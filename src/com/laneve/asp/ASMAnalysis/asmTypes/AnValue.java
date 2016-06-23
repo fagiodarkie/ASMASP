@@ -8,7 +8,8 @@ public class AnValue implements Value {
 	
 	public static String LONG_NAME = "LONG", SHORT_NAME = "SHORT",
 			INT_NAME = "INT", FLOAT_NAME = "FLOAT", DOUBLE_NAME = "DOUBLE",
-			BOOL_NAME = "BOOLEAN", CHAR_NAME = "CHAR", STRING_NAME = "STRING";
+			BOOL_NAME = "BOOLEAN", CHAR_NAME = "CHAR", STRING_NAME = "STRING",
+			REF_NAME = "REFERENCE";
 	
 	public static String getClassName(Type t) {
 		switch(t.getSort()) {
@@ -82,6 +83,21 @@ public class AnValue implements Value {
 		}
 	}
 
+	public static ExpressionType leastUpperBound(ExpressionType t1, ExpressionType t2) {
+		if (t1 == ExpressionType.UNKNOWN || t2 == ExpressionType.UNKNOWN)
+			return ExpressionType.UNKNOWN;
+		if (t1 == ExpressionType.UNDEFINED_EXP || t2 == ExpressionType.UNDEFINED_EXP)
+			return ExpressionType.UNDEFINED_EXP;
+		if (t1 == ExpressionType.VAR_EXP || t2 == ExpressionType.VAR_EXP)
+			return ExpressionType.VAR_EXP;
+		if (t1 == ExpressionType.VARIABLE || t2 == ExpressionType.VARIABLE)
+			return ExpressionType.VARIABLE;
+		if (t1 == ExpressionType.CONST_EXP || t2 == ExpressionType.CONST_EXP)
+			return ExpressionType.CONST_EXP;
+		return ExpressionType.CONST;
+
+		
+	}
 	
 	
 	public enum ExpressionType {CONST, VARIABLE, UNKNOWN, CONST_EXP, VAR_EXP, UNDEFINED_EXP};
@@ -111,56 +127,24 @@ public class AnValue implements Value {
 		ID = a.ID;
 	}
 	
-/*
-	public AnValue(Type t, IincInsnNode n) {
-		ID = generateID();
-		type = t;
-		className = getClassName(t);
-		// TODO
+	public boolean defined() {
+		return (exType != ExpressionType.UNDEFINED_EXP && exType != ExpressionType.UNKNOWN);
 	}
-
-	public AnValue(Type t, IntInsnNode n) {
-		ID = generateID();
-		type = t;
-		className = getClassName(t);
-		// TODO
+	
+	public boolean equals(AnValue o) {
+		if (ID != o.ID)
+			return false;
+		if (exType != o.exType)
+			return false;
+		if (className != o.className)
+			return false;
+		if (type != o.type)
+			return false;
+		if (value != o.value)
+			return false;
+		return true;
 	}
-
-	public AnValue(Type t, InvokeDynamicInsnNode n) {
-		ID = generateID();
-		type = t;
-		className = getClassName(t);
-		// TODO
-	}
-
-	public AnValue(Type t, JumpInsnNode n) {
-		ID = generateID();
-		type = t;
-		className = getClassName(t);
-		// TODO
-	}
-
-	public AnValue(Type t, MethodInsnNode n) {
-		ID = generateID();
-		type = t;
-		className = getClassName(t);
-		// TODO
-	}
-
-	public AnValue(Type t, VarInsnNode n) {
-		ID = generateID();
-		type = t;
-		className = getClassName(t);
-		// TODO
-	}
-
-	public AnValue(Type t, TypeInsnNode n) {
-		ID = generateID();
-		type = t;
-		className = getClassName(t);
-		// TODO
-	}
- */
+	
 	public String getClassName() {
 		return className;
 	}

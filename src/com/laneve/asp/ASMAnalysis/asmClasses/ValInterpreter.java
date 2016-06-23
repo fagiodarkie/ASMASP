@@ -8,13 +8,20 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
-import org.objectweb.asm.tree.analysis.BasicValue;
 import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue.ExpressionType;
+
+/*
+ * TODO this class is useless if we don't subclass also Frame. Frame's fields are private, 
+ * but getters and setters are provided. Huzzah, problem solved!
+ *
+ */
+
 
 public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
@@ -205,35 +212,256 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	@Override
 	public AnValue binaryOperation(AbstractInsnNode insn, AnValue value1,
 			AnValue value2) throws AnalyzerException {
-		// TODO Auto-generated method stub
-		return null;
+		AnValue unknown = new AnValue(Type.INT_TYPE);
+		unknown.setExpressionType(ExpressionType.UNKNOWN);
+    	AnValue res = new AnValue(Type.INT_TYPE);
+		switch(insn.getOpcode()) {
+		// we don't support array operations. yet.
+		case Opcodes.IALOAD:
+			return unknown;
+        case Opcodes.LALOAD:
+        	unknown.setClassName(AnValue.LONG_NAME);
+        	return unknown;
+        case Opcodes.FALOAD:
+        	unknown.setClassName(AnValue.FLOAT_NAME);
+        	return unknown;
+        case Opcodes.DALOAD:
+        	unknown.setClassName(AnValue.DOUBLE_NAME);
+        	return unknown;
+        case Opcodes.AALOAD:
+        	unknown.setClassName(AnValue.REF_NAME);
+        	return unknown;
+        case Opcodes.BALOAD:
+        	unknown.setClassName(AnValue.BOOL_NAME);
+        	return unknown;
+        case Opcodes.CALOAD:
+        	unknown.setClassName(AnValue.CHAR_NAME);
+        	return unknown;
+        case Opcodes.SALOAD:
+        	unknown.setClassName(AnValue.SHORT_NAME);
+        	return unknown;
+        // operations are modeled, but only in certain cases.
+        case Opcodes.IADD:
+        case Opcodes.LADD:
+        case Opcodes.FADD:
+        case Opcodes.DADD:
+        	// we assert both addends are the same type.
+        	if (value1.defined() && value2.defined()) {
+        		res.setExpressionValue("(" + value1.getValue() + " + " + value2.getValue() + ")",
+        			AnValue.leastUpperBound(value1.getExpType(), value2.getExpType()));
+        		if (res.getExpType() == ExpressionType.CONST)
+        			res.setExpressionType(ExpressionType.CONST_EXP);
+        		else if (res.getExpType() == ExpressionType.VARIABLE)
+        			res.setExpressionType(ExpressionType.VAR_EXP);
+        		String s = AnValue.INT_NAME;
+        		switch(insn.getOpcode()) {
+        		case Opcodes.LADD:
+        			s = AnValue.LONG_NAME;
+        			break;
+        		case Opcodes.FADD:
+        			s = AnValue.FLOAT_NAME;
+        			break;
+        		case Opcodes.DADD:
+        			s = AnValue.DOUBLE_NAME;
+        		}
+        		res.setClassName(s);
+        		return res;
+        	} else {
+        		res.setExpressionType(ExpressionType.UNDEFINED_EXP);
+        		return res;
+        	}
+        case Opcodes.ISUB:
+        case Opcodes.IMUL:
+        case Opcodes.IDIV:
+        case Opcodes.IREM:
+        case Opcodes.ISHL:
+        case Opcodes.ISHR:
+        case Opcodes.IUSHR:
+        case Opcodes.IAND:
+        case Opcodes.IOR:
+        case Opcodes.IXOR:
+        	unknown.setExpressionType(ExpressionType.UNDEFINED_EXP);
+    		return unknown;
+        case Opcodes.FMUL:
+        case Opcodes.FSUB:
+        case Opcodes.FDIV:
+        case Opcodes.FREM:
+        	unknown.setClassName(AnValue.FLOAT_NAME);
+    		unknown.setExpressionType(ExpressionType.UNDEFINED_EXP);
+    		return unknown;
+        case Opcodes.DSUB:
+        case Opcodes.DREM:
+        case Opcodes.DMUL:
+        case Opcodes.DDIV:
+        	unknown.setClassName(AnValue.DOUBLE_NAME);
+    		unknown.setExpressionType(ExpressionType.UNDEFINED_EXP);
+    		return unknown;
+        case Opcodes.LDIV:
+        case Opcodes.LSUB:
+        case Opcodes.LMUL:
+        case Opcodes.LREM:
+        case Opcodes.LOR:
+        case Opcodes.LUSHR:
+        case Opcodes.LSHL:
+        case Opcodes.LSHR:
+        case Opcodes.LAND:
+        case Opcodes.LXOR:
+        	unknown.setClassName(AnValue.LONG_NAME);
+    		unknown.setExpressionType(ExpressionType.UNDEFINED_EXP);
+    		return unknown;
+        case Opcodes.LCMP:
+        	/* FIXME to achieve better results, since we will redefine jump behavior in Frame\
+        	 * or other places, we could define these instructions as follows:
+        	 * 
+        	 * B(a,b) = [a == b] B(0) +
+        	 *			[a < b] B(1) +
+        	 *			[a > b] B(-1)
+        	 */
+        	res.setClassName(AnValue.LONG_NAME);
+        	if (value1.getExpType() == ExpressionType.CONST
+        			&& value2.getExpType() == ExpressionType.CONST) {
+        		long i1 = Long.parseLong(value1.getValue()),
+        				i2 = Long.parseLong(value2.getValue());
+        		res.setExpressionValue((i1 > i2 ? "1" :
+        				(i1 == i2 ? "0" : "-1")),
+        				ExpressionType.CONST);
+        		return res;
+        	/*} else if (value1.getExpType() == ExpressionType.CONST_EXP
+        			&& value2.getExpType() == ExpressionType.CONST_EXP) {
+        		
+        		// TODO parse expression?
+        		res.setExpressionValue("dummy",
+        				ExpressionType.CONST);
+        		return res;*/
+        	} else {
+        		unknown.setClassName(AnValue.LONG_NAME);
+        		return unknown;
+        	}
+        case Opcodes.FCMPL:
+        	res.setClassName(AnValue.INT_NAME);
+        	if (value1.getExpType() == ExpressionType.CONST
+        			&& value2.getExpType() == ExpressionType.CONST) {
+        		Float i1 = Float.parseFloat(value1.getValue()),
+        				i2 = Float.parseFloat(value2.getValue());
+        		res.setExpressionValue((i1 < i2 ? "1" :
+        				(i1 == i2 ? "0" : "-1")),
+        				ExpressionType.CONST);
+        		return res;
+        	} else {
+        		unknown.setClassName(AnValue.INT_NAME);
+        		return unknown;
+        	}
+    	case Opcodes.FCMPG:
+    		res.setClassName(AnValue.INT_NAME);
+        	if (value1.getExpType() == ExpressionType.CONST
+        			&& value2.getExpType() == ExpressionType.CONST) {
+        		Float i1 = Float.parseFloat(value1.getValue()),
+        				i2 = Float.parseFloat(value2.getValue());
+        		res.setExpressionValue((i1 > i2 ? "1" :
+        				(i1 == i2 ? "0" : "-1")),
+        				ExpressionType.CONST);
+        		return res;
+        	} else {
+        		unknown.setClassName(AnValue.INT_NAME);
+        		return unknown;
+        	}
+    	case Opcodes.DCMPL:
+    		res.setClassName(AnValue.INT_NAME);
+        	if (value1.getExpType() == ExpressionType.CONST
+        			&& value2.getExpType() == ExpressionType.CONST) {
+        		double i1 = Double.parseDouble(value1.getValue()),
+        				i2 = Double.parseDouble(value2.getValue());
+        		res.setExpressionValue((i1 < i2 ? "1" :
+        				(i1 == i2 ? "0" : "-1")),
+        				ExpressionType.CONST);
+        		return res;
+        	} else {
+        		unknown.setClassName(AnValue.INT_NAME);
+        		return unknown;
+        	}
+    	case Opcodes.DCMPG:
+    		res.setClassName(AnValue.INT_NAME);
+        	if (value1.getExpType() == ExpressionType.CONST
+        			&& value2.getExpType() == ExpressionType.CONST) {
+        		double i1 = Double.parseDouble(value1.getValue()),
+        				i2 = Double.parseDouble(value2.getValue());
+        		res.setExpressionValue((i1 > i2 ? "1" :
+        				(i1 == i2 ? "0" : "-1")),
+        				ExpressionType.CONST);
+        		return res;
+        	} else {
+        		unknown.setClassName(AnValue.INT_NAME);
+        		return unknown;
+        	}
+    	
+        case Opcodes.IF_ICMPEQ:
+        case Opcodes.IF_ICMPNE:
+        case Opcodes.IF_ICMPLT:
+        case Opcodes.IF_ICMPGE:
+        case Opcodes.IF_ICMPGT:
+        case Opcodes.IF_ICMPLE:
+        case Opcodes.IF_ACMPEQ:
+        case Opcodes.IF_ACMPNE:
+        	// no object is created. jump instruction must be modeled in frame.
+        	return null;
+        case Opcodes.PUTFIELD:
+        
+        default:
+    		throw new Error("Internal error.");
+		}
 	}
 
 	@Override
 	public AnValue ternaryOperation(AbstractInsnNode insn, AnValue value1,
 			AnValue value2, AnValue value3) throws AnalyzerException {
-		// TODO Auto-generated method stub
-		return null;
+		switch(insn.getOpcode()) {
+        case Opcodes.IASTORE:
+        case Opcodes.LASTORE:
+        case Opcodes.FASTORE:
+        case Opcodes.DASTORE:
+        case Opcodes.AASTORE:
+        case Opcodes.BASTORE:
+        case Opcodes.CASTORE:
+        case Opcodes.SASTORE:
+        	// ternary are always store, which do not produce output.
+        	return null;
+        default:
+    		throw new Error("Internal error.");
+		}
 	}
 
 	@Override
 	public AnValue naryOperation(AbstractInsnNode insn,
 			List<? extends AnValue> values) throws AnalyzerException {
-		// TODO Auto-generated method stub
-		return null;
+		switch(insn.getOpcode()) {
+        case Opcodes.INVOKEVIRTUAL:
+        case Opcodes.INVOKESPECIAL:
+        case Opcodes.INVOKESTATIC:
+        case Opcodes.INVOKEDYNAMIC:
+        case Opcodes.INVOKEINTERFACE:
+        case Opcodes.MULTIANEWARRAY:
+        	// undefined, for the time being.
+        	AnValue res = new AnValue(Type.getReturnType(((MethodInsnNode) insn).desc));
+        	res.setExpressionType(ExpressionType.UNKNOWN);
+        	return res;
+        	
+    	default:
+    		throw new Error("Internal error.");
+    	}
 	}
 
 	@Override
 	public void returnOperation(AbstractInsnNode insn, AnValue value,
 			AnValue expected) throws AnalyzerException {
-		// TODO Auto-generated method stub
+		// TODO, but probably useless.
 		
 	}
 
 	@Override
 	public AnValue merge(AnValue v, AnValue w) {
-		// TODO Auto-generated method stub
-		return null;
+		AnValue r = v.clone();
+		r.setExpressionType(AnValue.leastUpperBound(v.getExpType(),	w.getExpType()));
+		return r;
 	}
 
 }
