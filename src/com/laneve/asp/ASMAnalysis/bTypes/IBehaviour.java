@@ -1,6 +1,6 @@
 package com.laneve.asp.ASMAnalysis.bTypes;
 
-public interface IBheaviour {
+public interface IBehaviour {
 	
 	/**
 	 * B takes a frame index, method name, stack and memory types as parameters,

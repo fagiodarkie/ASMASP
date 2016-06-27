@@ -19,6 +19,8 @@ import com.laneve.asp.ASMAnalysis.asmTypes.AnValue.ExpressionType;
 /*
  * TODO this class is useless if we don't subclass also Frame. Frame's fields are private, 
  * but getters and setters are provided. Huzzah, problem solved!
+ * 
+ * FIXME, this doesn't keep track of fields. AnValue and relevant operation must be updated.
  *
  */
 
