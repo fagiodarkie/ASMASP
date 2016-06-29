@@ -17,8 +17,6 @@ import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue.ExpressionType;
 
 /*
- * TODO this class is useless if we don't subclass also Frame. Frame's fields are private, 
- * but getters and setters are provided. Huzzah, problem solved!
  * 
  * FIXME, this doesn't keep track of fields. AnValue and relevant operation must be updated.
  *
@@ -70,8 +68,9 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
             return v;
         case BIPUSH:
         case SIPUSH:
+        	// FIXME BIPUSH and SIPUSH should cast a byte or short to int32, but no value to be cast is provided.
         	v = newValue(Type.INT_TYPE);
-        	v.setExpressionValue("ic" + v.getID(), ExpressionType.CONST);
+        	v.setExpressionValue("x", ExpressionType.CONST);
             return v;
         case LDC:
             Object cst = ((LdcInsnNode) insn).cst;
@@ -188,12 +187,13 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.IFNULL:
         case Opcodes.IFNONNULL:
         	// TODO jumps in interpreter. change the frame's behavioural types?
+        	// no, jumps must be computed in Frame.
         case Opcodes.IRETURN:
         case Opcodes.LRETURN:
         case Opcodes.FRETURN:
         case Opcodes.DRETURN:
         case Opcodes.ARETURN:
-        	// TODO behaviour types should be "0"
+        	// TODO behaviour types should be "0", will be computed in Frame.
         case Opcodes.TABLESWITCH:
         case Opcodes.LOOKUPSWITCH:
         case Opcodes.PUTSTATIC:
@@ -206,6 +206,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.INSTANCEOF:
         case Opcodes.MONITORENTER:
         case Opcodes.MONITOREXIT:
+        	// not implemented.
 		default:
             throw new Error("Internal error.");
 		}
@@ -249,6 +250,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.DADD:
         	// we assert both addends are the same type.
         	if (value1.defined() && value2.defined()) {
+        		// x1 + x2
         		res.setExpressionValue("(" + value1.getValue() + " + " + value2.getValue() + ")",
         			AnValue.leastUpperBound(value1.getExpType(), value2.getExpType()));
         		if (res.getExpType() == ExpressionType.CONST)
@@ -312,89 +314,21 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     		unknown.setExpressionType(ExpressionType.UNDEFINED_EXP);
     		return unknown;
         case Opcodes.LCMP:
-        	/* FIXME to achieve better results, since we will redefine jump behavior in Frame\
-        	 * or other places, we could define these instructions as follows:
+        case Opcodes.FCMPL:
+        case Opcodes.FCMPG:
+    	case Opcodes.DCMPL:
+    	case Opcodes.DCMPG:
+        	/* FIXME to achieve better results, since we will redefine jump behavior in Frame
+        	 * or other places, we will define these instructions as follows:
         	 * 
         	 * B(a,b) = [a == b] B(0) +
         	 *			[a < b] B(1) +
         	 *			[a > b] B(-1)
+        	 *
+        	 * result value will be set by Frame.
         	 */
-        	res.setClassName(AnValue.LONG_NAME);
-        	if (value1.getExpType() == ExpressionType.CONST
-        			&& value2.getExpType() == ExpressionType.CONST) {
-        		long i1 = Long.parseLong(value1.getValue()),
-        				i2 = Long.parseLong(value2.getValue());
-        		res.setExpressionValue((i1 > i2 ? "1" :
-        				(i1 == i2 ? "0" : "-1")),
-        				ExpressionType.CONST);
-        		return res;
-        	/*} else if (value1.getExpType() == ExpressionType.CONST_EXP
-        			&& value2.getExpType() == ExpressionType.CONST_EXP) {
-        		
-        		// TODO parse expression?
-        		res.setExpressionValue("dummy",
-        				ExpressionType.CONST);
-        		return res;*/
-        	} else {
-        		unknown.setClassName(AnValue.LONG_NAME);
-        		return unknown;
-        	}
-        case Opcodes.FCMPL:
         	res.setClassName(AnValue.INT_NAME);
-        	if (value1.getExpType() == ExpressionType.CONST
-        			&& value2.getExpType() == ExpressionType.CONST) {
-        		Float i1 = Float.parseFloat(value1.getValue()),
-        				i2 = Float.parseFloat(value2.getValue());
-        		res.setExpressionValue((i1 < i2 ? "1" :
-        				(i1 == i2 ? "0" : "-1")),
-        				ExpressionType.CONST);
-        		return res;
-        	} else {
-        		unknown.setClassName(AnValue.INT_NAME);
-        		return unknown;
-        	}
-    	case Opcodes.FCMPG:
-    		res.setClassName(AnValue.INT_NAME);
-        	if (value1.getExpType() == ExpressionType.CONST
-        			&& value2.getExpType() == ExpressionType.CONST) {
-        		Float i1 = Float.parseFloat(value1.getValue()),
-        				i2 = Float.parseFloat(value2.getValue());
-        		res.setExpressionValue((i1 > i2 ? "1" :
-        				(i1 == i2 ? "0" : "-1")),
-        				ExpressionType.CONST);
-        		return res;
-        	} else {
-        		unknown.setClassName(AnValue.INT_NAME);
-        		return unknown;
-        	}
-    	case Opcodes.DCMPL:
-    		res.setClassName(AnValue.INT_NAME);
-        	if (value1.getExpType() == ExpressionType.CONST
-        			&& value2.getExpType() == ExpressionType.CONST) {
-        		double i1 = Double.parseDouble(value1.getValue()),
-        				i2 = Double.parseDouble(value2.getValue());
-        		res.setExpressionValue((i1 < i2 ? "1" :
-        				(i1 == i2 ? "0" : "-1")),
-        				ExpressionType.CONST);
-        		return res;
-        	} else {
-        		unknown.setClassName(AnValue.INT_NAME);
-        		return unknown;
-        	}
-    	case Opcodes.DCMPG:
-    		res.setClassName(AnValue.INT_NAME);
-        	if (value1.getExpType() == ExpressionType.CONST
-        			&& value2.getExpType() == ExpressionType.CONST) {
-        		double i1 = Double.parseDouble(value1.getValue()),
-        				i2 = Double.parseDouble(value2.getValue());
-        		res.setExpressionValue((i1 > i2 ? "1" :
-        				(i1 == i2 ? "0" : "-1")),
-        				ExpressionType.CONST);
-        		return res;
-        	} else {
-        		unknown.setClassName(AnValue.INT_NAME);
-        		return unknown;
-        	}
+        	return res;
     	
         case Opcodes.IF_ICMPEQ:
         case Opcodes.IF_ICMPNE:

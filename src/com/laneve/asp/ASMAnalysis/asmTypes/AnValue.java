@@ -14,14 +14,13 @@ public class AnValue implements Value {
 	public static String getClassName(Type t) {
 		switch(t.getSort()) {
 		case Type.ARRAY: return t.getInternalName() + "[]";
-		// TODO cambia in enum pubblici
-		case Type.BOOLEAN: return "BOOLEAN";
-		case Type.CHAR: return "CHAR";
-		case Type.DOUBLE: return "DOUBLE";
-		case Type.FLOAT: return "FLOAT";
-		case Type.INT: return "INT";
-		case Type.LONG: return "LONG";
-		case Type.SHORT: return "SHORT";
+		case Type.BOOLEAN: return BOOL_NAME;
+		case Type.CHAR: return CHAR_NAME;
+		case Type.DOUBLE: return DOUBLE_NAME;
+		case Type.FLOAT: return FLOAT_NAME;
+		case Type.INT: return INT_NAME;
+		case Type.LONG: return LONG_NAME;
+		case Type.SHORT: return SHORT_NAME;
 		case Type.METHOD: return t.getDescriptor();
 		case Type.OBJECT: return t.getInternalName();
 		default: return "UNKNOWN";
@@ -110,11 +109,11 @@ public class AnValue implements Value {
 	protected String className;
 	protected String value;
 	protected ExpressionType exType;
-	protected int ID;
+	// protected int ID;
 	
 	
 	public AnValue(Type t) {
-		ID = generateID();
+		//ID = generateID();
 		type = t;
 		className = getClassName(t);
 	}
@@ -124,7 +123,12 @@ public class AnValue implements Value {
 		className = a.className;
 		value = a.value;
 		exType = a.exType;
-		ID = a.ID;
+		//ID = a.ID;
+	}
+	
+	public String toString() {
+		String type =(defined() ?  className : "-");
+		return getValue() + ":" + type;
 	}
 	
 	public boolean defined() {
@@ -132,8 +136,8 @@ public class AnValue implements Value {
 	}
 	
 	public boolean equals(AnValue o) {
-		if (ID != o.ID)
-			return false;
+		//if (ID != o.ID)
+		//	return false;
 		if (exType != o.exType)
 			return false;
 		if (className != o.className)
@@ -153,9 +157,9 @@ public class AnValue implements Value {
 		return value;
 	}
 	
-	public int getID() {
-		return ID;
-	}
+//	public int getID() {
+//		return ID;
+//	}
 	
 	public ExpressionType getExpType() {
 		return exType;
