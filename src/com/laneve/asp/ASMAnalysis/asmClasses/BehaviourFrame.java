@@ -16,7 +16,9 @@ import org.objectweb.asm.tree.analysis.Interpreter;
 import org.objectweb.asm.tree.analysis.Value;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.bTypes.Atom;
 import com.laneve.asp.ASMAnalysis.bTypes.BranchingBehaviour;
+import com.laneve.asp.ASMAnalysis.bTypes.ChainedBehavior;
 import com.laneve.asp.ASMAnalysis.bTypes.FinalBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.SimpleBehaviour;
@@ -25,6 +27,8 @@ import com.laneve.asp.ASMAnalysis.bTypes.SimpleBehaviour;
 public class BehaviourFrame extends Frame<AnValue> {
 
 	protected IBehaviour frameBehaviour;
+	private String deallocationSignature;
+	private String allocationSignature;
 	
 	protected static int getOpType(int opcode) {
 		switch(opcode) {
@@ -484,7 +488,13 @@ public class BehaviourFrame extends Frame<AnValue> {
 		case Opcodes.INVOKESTATIC:
 		case Opcodes.INVOKEINTERFACE:
 		case Opcodes.INVOKEDYNAMIC:
-			// TODO invoke may trigger memory allocation or deallocation!
+			// TODO infer which method was called.
+			String methodName = "dummy";
+			
+			if (methodName == allocationSignature)
+				frameBehaviour = new ChainedBehavior(Atom.ACQUIRE, methodNameStart, lineStart, startList,
+						methodNameTarget, lineTarget1, endList);
+				
 			break;
 		case Opcodes.ATHROW:
 		case Opcodes.CHECKCAST:
@@ -498,6 +508,14 @@ public class BehaviourFrame extends Frame<AnValue> {
 		}
 	}
 
+
+	public void setAllocationSignature(String sig) {
+		allocationSignature = sig;
+	}
+	
+	public void setDeallocationSignature(String sig) {
+		deallocationSignature = sig;
+	}
 
 	/*
 	 * 
