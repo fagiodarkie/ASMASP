@@ -466,7 +466,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 			 * ! return address is pushed on the stack, and will be immediately stored by subroutine.
 			 * return address would be file.method1.48
 			 * 
-			 * this may also be 
+			 * this may also be done as the INVOKEs, later on.
 			 * 
 			 * ret is dual, as it takes a value from the stack and goes to that address.
 			 */
@@ -494,14 +494,22 @@ public class BehaviourFrame extends Frame<AnValue> {
 			// TODO infer which method was called.
 			String methodName = "dummy";
 			
-			if (methodName == allocationSignature)
+			if (methodName == allocationSignature) {
 				frameBehaviour = new ChainedBehavior(Atom.ACQUIRE, methodNameStart, lineStart, startList,
 						methodNameTarget, lineTarget1, endList);
-			else if (methodName == deallocationSignature)
+			} else if (methodName == deallocationSignature) {
 				frameBehaviour = new ChainedBehavior(Atom.RELEASE, methodNameStart, lineStart, startList,
 						methodNameTarget, lineTarget1, endList);
-			else if (isInScope(methodName)) {
-				// TODO continue from the routine?
+			} else if (isInScope(methodName)) {
+				/* TODO continue from the routine?
+				 * something like A3(a, b, c, d, e) = B0(c, d, e); A6(a, b, return(B0))
+				 * 
+				 * two questions:
+				 * 1) how to get return values of methods we analysed given their parameters? Our
+				 *    behaviour system only maps allocation and deallocation!
+				 * 2) does CoFloCo actually behave in case of ';'? (we hope so, because if not so
+				 *    the Chained behaviour with atoms is wrong. 
+				 */ 
 			} else {
 				// this method is not covered by the analysis.
 				frameBehaviour = trivial;
