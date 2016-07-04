@@ -235,6 +235,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 		List<String> condList = new ArrayList<String>();
 		List<SimpleBehaviour> behaviourList = new ArrayList<SimpleBehaviour>();
 		int index = endList.size();
+		IBehaviour trivial = new SimpleBehaviour(methodNameStart, lineStart, startList, methodNameTarget, lineTarget1, endList);
 
 		// update the behaviour.
 		switch (getOpType(insn.getOpcode())) {
@@ -245,8 +246,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 			 * 
 			 * GOTO is a non-conditional jump, therefore it's as simple as the other cases.
 			 */
-			frameBehaviour = new SimpleBehaviour(methodNameStart, lineStart, startList,
-					methodNameStart, lineTarget1, getMemoryAsList());
+			frameBehaviour = trivial;
 			break;
 		case Opcodes.LCMP:
 		case Opcodes.FCMPG:
@@ -466,12 +466,14 @@ public class BehaviourFrame extends Frame<AnValue> {
 			 * ! return address is pushed on the stack, and will be immediately stored by subroutine.
 			 * return address would be file.method1.48
 			 * 
+			 * this may also be 
 			 * 
 			 * ret is dual, as it takes a value from the stack and goes to that address.
 			 */
 		case Opcodes.RET:
 		case Opcodes.TABLESWITCH:
-		case Opcodes.LOOKUPSWITCH:			
+		case Opcodes.LOOKUPSWITCH:
+			frameBehaviour = trivial;
 			break;
 			
 		case Opcodes.RETURN:
@@ -482,6 +484,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 		case Opcodes.GETFIELD:
 		case Opcodes.PUTFIELD:
 			// TODO we need (?) a way to handle static and non-static fields. 
+			frameBehaviour = trivial;
 			break;
 		case Opcodes.INVOKEVIRTUAL:
 		case Opcodes.INVOKESPECIAL:
@@ -494,6 +497,15 @@ public class BehaviourFrame extends Frame<AnValue> {
 			if (methodName == allocationSignature)
 				frameBehaviour = new ChainedBehavior(Atom.ACQUIRE, methodNameStart, lineStart, startList,
 						methodNameTarget, lineTarget1, endList);
+			else if (methodName == deallocationSignature)
+				frameBehaviour = new ChainedBehavior(Atom.RELEASE, methodNameStart, lineStart, startList,
+						methodNameTarget, lineTarget1, endList);
+			else if (isInScope(methodName)) {
+				// TODO continue from the routine?
+			} else {
+				// this method is not covered by the analysis.
+				frameBehaviour = trivial;
+			}
 				
 			break;
 		case Opcodes.ATHROW:
@@ -502,12 +514,18 @@ public class BehaviourFrame extends Frame<AnValue> {
 		case Opcodes.MONITORENTER:
 		case Opcodes.MONITOREXIT:
 			// TODO kind of branches, but we can't tell where do they jump
+			frameBehaviour = trivial;
 			break;
 		default:
 			throw new RuntimeException("Illegal opcode " + insn.getOpcode());
 		}
 	}
 
+
+	protected boolean isInScope(String methodName) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 	public void setAllocationSignature(String sig) {
 		allocationSignature = sig;
