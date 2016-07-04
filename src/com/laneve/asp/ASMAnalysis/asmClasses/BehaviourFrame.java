@@ -17,6 +17,7 @@ import org.objectweb.asm.tree.analysis.Value;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.bTypes.BranchingBehaviour;
+import com.laneve.asp.ASMAnalysis.bTypes.FinalBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.SimpleBehaviour;
 
@@ -133,6 +134,11 @@ public class BehaviourFrame extends Frame<AnValue> {
 		case Opcodes.I2B:
 		case Opcodes.I2C:
 		case Opcodes.I2S:
+		case Opcodes.NEW:
+		case Opcodes.NEWARRAY:
+		case Opcodes.ANEWARRAY:
+		case Opcodes.ARRAYLENGTH:
+		case Opcodes.MULTIANEWARRAY:
 		case Opcodes.GOTO:
 			return Opcodes.NOP;
 		case Opcodes.IRETURN:
@@ -203,7 +209,6 @@ public class BehaviourFrame extends Frame<AnValue> {
 			final Interpreter<AnValue> interpreter) throws AnalyzerException {
 		AnValue value1, value2, value3, value4;
 		List<AnValue> values;
-		int var;
 
 		rebaseValues();
 		// now the local variables are like: x1:int, x2:int, x3:float
@@ -218,6 +223,15 @@ public class BehaviourFrame extends Frame<AnValue> {
 		// execute the instruction
 		super.execute(insn, interpreter);
 
+		// create temp variables for jump.
+		AnValue condVar = getStack(getStackSize() - 1);
+		String testedValue1 = "x" + (startList.size() - 1),
+				testedValue2 = "x" + startList.size();
+		List<AnValue> endList = getMemoryAsList();
+		List<String> condList = new ArrayList<String>();
+		List<SimpleBehaviour> behaviourList = new ArrayList<SimpleBehaviour>();
+		int index = endList.size();
+
 		// update the behaviour.
 		switch (getOpType(insn.getOpcode())) {
 		case Opcodes.NOP:
@@ -231,18 +245,28 @@ public class BehaviourFrame extends Frame<AnValue> {
 					methodNameStart, lineTarget1, getMemoryAsList());
 			break;
 		case Opcodes.LCMP:
-			AnValue condVar = pop();
-			String testedValue1 = "x" + (startList.size() - 1),
-					testedValue2 = "x" + startList.size();
-			List<AnValue> endList = getMemoryAsList();
-			List<String> condList = new ArrayList<String>();
-			condList.add(testedValue1 + " < " + testedValue2);
-			condList.add(testedValue1 + " = " + testedValue2);
-			condList.add(testedValue1 + " > " + testedValue2);
+		case Opcodes.FCMPG:
+		case Opcodes.DCMPG:
+		case Opcodes.FCMPL:
+		case Opcodes.DCMPL:
+			lineTarget2 = lineStart + 1;
+			// remove the top-level variable (we need to change its value)
+			pop();
+			if (insn.getOpcode() == Opcodes.DCMPL
+				|| insn.getOpcode() == Opcodes.FCMPL) {
+				// fill the condition list;
+				// when the check is for less than, invert condition order.
+				condList.add(testedValue1 + " > " + testedValue2);
+				condList.add(testedValue1 + " = " + testedValue2);
+				condList.add(testedValue1 + " < " + testedValue2);
+			} else {
+				condList.add(testedValue1 + " < " + testedValue2);
+				condList.add(testedValue1 + " = " + testedValue2);
+				condList.add(testedValue1 + " > " + testedValue2);				
+			}
 			
-			List<SimpleBehaviour> behaviourList = new ArrayList<SimpleBehaviour>();
+			// set the value of the top-level variable and add it again, then change it for next branches.
 			condVar.setInternalValue("-1");
-			int index = endList.size();
 			endList.add(condVar);
 			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
 					methodNameTarget, lineTarget2, endList));
@@ -254,120 +278,220 @@ public class BehaviourFrame extends Frame<AnValue> {
 			endList.set(index, condVar);
 			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
 					methodNameTarget, lineTarget2, endList));
+			// finally, create the branching behaviour with respective behaviours and conditions
 			frameBehaviour = new BranchingBehaviour(behaviourList, condList);
-		case Opcodes.FCMPL:
-		case Opcodes.FCMPG:
-		case Opcodes.DCMPL:
-		case Opcodes.DCMPG:
-			AnValue cond = pop();
 			break;
 		case Opcodes.IFEQ:
+			lineTarget1 = lineStart + 3;
+			// here no value is added: the program jumps to the other label directly.
+			condList.add(testedValue2 + " != 0");		
+			condList.add(testedValue2 + " = 0");
+			// instead, we must modify the line target.
+			// TODO find out how. what if bigEndian / littleEndian makes difference?
+			// (parseint(value1.getValue()) << 8) + parseInt(value2.getValue())
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget1, endList));
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget2, endList));
+			frameBehaviour = new BranchingBehaviour(behaviourList, condList);
+			break;
 		case Opcodes.IFNE:
+			lineTarget1 = lineStart + 3;
+			// here no value is added: the program jumps to the other label directly.
+			condList.add(testedValue2 + " = 0");
+			condList.add(testedValue2 + " != 0");		
+			// instead, we must modify the line target.
+			// TODO find out how.
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget1, endList));
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget2, endList));
+			frameBehaviour = new BranchingBehaviour(behaviourList, condList);
+			break;
 		case Opcodes.IFLT:
+			lineTarget1 = lineStart + 3;
+			// here no value is added: the program jumps to the other label directly.
+			condList.add(testedValue2 + " >= 0");		
+			condList.add(testedValue2 + " < 0");
+			// instead, we must modify the line target.
+			// TODO find out how.
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget1, endList));
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget2, endList));
+			frameBehaviour = new BranchingBehaviour(behaviourList, condList);
+			break;
 		case Opcodes.IFGE:
+			lineTarget1 = lineStart + 3;
+			// here no value is added: the program jumps to the other label directly.
+			condList.add(testedValue2 + " < 0");
+			condList.add(testedValue2 + " >= 0");		
+			// instead, we must modify the line target.
+			// TODO find out how.
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget1, endList));
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget2, endList));
+			frameBehaviour = new BranchingBehaviour(behaviourList, condList);
+			break;
 		case Opcodes.IFGT:
+			lineTarget1 = lineStart + 3;
+			// here no value is added: the program jumps to the other label directly.
+			condList.add(testedValue2 + " <= 0");		
+			condList.add(testedValue2 + " > 0");
+			// instead, we must modify the line target.
+			// TODO find out how.
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget1, endList));
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget2, endList));
+			frameBehaviour = new BranchingBehaviour(behaviourList, condList);
+			break;
 		case Opcodes.IFLE:
-			interpreter.unaryOperation(insn, pop());
+			lineTarget1 = lineStart + 3;
+			// here no value is added: the program jumps to the other label directly.
+			condList.add(testedValue2 + " > 0");
+			condList.add(testedValue2 + " <= 0");		
+			// instead, we must modify the line target.
+			// TODO find out how.
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget1, endList));
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget2, endList));
+			frameBehaviour = new BranchingBehaviour(behaviourList, condList);
 			break;
 		case Opcodes.IF_ICMPEQ:
+			lineTarget1 = lineStart + 3;
+			// here no value is added: the program jumps to the other label directly.
+			condList.add(testedValue1 + " != " + testedValue2);		
+			condList.add(testedValue1 + " = " + testedValue2);
+			// instead, we must modify the line target.
+			// TODO find out how.
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget1, endList));
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget2, endList));
+			frameBehaviour = new BranchingBehaviour(behaviourList, condList);
+			break;
 		case Opcodes.IF_ICMPNE:
+			lineTarget1 = lineStart + 3;
+			// here no value is added: the program jumps to the other label directly.
+			condList.add(testedValue1 + " = " + testedValue2);
+			condList.add(testedValue1 + " != " + testedValue2);		
+			// instead, we must modify the line target.
+			// TODO find out how.
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget1, endList));
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget2, endList));
+			frameBehaviour = new BranchingBehaviour(behaviourList, condList);
+			break;
 		case Opcodes.IF_ICMPLT:
+			lineTarget1 = lineStart + 3;
+			// here no value is added: the program jumps to the other label directly.
+			condList.add(testedValue1 + " >= " + testedValue2);		
+			condList.add(testedValue1 + " < " + testedValue2);
+			// instead, we must modify the line target.
+			// TODO find out how.
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget1, endList));
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget2, endList));
+			frameBehaviour = new BranchingBehaviour(behaviourList, condList);
+			break;
 		case Opcodes.IF_ICMPGE:
+			lineTarget1 = lineStart + 3;
+			// here no value is added: the program jumps to the other label directly.
+			condList.add(testedValue1 + " < " + testedValue2);
+			condList.add(testedValue1 + " >= " + testedValue2);		
+			// instead, we must modify the line target.
+			// TODO find out how.
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget1, endList));
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget2, endList));
+			frameBehaviour = new BranchingBehaviour(behaviourList, condList);
+			break;
 		case Opcodes.IF_ICMPGT:
+			lineTarget1 = lineStart + 3;
+			// here no value is added: the program jumps to the other label directly.
+			condList.add(testedValue1 + " <= " + testedValue2);		
+			condList.add(testedValue1 + " > " + testedValue2);
+			// instead, we must modify the line target.
+			// TODO find out how.
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget1, endList));
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget2, endList));
+			frameBehaviour = new BranchingBehaviour(behaviourList, condList);
+			break;
 		case Opcodes.IF_ICMPLE:
+			lineTarget1 = lineStart + 3;
+			// here no value is added: the program jumps to the other label directly.
+			condList.add(testedValue1 + " > " + testedValue2);
+			condList.add(testedValue1 + " <= " + testedValue2);		
+			// instead, we must modify the line target.
+			// TODO find out how.
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget1, endList));
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget2, endList));
+			frameBehaviour = new BranchingBehaviour(behaviourList, condList);
+			break;
 		case Opcodes.IF_ACMPEQ:
 		case Opcodes.IF_ACMPNE:
-			value2 = pop();
-			value1 = pop();
-			interpreter.binaryOperation(insn, value1, value2);
+		case Opcodes.IFNULL:
+		case Opcodes.IFNONNULL:
+			lineTarget1 = lineStart + 3;
+			// here no value is added: the program jumps to the other label directly.
+			// instead, we must modify the line target.
+			// TODO find out how.
+			// reference / null check is (for the time being) not a valid condition: using null cond list.
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget1, endList));
+			behaviourList.add(new SimpleBehaviour(methodNameStart, lineStart, startList,
+					methodNameTarget, lineTarget2, endList));
+			frameBehaviour = new BranchingBehaviour(behaviourList, null);
 			break;
 		case Opcodes.JSR:
-			push(interpreter.newOperation(insn));
-			break;
+			/* TODO this is a "jump" in a subroutine defined by the values v1 and v2: may be implemented
+			 * once we understand how it works.
+			 * example:
+			 * 
+			 * file.method1.45(a, b, c) = file.methodX.0(a, b, c, returnAddress)
+			 * ! return address is pushed on the stack, and will be immediately stored by subroutine.
+			 * return address would be file.method1.48
+			 * 
+			 * 
+			 * ret is dual, as it takes a value from the stack and goes to that address.
+			 */
 		case Opcodes.RET:
-			break;
 		case Opcodes.TABLESWITCH:
-		case Opcodes.LOOKUPSWITCH:
-			interpreter.unaryOperation(insn, pop());
+		case Opcodes.LOOKUPSWITCH:			
 			break;
+			
 		case Opcodes.RETURN:
-			// TODO finalBehaviour.
+			frameBehaviour = new FinalBehaviour(methodNameStart, lineStart, startList);
 			break;
 		case Opcodes.GETSTATIC:
-			push(interpreter.newOperation(insn));
-			break;
 		case Opcodes.PUTSTATIC:
-			interpreter.unaryOperation(insn, pop());
-			break;
 		case Opcodes.GETFIELD:
-			push(interpreter.unaryOperation(insn, pop()));
-			break;
 		case Opcodes.PUTFIELD:
-			value2 = pop();
-			value1 = pop();
-			interpreter.binaryOperation(insn, value1, value2);
+			// TODO we need (?) a way to handle static and non-static fields. 
 			break;
 		case Opcodes.INVOKEVIRTUAL:
 		case Opcodes.INVOKESPECIAL:
 		case Opcodes.INVOKESTATIC:
-		case Opcodes.INVOKEINTERFACE: {
-			values = new ArrayList<AnValue>();
-			String desc = ((MethodInsnNode) insn).desc;
-			for (int i = Type.getArgumentTypes(desc).length; i > 0; --i) {
-				values.add(0, pop());
-			}
-			if (insn.getOpcode() != Opcodes.INVOKESTATIC) {
-				values.add(0, pop());
-			}
-			if (Type.getReturnType(desc) == Type.VOID_TYPE) {
-				interpreter.naryOperation(insn, values);
-			} else {
-				push(interpreter.naryOperation(insn, values));
-			}
-			break;
-		}
-		case Opcodes.INVOKEDYNAMIC: {
-			values = new ArrayList<AnValue>();
-			String desc = ((InvokeDynamicInsnNode) insn).desc;
-			for (int i = Type.getArgumentTypes(desc).length; i > 0; --i) {
-				values.add(0, pop());
-			}
-			if (Type.getReturnType(desc) == Type.VOID_TYPE) {
-				interpreter.naryOperation(insn, values);
-			} else {
-				push(interpreter.naryOperation(insn, values));
-			}
-			break;
-		}
-		case Opcodes.NEW:
-			push(interpreter.newOperation(insn));
-			break;
-		case Opcodes.NEWARRAY:
-		case Opcodes.ANEWARRAY:
-		case Opcodes.ARRAYLENGTH:
-			push(interpreter.unaryOperation(insn, pop()));
+		case Opcodes.INVOKEINTERFACE:
+		case Opcodes.INVOKEDYNAMIC:
+			// TODO invoke may trigger memory allocation or deallocation!
 			break;
 		case Opcodes.ATHROW:
-			interpreter.unaryOperation(insn, pop());
-			break;
 		case Opcodes.CHECKCAST:
 		case Opcodes.INSTANCEOF:
-			push(interpreter.unaryOperation(insn, pop()));
-			break;
 		case Opcodes.MONITORENTER:
 		case Opcodes.MONITOREXIT:
-			interpreter.unaryOperation(insn, pop());
-			break;
-		case Opcodes.MULTIANEWARRAY:
-			values = new ArrayList<AnValue>();
-			for (int i = ((MultiANewArrayInsnNode) insn).dims; i > 0; --i) {
-				values.add(0, pop());
-			}
-			push(interpreter.naryOperation(insn, values));
-			break;
-		case Opcodes.IFNULL:
-		case Opcodes.IFNONNULL:
-			interpreter.unaryOperation(insn, pop());
+			// TODO kind of branches, but we can't tell where do they jump
 			break;
 		default:
 			throw new RuntimeException("Illegal opcode " + insn.getOpcode());
