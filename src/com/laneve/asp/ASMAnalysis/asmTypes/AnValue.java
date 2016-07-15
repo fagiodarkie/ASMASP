@@ -1,7 +1,5 @@
 package com.laneve.asp.ASMAnalysis.asmTypes;
 
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter.DEFAULT;
-
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.analysis.Value;
@@ -101,7 +99,6 @@ public class AnValue implements Value {
 	
 	
 	public AnValue(Type t) {
-		//ID = generateID();
 		type = t;
 		className = getClassName(t);
 	}

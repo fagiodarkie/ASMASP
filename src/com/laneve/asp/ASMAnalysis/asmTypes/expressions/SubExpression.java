@@ -1,4 +1,4 @@
-package com.laneve.asp.ASMAnalysis.asmClasses.expressions;
+package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
 
 public class SubExpression implements IExpression {
 	

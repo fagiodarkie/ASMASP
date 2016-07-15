@@ -1,6 +1,6 @@
-package com.laneve.asp.ASMAnalysis.asmClasses.expressions;
+package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
 
-public class FalseExpression implements IBoolExpression {
+public class FalseExpression extends IBoolExpression {
 	
 protected IBoolExpression Exp;
 	

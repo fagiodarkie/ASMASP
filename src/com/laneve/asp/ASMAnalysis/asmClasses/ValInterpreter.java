@@ -17,6 +17,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.BooleanValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.IntegerValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue.ExpressionType;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.MinusExpression;
 
 
 public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
@@ -142,13 +143,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		switch (insn.getOpcode()) {
 		case INEG:
 		case LNEG:
-		case DNEG:
-		case FNEG:
-			if (value.getExpType() != ExpressionType.UNDEFINED_EXP
-					&& value.getExpType() != ExpressionType.UNKNOWN) {
-				v.setInternalValue("-(" + value.getValue() + ")");
-				return v;
-			} else return value;
+			return new IntegerValue(new MinusExpression(((IntegerValue) value).getValue()))
 		case IINC:
 			if (value.getExpType() != ExpressionType.UNDEFINED_EXP
 			&& value.getExpType() != ExpressionType.UNKNOWN) {
@@ -213,6 +208,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.INSTANCEOF:
         case Opcodes.MONITORENTER:
         case Opcodes.MONITOREXIT:
+		case DNEG:
+		case FNEG:
         	// not implemented.
 		default:
             throw new Error("Internal error.");
