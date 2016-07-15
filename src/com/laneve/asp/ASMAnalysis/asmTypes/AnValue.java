@@ -6,7 +6,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.analysis.Value;
 
-public class AnValue extends Value {
+public class AnValue implements Value {
 	
 	public static String LONG_NAME = "LONG", SHORT_NAME = "SHORT",
 			INT_NAME = "INT", FLOAT_NAME = "FLOAT", DOUBLE_NAME = "DOUBLE",
@@ -121,6 +121,11 @@ public class AnValue extends Value {
 	
 	public void setClassName(String name) {
 		className = name;
+	}
+
+	@Override
+	public int getSize() {
+		return type.getSize();
 	}
 	
 }

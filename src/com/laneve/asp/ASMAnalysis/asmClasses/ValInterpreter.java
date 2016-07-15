@@ -14,24 +14,31 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.BooleanValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.IntegerValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue.ExpressionType;
-
-/*
- * 
- * FIXME, this doesn't keep track of fields. AnValue and relevant operation must be updated.
- *
- */
 
 
 public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
+	protected AnalysisContext context;
+	
 	protected ValInterpreter(int api) {
 		super(api);
 	}
 
 	@Override
 	public AnValue newValue(Type type) {
-		return new AnValue(type);
+		switch(type.getSort()) {
+		case Type.INT:
+		case Type.LONG:
+			return new IntegerValue(new AnValue(type));
+		case Type.BOOLEAN:
+			return new BooleanValue(new AnValue(type));
+		case Type.OBJECT:
+			if (AnValue.getClassName(type) == AnValue.THREAD_NAME)
+				return context.generateThread();
+		}
 	}
 
 	@Override
@@ -48,7 +55,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case ICONST_4:
         case ICONST_5:
         	v = newValue(Type.INT_TYPE);
-        	v.setExpressionValue(AnValue.getConstValue(insn.getOpcode()), ExpressionType.CONST);
+        	v.setValue(AnValue.getConstValue(insn.getOpcode()));
             return v;
         case LCONST_0:
         case LCONST_1:
