@@ -70,53 +70,41 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case BIPUSH:
         case SIPUSH:
         	// FIXME BIPUSH and SIPUSH should cast a byte or short to int32, but no value to be cast is provided.
-        	v = newValue(Type.INT_TYPE);
-        	v.setExpressionValue("x", ExpressionType.CONST);
-            return v;
+        	return newValue(Type.INT_TYPE);
+        	
         case LDC:
             Object cst = ((LdcInsnNode) insn).cst;
             if (cst instanceof Integer) {
-            	v = newValue(Type.INT_TYPE);
-            	v.setExpressionValue(((Integer) cst).toString(), ExpressionType.CONST);
-                return v;
+                return new ConstExpression(Type.INT_TYPE, AnValue.getConstValue(insn.getOpcode()));
             } else if (cst instanceof Float) {
-            	v = newValue(Type.FLOAT_TYPE);
-            	v.setExpressionValue(((Float) cst).toString(), ExpressionType.CONST);
-                return v;
+            	return newValue(Type.FLOAT_TYPE);
             } else if (cst instanceof Long) {
-            	v = newValue(Type.LONG_TYPE);
-            	v.setExpressionValue(((Long) cst).toString(), ExpressionType.CONST);
-                return v;
+            	return new ConstExpression(Type.LONG_TYPE, AnValue.getConstValue(insn.getOpcode()));
             } else if (cst instanceof Double) {
-            	v = newValue(Type.DOUBLE_TYPE);
-            	v.setExpressionValue(((Double) cst).toString(), ExpressionType.CONST);
-                return v;
+            	return newValue(Type.DOUBLE_TYPE);
             } else if (cst instanceof String) {
             	// FIXME do we need strings?
-                return newValue(Type.getObjectType("java/lang/String"));
+                return newValue(Type.getType("java.lang.String"));
             } else if (cst instanceof Type) {
                 int sort = ((Type) cst).getSort();
                 if (sort == Type.OBJECT || sort == Type.ARRAY) {
-                    return newValue(Type.getObjectType("java/lang/Class"));
+                    return newValue(Type.VOID_TYPE);
                 } else if (sort == Type.METHOD) {
-                    return newValue(Type
-                            .getObjectType("java/lang/invoke/MethodType"));
+                    return newValue(Type.VOID_TYPE);
                 } else {
                     throw new IllegalArgumentException("Illegal LDC constant "
                             + cst);
                 }
             } else if (cst instanceof Handle) {
-                return newValue(Type
-                        .getObjectType("java/lang/invoke/MethodHandle"));
+                return newValue(Type.VOID_TYPE);
             } else {
                 throw new IllegalArgumentException("Illegal LDC constant "
                         + cst);
             }
         case GETSTATIC:
         	// TODO maybe rewrite instance of FieldInsnNode to map actual values of fields?
-            return newValue(Type.getType(((FieldInsnNode) insn).desc));
+        	throw new Error("Static fields are not analyzed.");
         case NEW:
-        	// TODO here new "thread" object may be instantiated. is there something we need to do? 
             return newValue(Type.getObjectType(((TypeInsnNode) insn).desc));
         default:
             throw new Error("Internal error.");
