@@ -1,10 +1,12 @@
 package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
+import org.objectweb.asm.Type;
 
-public class ConstExpression implements IExpression {
+public class ConstExpression extends IExpression {
 	
 protected Long constExp;
 	
-	public ConstExpression(Long Const) {
+	public ConstExpression(Type t, Long Const) {
+		super(t);
 		constExp = Const;
 	}
 	

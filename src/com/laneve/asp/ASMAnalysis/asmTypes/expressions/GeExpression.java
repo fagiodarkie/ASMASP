@@ -1,10 +1,12 @@
 package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
+import org.objectweb.asm.Type;
 
-public class GeExpression implements IBoolExpression {
+public class GeExpression extends IBoolExpression {
 	
 protected IExpression leftExp, rightExp;
 	
-	public GeExpression(IExpression left, IExpression right) {
+	public GeExpression(Type t, IExpression left, IExpression right) {
+		super(t);
 		leftExp = left;
 		rightExp = right;
 	}

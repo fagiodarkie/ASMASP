@@ -1,10 +1,13 @@
 package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
 
-public class AndExpression implements IBoolExpression {
+import org.objectweb.asm.Type;
+
+public class AndExpression extends IBoolExpression {
 	
 protected IBoolExpression leftExp, rightExp;
 	
-	public AndExpression(IBoolExpression left, IBoolExpression right) {
+	public AndExpression(Type t, IBoolExpression left, IBoolExpression right) {
+		super(t);
 		leftExp = left;
 		rightExp = right;
 	}

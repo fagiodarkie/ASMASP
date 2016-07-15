@@ -1,10 +1,12 @@
 package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
+import org.objectweb.asm.Type;
 
-public class GtExpression implements IBoolExpression {
+public class GtExpression extends IBoolExpression {
 	
 protected IExpression leftExp, rightExp;
 	
-	public GtExpression(IExpression left, IExpression right) {
+	public GtExpression(Type t, IExpression left, IExpression right) {
+		super(t);
 		leftExp = left;
 		rightExp = right;
 	}

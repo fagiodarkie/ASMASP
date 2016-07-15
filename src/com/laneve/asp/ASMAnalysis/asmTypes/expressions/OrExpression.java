@@ -1,10 +1,12 @@
 package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
+import org.objectweb.asm.Type;
 
-public class OrExpression implements IBoolExpression {
+public class OrExpression extends IBoolExpression {
 	
 protected IBoolExpression leftExp, rightExp;
 	
-	public OrExpression(IBoolExpression left, IBoolExpression right) {
+	public OrExpression(Type t, IBoolExpression left, IBoolExpression right) {
+		super(t);
 		leftExp = left;
 		rightExp = right;
 	}

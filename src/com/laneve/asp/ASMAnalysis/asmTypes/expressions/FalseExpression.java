@@ -1,10 +1,12 @@
 package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
+import org.objectweb.asm.Type;
 
 public class FalseExpression extends IBoolExpression {
 	
 protected IBoolExpression Exp;
 	
-	public FalseExpression(IBoolExpression exp) {
+	public FalseExpression(Type t, IBoolExpression exp) {
+		super(t);
 		Exp = exp;
 	}
 	

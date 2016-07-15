@@ -1,10 +1,12 @@
 package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
+import org.objectweb.asm.Type;
 
-public class NotExpression implements IBoolExpression {
+public class NotExpression extends IBoolExpression {
 	
 protected IBoolExpression Exp;
 	
-	public NotExpression(IBoolExpression exp) {
+	public NotExpression(Type t, IBoolExpression exp) {
+		super(t);
 		Exp = exp;
 	}
 	

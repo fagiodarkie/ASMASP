@@ -1,10 +1,12 @@
 package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
+import org.objectweb.asm.Type;
 
-public class LeExpression implements IBoolExpression {
+public class LeExpression extends IBoolExpression {
 	
 protected IExpression leftExp, rightExp;
 	
-	public LeExpression(IExpression left, IExpression right) {
+	public LeExpression(Type t, IExpression left, IExpression right) {
+		super(t);
 		leftExp = left;
 		rightExp = right;
 	}
