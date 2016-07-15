@@ -2,9 +2,9 @@ package com.laneve.asp.ASMAnalysis.asmClasses.expressions;
 
 public class EqExpression implements IBoolExpression {
 	
-	protected IBoolExpression leftExp, rightExp;
+	protected IExpression leftExp, rightExp;
 	
-	public EqExpression(IBoolExpression left, IBoolExpression right) {
+	public EqExpression(IExpression left, IExpression right) {
 		leftExp = left;
 		rightExp = right;
 	}
