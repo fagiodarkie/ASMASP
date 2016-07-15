@@ -124,5 +124,9 @@ public class AnValue implements Value {
 	public int getSize() {
 		return type.getSize();
 	}
+
+	public Type getType() {
+		return type;
+	}
 	
 }
