@@ -4,6 +4,8 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.analysis.Value;
 
+import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
+
 public class AnValue implements Value {
 	
 	public static String LONG_NAME = "LONG", SHORT_NAME = "SHORT",
@@ -57,6 +59,10 @@ public class AnValue implements Value {
 		case Type.OBJECT: return 5;
 		default: return -1;
 		}
+	}
+	
+	public static boolean isThread(Type t) {
+		return (t.getClassName() == THREAD_NAME);
 	}
 
 	public static boolean compatible(Type t1, Type t2) {
