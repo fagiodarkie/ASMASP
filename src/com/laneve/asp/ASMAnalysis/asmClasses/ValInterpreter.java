@@ -14,10 +14,16 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IBoolExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.MinusExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.MulExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SHLExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SHRExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SubExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SumExpression;
 
 
 public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
@@ -30,20 +36,15 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
 	@Override
 	public AnValue newValue(Type type) {
-/*		switch(type.getSort()) {
-		case Type.INT:
-		case Type.LONG:
-			return new IExpression(type);
-		case Type.BOOLEAN:
-			return new IBoolExpression(type);
-		case Type.OBJECT:
-			if (AnValue.getClassName(type) == AnValue.THREAD_NAME)
-				return context.generateThread();
-		}*/
-		
+		if (AnValue.isThread(type))
+			return context.generateThread();
 		return new AnValue(type);
 	}
 
+	public void setContext(AnalysisContext analysisContext) {
+		context = analysisContext;
+	}
+	
 	@Override
 	public AnValue newOperation(AbstractInsnNode insn) throws AnalyzerException {
 		AnValue v;
@@ -124,43 +125,34 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		switch (insn.getOpcode()) {
 		case INEG:
 		case LNEG:
-			return new IntegerValue(new MinusExpression(((IntegerValue) value).getValue()))
+			return new MinusExpression(value.getType(), ((IExpression) value));
 		case IINC:
-			if (value.getExpType() != ExpressionType.UNDEFINED_EXP
-			&& value.getExpType() != ExpressionType.UNKNOWN) {
-				// NB value is integer, because otherwise the bytecode would be wrong.
-				v.setInternalValue("(" + value.getValue() + " + 1)");
-				return v;
-			} else return value;
+			return new SumExpression(value.getType(), (IExpression) value, new ConstExpression(Type.INT_TYPE, new Long(1)));
         case Opcodes.I2L:
+        	return value;
         case Opcodes.F2L:
         case Opcodes.D2L:
-        	v.setClassName(AnValue.LONG_NAME);
-        	return v;
+        	return new AnValue(Type.LONG_TYPE);
         case Opcodes.I2F:
         case Opcodes.L2F:
         case Opcodes.D2F:
-        	v.setClassName(AnValue.FLOAT_NAME);
-        	return v;
+        case Opcodes.FNEG:
+        	return new AnValue(Type.FLOAT_TYPE);
         case Opcodes.L2I:
         case Opcodes.F2I:
         case Opcodes.D2I:
-        	v.setClassName(AnValue.INT_NAME);
-        	return v;
+        	return new AnValue(Type.INT_TYPE);
         case Opcodes.I2D:
         case Opcodes.L2D:
         case Opcodes.F2D:
-        	v.setClassName(AnValue.DOUBLE_NAME);
-        	return v;
+		case Opcodes.DNEG:
+        	return new AnValue(Type.DOUBLE_TYPE);
         case Opcodes.I2B:
-        	v.setClassName(AnValue.BOOL_NAME);
-        	return v;
+        	return new AnValue(Type.BOOLEAN_TYPE);
         case Opcodes.I2C:
-        	v.setClassName(AnValue.CHAR_NAME);
-        	return v;
+        	return new AnValue(Type.CHAR_TYPE);
         case Opcodes.I2S:
-        	v.setClassName(AnValue.SHORT_NAME);
-        	return v;
+        	return new AnValue(Type.SHORT_TYPE);
         case Opcodes.IFEQ:
         case Opcodes.IFNE:
         case Opcodes.IFLT:
@@ -169,28 +161,27 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.IFLE:
         case Opcodes.IFNULL:
         case Opcodes.IFNONNULL:
-        	// TODO jumps in interpreter. change the frame's behavioural types?
-        	// no, jumps must be computed in Frame.
         case Opcodes.IRETURN:
         case Opcodes.LRETURN:
         case Opcodes.FRETURN:
         case Opcodes.DRETURN:
         case Opcodes.ARETURN:
-        	// TODO behaviour types should be "0", will be computed in Frame.
         case Opcodes.TABLESWITCH:
         case Opcodes.LOOKUPSWITCH:
         case Opcodes.PUTSTATIC:
         case Opcodes.GETFIELD:
+        	return new AnValue(Type.VOID_TYPE);
         case Opcodes.NEWARRAY:
+        	return new AnValue(Type.VOID_TYPE);
         case Opcodes.ANEWARRAY:
+        	return new AnValue(Type.VOID_TYPE);
         case Opcodes.ARRAYLENGTH:
+        case Opcodes.INSTANCEOF:
+        	return new AnValue(Type.INT_TYPE);
         case Opcodes.ATHROW:
         case Opcodes.CHECKCAST:
-        case Opcodes.INSTANCEOF:
         case Opcodes.MONITORENTER:
         case Opcodes.MONITOREXIT:
-		case DNEG:
-		case FNEG:
         	// not implemented.
 		default:
             throw new Error("Internal error.");
@@ -200,104 +191,63 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	@Override
 	public AnValue binaryOperation(AbstractInsnNode insn, AnValue value1,
 			AnValue value2) throws AnalyzerException {
-		AnValue unknown = new AnValue(Type.INT_TYPE);
-		unknown.setExpressionType(ExpressionType.UNKNOWN);
-    	AnValue res = new AnValue(Type.INT_TYPE);
 		switch(insn.getOpcode()) {
 		// we don't support array operations. yet.
 		case Opcodes.IALOAD:
-			return unknown;
         case Opcodes.LALOAD:
-        	unknown.setClassName(AnValue.LONG_NAME);
-        	return unknown;
         case Opcodes.FALOAD:
-        	unknown.setClassName(AnValue.FLOAT_NAME);
-        	return unknown;
         case Opcodes.DALOAD:
-        	unknown.setClassName(AnValue.DOUBLE_NAME);
-        	return unknown;
         case Opcodes.AALOAD:
-        	unknown.setClassName(AnValue.REF_NAME);
-        	return unknown;
         case Opcodes.BALOAD:
-        	unknown.setClassName(AnValue.BOOL_NAME);
-        	return unknown;
         case Opcodes.CALOAD:
-        	unknown.setClassName(AnValue.CHAR_NAME);
-        	return unknown;
         case Opcodes.SALOAD:
-        	unknown.setClassName(AnValue.SHORT_NAME);
-        	return unknown;
+        	throw new Error("Array operations not supported.");
         // operations are modeled, but only in certain cases.
         case Opcodes.IADD:
         case Opcodes.LADD:
+        	return new SumExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+        case Opcodes.IMUL:
+        case Opcodes.LMUL:
+        	return new MulExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+        case Opcodes.ISUB:
+        case Opcodes.LSUB:
+        	return new SubExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+        case Opcodes.LREM:
+        case Opcodes.IREM:
+    		return new RemExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+        case Opcodes.IDIV:
+        case Opcodes.LDIV:
+        	return new DivExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+        case Opcodes.LOR:
+        case Opcodes.IOR:
+        	return new OrExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+        case Opcodes.LXOR:
+        case Opcodes.IXOR:
+        	return new XorExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+        case Opcodes.LAND:
+        case Opcodes.IAND:
+        	return new AndExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+        case Opcodes.LUSHR:
+        case Opcodes.IUSHR:
+        	return new USHRExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+        case Opcodes.LSHL:
+        case Opcodes.ISHL:
+        	return new SHLExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+        case Opcodes.LSHR:
+        case Opcodes.ISHR:
+        	return new SHRExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+
         case Opcodes.FADD:
         case Opcodes.DADD:
-        	// we assert both addends are the same type.
-        	if (value1.defined() && value2.defined()) {
-        		// x1 + x2
-        		res.setExpressionValue("(" + value1.getValue() + " + " + value2.getValue() + ")",
-        			AnValue.leastUpperBound(value1.getExpType(), value2.getExpType()));
-        		if (res.getExpType() == ExpressionType.CONST)
-        			res.setExpressionType(ExpressionType.CONST_EXP);
-        		else if (res.getExpType() == ExpressionType.VARIABLE)
-        			res.setExpressionType(ExpressionType.VAR_EXP);
-        		String s = AnValue.INT_NAME;
-        		switch(insn.getOpcode()) {
-        		case Opcodes.LADD:
-        			s = AnValue.LONG_NAME;
-        			break;
-        		case Opcodes.FADD:
-        			s = AnValue.FLOAT_NAME;
-        			break;
-        		case Opcodes.DADD:
-        			s = AnValue.DOUBLE_NAME;
-        		}
-        		res.setClassName(s);
-        		return res;
-        	} else {
-        		res.setExpressionType(ExpressionType.UNDEFINED_EXP);
-        		return res;
-        	}
-        case Opcodes.ISUB:
-        case Opcodes.IMUL:
-        case Opcodes.IDIV:
-        case Opcodes.IREM:
-        case Opcodes.ISHL:
-        case Opcodes.ISHR:
-        case Opcodes.IUSHR:
-        case Opcodes.IAND:
-        case Opcodes.IOR:
-        case Opcodes.IXOR:
-        	unknown.setExpressionType(ExpressionType.UNDEFINED_EXP);
-    		return unknown;
         case Opcodes.FMUL:
         case Opcodes.FSUB:
-        case Opcodes.FDIV:
         case Opcodes.FREM:
-        	unknown.setClassName(AnValue.FLOAT_NAME);
-    		unknown.setExpressionType(ExpressionType.UNDEFINED_EXP);
-    		return unknown;
+        case Opcodes.FDIV:
         case Opcodes.DSUB:
         case Opcodes.DREM:
         case Opcodes.DMUL:
         case Opcodes.DDIV:
-        	unknown.setClassName(AnValue.DOUBLE_NAME);
-    		unknown.setExpressionType(ExpressionType.UNDEFINED_EXP);
-    		return unknown;
-        case Opcodes.LDIV:
-        case Opcodes.LSUB:
-        case Opcodes.LMUL:
-        case Opcodes.LREM:
-        case Opcodes.LOR:
-        case Opcodes.LUSHR:
-        case Opcodes.LSHL:
-        case Opcodes.LSHR:
-        case Opcodes.LAND:
-        case Opcodes.LXOR:
-        	unknown.setClassName(AnValue.LONG_NAME);
-    		unknown.setExpressionType(ExpressionType.UNDEFINED_EXP);
-    		return unknown;
+        	throw new Error("Floating Point operations not supported.");
         case Opcodes.LCMP:
         case Opcodes.FCMPL:
         case Opcodes.FCMPG:
