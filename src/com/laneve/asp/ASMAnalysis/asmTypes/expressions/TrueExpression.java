@@ -3,20 +3,14 @@ import org.objectweb.asm.Type;
 
 public class TrueExpression extends IBoolExpression {
 	
-protected IBoolExpression Exp;
-	
-	public TrueExpression(Type t, IBoolExpression exp) {
+	public TrueExpression(Type t) {
 		super(t);
-		Exp = exp;
 	}
 	
 	@Override
 	public boolean evaluate() {
 		
-		if (Exp.evaluate() == true) {
-			return true;
-		}
-		else return false; 
+		return true;
 	}
 
 }

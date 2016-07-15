@@ -14,9 +14,9 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
-import com.laneve.asp.ASMAnalysis.asmTypes.BooleanValue;
-import com.laneve.asp.ASMAnalysis.asmTypes.IntegerValue;
-import com.laneve.asp.ASMAnalysis.asmTypes.AnValue.ExpressionType;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IBoolExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.MinusExpression;
 
 
@@ -30,16 +30,18 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
 	@Override
 	public AnValue newValue(Type type) {
-		switch(type.getSort()) {
+/*		switch(type.getSort()) {
 		case Type.INT:
 		case Type.LONG:
-			return new IntegerValue(new AnValue(type));
+			return new IExpression(type);
 		case Type.BOOLEAN:
-			return new BooleanValue(new AnValue(type));
+			return new IBoolExpression(type);
 		case Type.OBJECT:
 			if (AnValue.getClassName(type) == AnValue.THREAD_NAME)
 				return context.generateThread();
-		}
+		}*/
+		
+		return new AnValue(type);
 	}
 
 	@Override
@@ -55,25 +57,16 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case ICONST_3:
         case ICONST_4:
         case ICONST_5:
-        	v = newValue(Type.INT_TYPE);
-        	v.setValue(AnValue.getConstValue(insn.getOpcode()));
-            return v;
+        	return new ConstExpression(Type.INT_TYPE, AnValue.getConstValue(insn.getOpcode()));
         case LCONST_0:
         case LCONST_1:
-        	v = newValue(Type.LONG_TYPE);
-        	v.setExpressionValue(AnValue.getConstValue(insn.getOpcode()), ExpressionType.CONST);
-            return v;
+        	return new ConstExpression(Type.LONG_TYPE, AnValue.getConstValue(insn.getOpcode()));
         case FCONST_0:
         case FCONST_1:
         case FCONST_2:
-        	v = newValue(Type.FLOAT_TYPE);
-        	v.setExpressionValue(AnValue.getConstValue(insn.getOpcode()), ExpressionType.CONST);
-            return v;
         case DCONST_0:
         case DCONST_1:
-        	v = newValue(Type.DOUBLE_TYPE);
-        	v.setExpressionValue(AnValue.getConstValue(insn.getOpcode()), ExpressionType.CONST);
-            return v;
+        	// ?
         case BIPUSH:
         case SIPUSH:
         	// FIXME BIPUSH and SIPUSH should cast a byte or short to int32, but no value to be cast is provided.
