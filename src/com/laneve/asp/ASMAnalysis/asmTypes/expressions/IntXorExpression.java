@@ -4,15 +4,15 @@ import org.objectweb.asm.Type;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 
-public class SHLExpression extends IExpression {
+public class IntXorExpression extends IExpression {
 
-	public SHLExpression(Type t, IExpression e1, IExpression e2) {
-		super(t, e1, e2);
+	public IntXorExpression(Type t, IExpression l, IExpression r) {
+		super(t, l, r);
 	}
 	
 	@Override
 	public Long evaluate() {
-		return left.evaluate() << (right.evaluate() & 0x1f);
+		return left.evaluate() ^ right.evaluate();
 	}
 
 }

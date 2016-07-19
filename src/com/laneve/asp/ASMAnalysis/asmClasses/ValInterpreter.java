@@ -7,6 +7,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.TypeInsnNode;
@@ -16,14 +17,21 @@ import org.objectweb.asm.tree.analysis.Interpreter;
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IBoolExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.DivExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IntAndExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IntOrExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IntXorExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.MinusExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.MulExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.RemExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SHLExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SHRExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SubExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SumExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.USHRExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.IBoolExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.OrExpression;
 
 
 public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
@@ -34,6 +42,10 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		super(api);
 	}
 
+	public ValInterpreter() {
+		super(4);
+	}
+	
 	@Override
 	public AnValue newValue(Type type) {
 		if (AnValue.isThread(type))
@@ -70,8 +82,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	// ?
         case BIPUSH:
         case SIPUSH:
-        	// FIXME BIPUSH and SIPUSH should cast a byte or short to int32, but no value to be cast is provided.
-        	return newValue(Type.INT_TYPE);
+        	return new ConstExpression(Type.LONG_TYPE, AnValue.getConstValue(((IntInsnNode)insn).operand ));
         	
         case LDC:
             Object cst = ((LdcInsnNode) insn).cst;
@@ -191,6 +202,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	@Override
 	public AnValue binaryOperation(AbstractInsnNode insn, AnValue value1,
 			AnValue value2) throws AnalyzerException {
+		
+		Long v1, v2; 
 		switch(insn.getOpcode()) {
 		// we don't support array operations. yet.
 		case Opcodes.IALOAD:
@@ -220,13 +233,13 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	return new DivExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
         case Opcodes.LOR:
         case Opcodes.IOR:
-        	return new OrExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+        	return new IntOrExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
         case Opcodes.LXOR:
         case Opcodes.IXOR:
-        	return new XorExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+        	return new IntXorExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
         case Opcodes.LAND:
         case Opcodes.IAND:
-        	return new AndExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
+        	return new IntAndExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
         case Opcodes.LUSHR:
         case Opcodes.IUSHR:
         	return new USHRExpression(value1.getType(), (IExpression) value1, (IExpression) value2);
@@ -249,22 +262,18 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.DDIV:
         	throw new Error("Floating Point operations not supported.");
         case Opcodes.LCMP:
+        	v1 = ((IExpression) value1).evaluate();
+        	v2 = ((IExpression) value2).evaluate();
+        	if (v1 > v2)
+        		return new ConstExpression(Type.INT_TYPE, new Long(1));
+        	else if (v1 < v2)
+        		return new ConstExpression(Type.INT_TYPE, new Long(-1));
+        	else return new ConstExpression(Type.INT_TYPE, new Long(0));
         case Opcodes.FCMPL:
         case Opcodes.FCMPG:
     	case Opcodes.DCMPL:
     	case Opcodes.DCMPG:
-        	/* FIXME to achieve better results, since we will redefine jump behavior in Frame
-        	 * or other places, we will define these instructions as follows:
-        	 * 
-        	 * B(a,b) = [a == b] B(0) +
-        	 *			[a < b] B(1) +
-        	 *			[a > b] B(-1)
-        	 *
-        	 * result value will be set by Frame.
-        	 */
-        	res.setClassName(AnValue.INT_NAME);
-        	return res;
-    	
+    		// what do we do with floating point algebras?
         case Opcodes.IF_ICMPEQ:
         case Opcodes.IF_ICMPNE:
         case Opcodes.IF_ICMPLT:
@@ -312,9 +321,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.INVOKEINTERFACE:
         case Opcodes.MULTIANEWARRAY:
         	// undefined, for the time being.
-        	AnValue res = new AnValue(Type.getReturnType(((MethodInsnNode) insn).desc));
-        	res.setExpressionType(ExpressionType.UNKNOWN);
-        	return res;
+        	// TODO use the context to get the return value of function.
         	
     	default:
     		throw new Error("Internal error.");
