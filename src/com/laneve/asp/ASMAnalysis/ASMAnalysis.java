@@ -1,7 +1,13 @@
 package com.laneve.asp.ASMAnalysis;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import com.laneve.asp.ASMAnalysis.asmClasses.AnalysisContext;
 import com.laneve.asp.ASMAnalysis.utils.Streamifier;
@@ -29,12 +35,21 @@ public class ASMAnalysis {
 		 * start by taking the 1st argument as the folder in which the classfiles are located.
 		 */
 		context = new AnalysisContext();
-		context.setClassFiles(Streamifier.streamifyDirectory(args[2]));
 		List<InputStream> streams = Streamifier.streamifyDirectory(args[2]);
 		
 		for (int i = 0; i < streams.size(); ++i) {
-			// get info about methods? otherwise let the Interpreter / Analyzer notify the context when they
-			// actually get to them.
+			try {
+				ClassReader r = new ClassReader(streams.get(i));
+				ClassNode n = new ClassNode();
+				r.accept(n, 0);
+				for (MethodNode m: n.methods) {
+					context.createMethodNode(m.name, m);
+				}
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 		

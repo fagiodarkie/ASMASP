@@ -1,17 +1,16 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
 
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.MethodNode;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
+import com.laneve.asp.ASMAnalysis.bTypes.Behaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 public class AnalysisContext {
@@ -22,6 +21,8 @@ public class AnalysisContext {
 	protected Map<Long, List<Long>> depends;
 	protected List<String> analyzeClasses;
 	protected long threadCounter, methodCounter;
+	private Map<Long, MethodNode> methodNodes;
+	private Map<Long, Behaviour> methodBehaviour;
 	
 	
 	public AnalysisContext() {
@@ -29,9 +30,11 @@ public class AnalysisContext {
 		analyzeMethods = new HashMap<Long, Boolean>();
 		returnValue = new HashMap<Long, AnValue>();
 		methodID = new HashMap<Long, String>();
-		analyzeClasses = new ArrayList<String>();
 		depends = new HashMap<Long, List<Long>>();
+		analyzeClasses = new ArrayList<String>();
 		threadCounter = methodCounter = 0;
+		methodNodes = new HashMap<Long, MethodNode>();
+		methodBehaviour = new HashMap<Long, Behaviour>();
 	}
 	
 	public ThreadValue generateThread() {
@@ -55,10 +58,6 @@ public class AnalysisContext {
 			threadsStatus.put(t.getID(), false);
 			return new ThreadResource(t.getID(), ThreadResource.RELEASE);
 		} else return new ThreadResource(t.getID(), ThreadResource.ALREADY_RELEASED);
-	}
-
-	public void setClassFiles(List<InputStream> streamifyDirectory) {
-		// TODO?
 	}
 
 	public void signalDependancy(String methodName, List<String> deps) {
@@ -105,5 +104,13 @@ public class AnalysisContext {
 		depends.put(methodCounter, new ArrayList<Long>());
 		analyzeMethods.put(methodCounter, true);
 		methodCounter++;
+	}
+
+
+	public void createMethodNode(String name, MethodNode method) {
+		createMethod(name);
+		long k = getKeyOfMethod(name);
+		methodNodes.put(k, method);
+		methodBehaviour.put(k, null);
 	}
 }
