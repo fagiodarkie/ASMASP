@@ -1,5 +1,7 @@
 package com.laneve.asp.ASMAnalysis.bTypes;
 
-public class Behaviour {
+public interface Behaviour {
+
+	public abstract boolean equalBehaviour(Behaviour updatedBehaviour);
 
 }

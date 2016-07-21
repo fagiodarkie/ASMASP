@@ -15,6 +15,11 @@ import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 public class BehaviourFrame extends Frame<AnValue> {
 
+	
+	/*
+	 * TODO: behaviour for method calls is 0 unless methods are typed. In which case..?
+	 */
+	
 	protected ThreadResource frameBehaviour;
 	protected AnalysisContext context;
 	protected String methodName;

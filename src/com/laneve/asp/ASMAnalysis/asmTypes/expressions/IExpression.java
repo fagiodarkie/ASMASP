@@ -46,4 +46,9 @@ public abstract class IExpression extends AnValue{
 			right.setParameters(parameters);
 	}
 
+	public boolean equalExpression(IExpression iExpression) {
+		// TODO
+		return true;
+	}
+
 }

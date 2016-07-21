@@ -8,6 +8,7 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import com.laneve.asp.ASMAnalysis.asmClasses.AnalysisContext;
 import com.laneve.asp.ASMAnalysis.utils.Streamifier;
@@ -16,9 +17,10 @@ public class ASMAnalysis {
 
 	protected static AnalysisContext context;
 	/**
-	 * @param args: java ASMAnalysis [directory]
+	 * @param args: java ASMAnalysis [directory] [entryPoint method]
+	 * @throws AnalyzerException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws AnalyzerException {
 		/* TODO
 		 * - find and load class files;
 		 * - input the class files for analysis
@@ -43,17 +45,15 @@ public class ASMAnalysis {
 				ClassNode n = new ClassNode();
 				r.accept(n, 0);
 				for (MethodNode m: n.methods) {
-					context.createMethodNode(m.name, m);
+					context.createMethodNode(r.getClassName(), m.name, m);
 				}
 				
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 
-		
-		
+		context.analyze(args[3]);
 	}
 
 }
