@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +14,7 @@ public class Streamifier {
 		return new FileInputStream(filename);
 	}
 	
-	public static List<InputStream> streamifyDirectory(String directory) {
+	public static List<InputStream> streamifyDirectory(Path directory) {
 		List<InputStream> res = new ArrayList<InputStream>();
 		
 		for (String file : collectClassFiles(directory)) {
@@ -26,13 +27,10 @@ public class Streamifier {
 	}
 
 	
-	public static List<String> collectClassFiles(String dir) {
+	public static List<String> collectClassFiles(Path directory) {
 		List<String> files = new ArrayList<String>();
-		File f = new File(dir);
-		if (!f.isDirectory())
-			return files;
 		
-		for (File file : f.listFiles())
+		for (File file : directory.toFile().listFiles())
 			if (file.getName().endsWith(".class"))
 				files.add(file.getAbsolutePath());
 

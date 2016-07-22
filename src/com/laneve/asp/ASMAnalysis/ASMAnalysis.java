@@ -2,6 +2,8 @@ package com.laneve.asp.ASMAnalysis;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import org.objectweb.asm.ClassReader;
@@ -37,8 +39,9 @@ public class ASMAnalysis {
 		 */
 		context = new AnalysisContext();
 
-		String directory = (args.length > 2 ? args[2] : "~/git/ASMASP/tests/");
-		String entryPoint = (args.length > 3 ? args[3] : "com.laneve.asp.ASMAnalysis.Test.main");
+		Path p = Paths.get(System.getProperty("user.home"), "git", "ASMASP", "tests");
+		Path directory = (args.length > 2 ? Paths.get(args[2]) : p);
+		String entryPoint = (args.length > 3 ? args[3] : "com/laneve/asp/ASMAnalysis/tests/Tests.main");
 		
 		List<InputStream> streams = Streamifier.streamifyDirectory(directory);
 		
@@ -48,7 +51,7 @@ public class ASMAnalysis {
 				ClassNode n = new ClassNode();
 				r.accept(n, 0);
 				for (MethodNode m: n.methods) {
-					context.createMethodNode(r.getClassName(), m.name, m);
+					context.createMethodNode(r.getClassName(), n.name + "." + m.name, m);
 				}
 				
 			} catch (IOException e) {

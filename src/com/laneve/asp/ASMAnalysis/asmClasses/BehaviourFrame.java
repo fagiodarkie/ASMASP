@@ -29,6 +29,11 @@ public class BehaviourFrame extends Frame<AnValue> {
 		this.context = context;
 		this.methodName = methodName;
 	}
+	
+	public String getInvokedMethod() {
+		// TODO
+		return "";
+	}
 
 	public BehaviourFrame(int a, int b) {
 		super(a, b);
@@ -214,6 +219,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 		case Opcodes.INVOKESTATIC:
 		case Opcodes.INVOKEINTERFACE:
 		case Opcodes.INVOKEDYNAMIC:
+			// TODO qui dobbiamo avere informazioni sui metodi invocati in questo punto. In ogni frame teniamoci segnato l'eventuale metodo chiamato.
 		case Opcodes.ATHROW:
 		case Opcodes.CHECKCAST:
 		case Opcodes.INSTANCEOF:

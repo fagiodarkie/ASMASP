@@ -69,6 +69,9 @@ public class AnalysisContext {
 	public void signalDependancy(String methodName, List<String> deps) {
 		Long currentMethodID = getKeyOfMethod(methodName);
 		for (String s: deps) {
+			
+			if (!methodID.values().contains(s))
+				continue;
 			// add the index of methods.
 			Long k = getKeyOfMethod(s);
 			if (!depends.get(currentMethodID).contains(k)) {
@@ -100,11 +103,10 @@ public class AnalysisContext {
 	
 	private Long getKeyOfMethod(String method) {
 		if (!methodID.containsValue(method)) {
-			createMethod(method);
-			return methodCounter;
+			throw new Error("Method not found: " + method);
 		}
 		for (Long i: methodID.keySet()) {
-			if (methodID.get(i) == method)
+			if (methodID.get(i).equalsIgnoreCase(method))
 				return i;
 		}
 		return null;
@@ -191,20 +193,4 @@ public class AnalysisContext {
 		return null;
 	}
 
-	/**
-	 * depth visit of dependancy graph (we assume it's a graph).
-	 * @param front the ID of the node from which to start.
-	 * @param list the list on which to add the child nodes.
-	 */
-	private void analyzeFrontier(long front, List<Long> list) {
-		if (list.contains(front))
-			// already analyzed.
-			return;
-
-		// else, push dependancies (if any) followed by dependant.
-		for (Long i: depends.get(front)) {
-			analyzeFrontier(i, list);
-		}
-		list.add(front);
-	}
 }

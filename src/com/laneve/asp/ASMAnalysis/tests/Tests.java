@@ -103,7 +103,7 @@ public class Tests {
              */
             @Override
             public void visitSource(String source, String debug) {
-                System.out.println("Source: "+source);
+                System.out.println("Source: " + source);
                 super.visitSource(source, debug);
             }
             

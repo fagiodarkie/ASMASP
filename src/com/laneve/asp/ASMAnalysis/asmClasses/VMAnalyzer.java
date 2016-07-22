@@ -25,17 +25,33 @@ public class VMAnalyzer extends Analyzer<AnValue> {
 	public BehaviourFrame[] analyze(final String owner, final MethodNode m)
             throws AnalyzerException {
 		
-		String methodName = m.name;
+		String methodName = owner + "." + m.name;
+		BehaviourFrame[] result = new BehaviourFrame[m.instructions.size()];
+		
+		// TODO analyze
+		
 		
 		List<String> deps = new ArrayList<String>();
-		for (int i = 0; i < m.instructions.size(); ++i) {
+		/**
+		 * FIXME obsoleta: non riusciamo ad avere il nome fully qualified del metodo chiamato.
+		 * Per avere questa informazione ci serve la classe su cui viene invocato, 
+		 * informazione che hanno i Frame.
+		 * 
+		 * 
+		 * for (int i = 0; i < m.instructions.size(); ++i) {
 			if (m.instructions.get(i) instanceof InvokeDynamicInsnNode) {
-				deps.add(((InvokeDynamicInsnNode) m.instructions.get(i)).name);
+				deps.add(((InvokeDynamicInsnNode) m.instructions.get(i)).name );
 				
 			}
 		}
-		context.signalDependancy(methodName, deps);
+		 */
 		
+		for (int i = 0; i < result.length; ++i)
+			if (result[i].getInvokedMethod() != null)
+				deps.add(result[i].getInvokedMethod());
+		
+		context.signalDependancy(methodName, deps);
+
 		// TODO
 		return null;
 	}

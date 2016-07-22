@@ -320,8 +320,9 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.INVOKEDYNAMIC:
         case Opcodes.INVOKEINTERFACE:
         case Opcodes.MULTIANEWARRAY:
-        	// undefined, for the time being.
-        	// TODO use the context to get the return value of function.
+        	/** undefined, for the time being.
+        	 * TODO use the context to get the return value of function.
+        	 */
         	
     	default:
     		throw new Error("Internal error.");
