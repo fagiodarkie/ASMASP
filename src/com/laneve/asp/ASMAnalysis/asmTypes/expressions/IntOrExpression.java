@@ -15,4 +15,9 @@ public class IntOrExpression extends IExpression {
 		return left.evaluate() | right.evaluate();
 	}
 
+	@Override
+	public IExpression clone() {
+		return new IntOrExpression(type, left.clone(), right.clone());
+	}
+
 }

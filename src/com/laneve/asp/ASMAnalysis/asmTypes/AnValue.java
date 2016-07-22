@@ -4,8 +4,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.analysis.Value;
 
-import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
-
 public class AnValue implements Value {
 	
 	public static String LONG_NAME = "LONG", SHORT_NAME = "SHORT",

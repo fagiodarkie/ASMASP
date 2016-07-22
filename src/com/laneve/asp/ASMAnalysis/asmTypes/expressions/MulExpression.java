@@ -12,4 +12,9 @@ public class MulExpression extends IExpression {
 		return left.evaluate() * right.evaluate();
 	}
 
+	@Override
+	public IExpression clone() {
+		return new MulExpression(type, left.clone(), right.clone());
+	}
+
 }

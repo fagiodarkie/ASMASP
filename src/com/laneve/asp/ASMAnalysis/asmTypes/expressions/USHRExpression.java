@@ -14,4 +14,9 @@ public class USHRExpression extends IExpression {
 		return left.evaluate() >> (right.evaluate() & 0x3f);
 	}
 
+	@Override
+	public IExpression clone() {
+		return new USHRExpression(type, left.clone(), right.clone());
+	}
+
 }

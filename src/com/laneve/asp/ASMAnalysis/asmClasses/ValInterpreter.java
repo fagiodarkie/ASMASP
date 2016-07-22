@@ -337,9 +337,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
 	@Override
 	public AnValue merge(AnValue v, AnValue w) {
-		AnValue r = v.clone();
-		r.setExpressionType(AnValue.leastUpperBound(v.getExpType(),	w.getExpType()));
-		return r;
+		// TODO
+		return v;
 	}
 
 }

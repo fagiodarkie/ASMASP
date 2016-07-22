@@ -15,4 +15,9 @@ public class IntAndExpression extends IExpression {
 		return left.evaluate() & right.evaluate();
 	}
 
+	@Override
+	public IExpression clone() {
+		return new IntAndExpression(type, left.clone(), right.clone());
+	}
+
 }

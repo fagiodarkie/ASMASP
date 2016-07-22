@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
@@ -37,7 +36,11 @@ public class ASMAnalysis {
 		 * start by taking the 1st argument as the folder in which the classfiles are located.
 		 */
 		context = new AnalysisContext();
-		List<InputStream> streams = Streamifier.streamifyDirectory(args[2]);
+
+		String directory = (args.length > 2 ? args[2] : "~/git/ASMASP/tests/");
+		String entryPoint = (args.length > 3 ? args[3] : "com.laneve.asp.ASMAnalysis.Test.main");
+		
+		List<InputStream> streams = Streamifier.streamifyDirectory(directory);
 		
 		for (int i = 0; i < streams.size(); ++i) {
 			try {
@@ -53,7 +56,7 @@ public class ASMAnalysis {
 			}
 		}
 
-		context.analyze(args[3]);
+		context.analyze(entryPoint);
 	}
 
 }

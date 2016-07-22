@@ -37,4 +37,15 @@ public class VarExpression extends IExpression {
 		
 	}
 
+	@Override
+	public IExpression clone() {
+		if (intExp == null)
+			return new VarExpression(type, index);
+		
+		VarExpression v = new VarExpression(type, index);
+		v.intExp = intExp.clone();
+		return v;
+		
+	}
+
 }

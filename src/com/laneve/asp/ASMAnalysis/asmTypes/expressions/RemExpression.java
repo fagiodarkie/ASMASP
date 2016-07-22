@@ -12,4 +12,9 @@ public class RemExpression extends IExpression {
 		return left.evaluate() % right.evaluate();
 	}
 
+	@Override
+	public IExpression clone() {
+		return new RemExpression(type, left.clone(), right.clone());
+	}
+
 }

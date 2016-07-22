@@ -2,7 +2,6 @@ package com.laneve.asp.ASMAnalysis.tests;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.Attribute;
@@ -12,7 +11,8 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-public class GCTests {
+
+public class Tests {
 
     /**
      * @param args
@@ -110,7 +110,7 @@ public class GCTests {
             
         };
         
-        InputStream in=GCTests.class.getResourceAsStream("/java/lang/String.class");
+        InputStream in = Tests.class.getResourceAsStream("/java/lang/String.class");
         ClassReader classReader=new ClassReader(in);
         classReader.accept(cl, 0);
 

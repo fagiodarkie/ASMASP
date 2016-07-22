@@ -12,4 +12,9 @@ public class MinusExpression extends IExpression {
 		return - left.evaluate();
 	}
 
+	@Override
+	public IExpression clone() {
+		return new MinusExpression(type, left.clone());
+	}
+
 }

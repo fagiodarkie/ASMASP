@@ -15,4 +15,9 @@ public class SHRExpression extends IExpression {
 		return left.evaluate() >> (right.evaluate() & 0x1f);
 	}
 
+	@Override
+	public IExpression clone() {
+		return new SHRExpression(type, left.clone(), right.clone());
+	}
+
 }

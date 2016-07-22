@@ -12,4 +12,9 @@ public class SubExpression extends IExpression {
 		return left.evaluate() - right.evaluate();
 	}
 
+	@Override
+	public IExpression clone() {
+		return new SubExpression(type, left.clone(), right.clone());
+	}
+
 }

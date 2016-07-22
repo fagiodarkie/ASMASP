@@ -12,4 +12,9 @@ public class SumExpression extends IExpression {
 		return left.evaluate() + right.evaluate();
 	}
 
+	@Override
+	public IExpression clone() {
+		return new SumExpression(type, left.clone(), right.clone());
+	}
+
 }

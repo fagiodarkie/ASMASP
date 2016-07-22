@@ -36,9 +36,9 @@ public class BoolVarExpression extends IBoolExpression {
 	}
 	
 	@Override
-	public Long evaluate() {
-		if (intExp != null)
-			return intExp.evaluate();
+	public boolean evaluate() {
+		if (exp != null)
+			return exp.evaluate();
 		throw new Error("Unable to evaluate expression if not fully defined.");
 		
 	}
