@@ -3,11 +3,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="ASMSource"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
-	<classpathentry kind="lib" path="/home/phagio/Documents/eclipse_workspace/JARs/asm-5.1/lib/asm-analysis-5.1.jar"/>
-	<classpathentry kind="lib" path="/home/phagio/Documents/eclipse_workspace/JARs/asm-5.1/lib/asm-5.1.jar"/>
-	<classpathentry kind="lib" path="/home/phagio/Documents/eclipse_workspace/JARs/asm-5.1/lib/asm-commons-5.1.jar"/>
-	<classpathentry kind="lib" path="/home/phagio/Documents/eclipse_workspace/JARs/asm-5.1/lib/asm-tree-5.1.jar"/>
-	<classpathentry kind="lib" path="/home/phagio/Documents/eclipse_workspace/JARs/asm-5.1/lib/asm-util-5.1.jar"/>
-	<classpathentry kind="lib" path="/home/phagio/Documents/eclipse_workspace/JARs/asm-5.1/lib/asm-xml-5.1.jar"/>
+	<classpathentry kind="lib" path="lib"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
