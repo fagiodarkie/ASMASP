@@ -319,10 +319,11 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.INVOKESTATIC:
         case Opcodes.INVOKEDYNAMIC:
         case Opcodes.INVOKEINTERFACE:
-        case Opcodes.MULTIANEWARRAY:
         	/** undefined, for the time being.
         	 * TODO use the context to get the return value of function.
         	 */
+        	return new AnValue(Type.INT_TYPE);
+    	case Opcodes.MULTIANEWARRAY:
         	
     	default:
     		throw new Error("Internal error.");

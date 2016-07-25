@@ -3,7 +3,6 @@ package com.laneve.asp.ASMAnalysis.asmClasses;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.objectweb.asm.tree.InvokeDynamicInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
@@ -15,6 +14,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 public class VMAnalyzer extends Analyzer<AnValue> {
 
 	protected AnalysisContext context;
+	protected String methodName;
 
 	public VMAnalyzer(Interpreter<AnValue> arg0, AnalysisContext context) {
 		super(arg0);
@@ -25,26 +25,17 @@ public class VMAnalyzer extends Analyzer<AnValue> {
 	public BehaviourFrame[] analyze(final String owner, final MethodNode m)
             throws AnalyzerException {
 		
-		String methodName = owner + "." + m.name;
-		BehaviourFrame[] result = new BehaviourFrame[m.instructions.size()];
+		methodName = owner + "." + m.name;
 		
-		// TODO analyze
-		
+		/*
+		 * The analyze() method is able to compute actual BehaviourFrames, due to
+		 * the redefinition of the frame creation methods.
+		 * The analysis proceeds according to the BehaviourFrames logic, all we have to do here is
+		 * to make sure that actual BehaviourFrames are returned and exploit their additional information.
+		 */
+		BehaviourFrame[] result = (BehaviourFrame[]) super.analyze(owner, m);
 		
 		List<String> deps = new ArrayList<String>();
-		/**
-		 * FIXME obsoleta: non riusciamo ad avere il nome fully qualified del metodo chiamato.
-		 * Per avere questa informazione ci serve la classe su cui viene invocato, 
-		 * informazione che hanno i Frame.
-		 * 
-		 * 
-		 * for (int i = 0; i < m.instructions.size(); ++i) {
-			if (m.instructions.get(i) instanceof InvokeDynamicInsnNode) {
-				deps.add(((InvokeDynamicInsnNode) m.instructions.get(i)).name );
-				
-			}
-		}
-		 */
 		
 		for (int i = 0; i < result.length; ++i)
 			if (result[i].getInvokedMethod() != null)
@@ -52,7 +43,19 @@ public class VMAnalyzer extends Analyzer<AnValue> {
 		
 		context.signalDependancy(methodName, deps);
 
-		// TODO
-		return null;
+		return result;
 	}
+	
+	@Override
+    protected BehaviourFrame newFrame(final int nLocals, final int nStack) {
+		BehaviourFrame res = new BehaviourFrame(nLocals, nStack);
+		res.addAnalysisInformations(methodName, context);
+        return res;
+    }
+
+    @Override
+    protected BehaviourFrame newFrame(final Frame<? extends AnValue> src) {
+        return new BehaviourFrame(src, methodName, context);
+    }
+
 }

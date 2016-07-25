@@ -12,6 +12,8 @@ public class AnValue implements Value {
 			REF_NAME = "REFERENCE", THREAD_NAME = "THREAD";
 	
 	public static String getClassName(Type t) {
+		if (t == null)
+			return "UNKNOWN";
 		switch(t.getSort()) {
 		case Type.ARRAY: return t.getInternalName() + "[]";
 		case Type.BOOLEAN: return BOOL_NAME;
@@ -60,6 +62,7 @@ public class AnValue implements Value {
 	}
 	
 	public static boolean isThread(Type t) {
+		if (t == null) return false;
 		return (t.getClassName() == THREAD_NAME);
 	}
 

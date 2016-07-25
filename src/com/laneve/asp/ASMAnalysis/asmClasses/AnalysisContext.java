@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
 
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.MethodNode;
@@ -188,8 +186,9 @@ public class AnalysisContext {
 		
 		
 	}
+
 	protected Behaviour computeBehaviour(BehaviourFrame[] frames) {
-		// TODO Auto-generated method stub
+		// TODO Compute behaviour (LAM?) of frame.
 		return null;
 	}
 
