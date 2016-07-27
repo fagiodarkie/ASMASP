@@ -20,4 +20,10 @@ public class SHRExpression extends IExpression {
 		return new SHRExpression(type, left.clone(), right.clone());
 	}
 
+	@Override
+	public boolean equalExpression(IExpression iExpression) {
+		if (!(iExpression instanceof SHRExpression)) return false;
+		return right.equalExpression(iExpression.right) && left.equalExpression(iExpression.left);
+	}
+
 }

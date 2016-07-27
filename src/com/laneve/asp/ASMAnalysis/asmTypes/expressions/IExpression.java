@@ -29,8 +29,8 @@ public abstract class IExpression extends AnValue{
 
 	public abstract Long evaluate();
 	
-	public Long evaluate(List<AnValue> parameters) {
-		setParameters(parameters);
+	public Long evaluate(List<? extends AnValue> values) {
+		setParameters(values);
 		Long res = evaluate();
 		setParameters(null);
 		return res;
@@ -39,16 +39,13 @@ public abstract class IExpression extends AnValue{
 	@Override
 	public abstract IExpression clone();
 	
-	public void setParameters(List<AnValue> parameters) {
+	public void setParameters(List<? extends AnValue> values) {
 		if (left != null)
-			left.setParameters(parameters);
+			left.setParameters(values);
 		if (right != null)
-			right.setParameters(parameters);
+			right.setParameters(values);
 	}
 
-	public boolean equalExpression(IExpression iExpression) {
-		// TODO
-		return true;
-	}
+	public abstract boolean equalExpression(IExpression iExpression);
 
 }

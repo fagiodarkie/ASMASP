@@ -8,6 +8,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.IntInsnNode;
+import org.objectweb.asm.tree.InvokeDynamicInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.TypeInsnNode;
@@ -37,23 +38,27 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.OrExpression;
 public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
 	protected AnalysisContext context;
+	protected String currentMethodName;
 	
 	protected ValInterpreter(int api) {
 		super(api);
 	}
 
-	public ValInterpreter() {
+	public ValInterpreter(AnalysisContext c) {
 		super(4);
+		setContext(c);
 	}
 	
 	@Override
 	public AnValue newValue(Type type) {
 		if (AnValue.isThread(type))
 			return context.generateThread();
+		if (type == Type.VOID_TYPE)
+			return null;
 		return new AnValue(type);
 	}
 
-	public void setContext(AnalysisContext analysisContext) {
+	protected void setContext(AnalysisContext analysisContext) {
 		context = analysisContext;
 	}
 	
@@ -313,18 +318,29 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	@Override
 	public AnValue naryOperation(AbstractInsnNode insn,
 			List<? extends AnValue> values) throws AnalyzerException {
+		Type t = null;
 		switch(insn.getOpcode()) {
         case Opcodes.INVOKEVIRTUAL:
         case Opcodes.INVOKESPECIAL:
-        case Opcodes.INVOKESTATIC:
-        case Opcodes.INVOKEDYNAMIC:
         case Opcodes.INVOKEINTERFACE:
-        	/** undefined, for the time being.
-        	 * TODO use the context to get the return value of function.
-        	 */
-        	return new AnValue(Type.INT_TYPE);
-    	case Opcodes.MULTIANEWARRAY:
+        case Opcodes.INVOKESTATIC:
+        	t = Type.getReturnType(((MethodInsnNode)insn).desc);
+        case Opcodes.INVOKEDYNAMIC:
+        	if (t == null)
+        		t = Type.getReturnType(((InvokeDynamicInsnNode)insn).desc);
+
+        	AnValue a = context.getReturnValueOfMethod(currentMethodName);
+        	// now we take the method return value, with its eventual variables,
+        	IExpression exp = (IExpression)a;
         	
+        	// and we istantiate it with the actual values with which the method is called.
+        	Long result = exp.evaluate(values);
+        	
+        	if (t == Type.VOID_TYPE)
+        		return null;
+        	return new ConstExpression(t, result);
+        	
+        case Opcodes.MULTIANEWARRAY:
     	default:
     		throw new Error("Internal error.");
     	}
@@ -333,14 +349,25 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	@Override
 	public void returnOperation(AbstractInsnNode insn, AnValue value,
 			AnValue expected) throws AnalyzerException {
-		// TODO, but probably useless.
-		
+		switch (insn.getOpcode()) {
+		case Opcodes.IRETURN:
+		case Opcodes.LRETURN:
+			context.setReturnExpression(currentMethodName, value);
+			break;
+		default:
+			context.setReturnExpression(currentMethodName, null);
+		}
 	}
 
 	@Override
 	public AnValue merge(AnValue v, AnValue w) {
 		// TODO
 		return v;
+	}
+
+
+	public void setCurrentMethod(String methodName) {
+		currentMethodName = methodName;
 	}
 
 }

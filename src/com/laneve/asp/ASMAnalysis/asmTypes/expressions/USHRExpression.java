@@ -19,4 +19,11 @@ public class USHRExpression extends IExpression {
 		return new USHRExpression(type, left.clone(), right.clone());
 	}
 
+
+	@Override
+	public boolean equalExpression(IExpression iExpression) {
+		if (!(iExpression instanceof USHRExpression)) return false;
+		return right.equalExpression(iExpression.right) && left.equalExpression(iExpression.left);
+	}
+
 }

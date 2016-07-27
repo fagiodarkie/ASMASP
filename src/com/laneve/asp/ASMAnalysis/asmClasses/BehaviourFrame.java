@@ -77,14 +77,12 @@ public class BehaviourFrame extends Frame<AnValue> {
 			break;
 		case Opcodes.IRETURN:
 		case Opcodes.LRETURN:
-			context.setReturnExpression(this.methodName, pop());
-			super.execute(insn, interpreter);
-			break;
 		case Opcodes.FRETURN:
 		case Opcodes.DRETURN:
 		case Opcodes.ARETURN:
 		case Opcodes.RETURN:
-			// TODO
+			((ValInterpreter)interpreter).setCurrentMethod(methodName);
+			super.execute(insn, interpreter);
 			break;
 		case Opcodes.INVOKEVIRTUAL:
 		case Opcodes.INVOKESPECIAL:
@@ -100,6 +98,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 				MethodInsnNode invoke = ((MethodInsnNode) insn);
 				invokedMethod = invoke.owner + "." + invoke.name + invoke.desc;				
 			}
+			((ValInterpreter)interpreter).setCurrentMethod(invokedMethod);
 			super.execute(insn, interpreter);
 			break;
 		default:

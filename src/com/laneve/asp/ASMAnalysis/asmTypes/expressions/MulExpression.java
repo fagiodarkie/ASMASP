@@ -17,4 +17,11 @@ public class MulExpression extends IExpression {
 		return new MulExpression(type, left.clone(), right.clone());
 	}
 
+	@Override
+	public boolean equalExpression(IExpression iExpression) {
+		if (!(iExpression instanceof MulExpression)) return false;
+		return right.equalExpression(iExpression.right) && left.equalExpression(iExpression.left)
+				|| (left.equalExpression(iExpression.right) && right.equalExpression(iExpression.left));
+	}
+
 }

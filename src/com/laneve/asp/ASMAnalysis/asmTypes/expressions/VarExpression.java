@@ -17,10 +17,9 @@ public class VarExpression extends IExpression {
 	}
 	
 	@Override
-	public void setParameters(List<AnValue> parameters) {
+	public void setParameters(List<? extends AnValue> parameters) {
 		if (parameters == null || parameters.size() <= index) {
-			intExp = null;
-			return;
+			throw new Error("Tried to istantiate parameter #" + index + " with a list of parameters " + ( parameters == null ? "null" : "with length " + parameters.size()));
 		}
 		try {
 			intExp = ((IExpression) parameters.get(index));
@@ -46,6 +45,13 @@ public class VarExpression extends IExpression {
 		v.intExp = intExp.clone();
 		return v;
 		
+	}
+
+
+	@Override
+	public boolean equalExpression(IExpression iExpression) {
+		if (!(iExpression instanceof VarExpression)) return false;
+		return intExp == ((VarExpression)iExpression).intExp;
 	}
 
 }

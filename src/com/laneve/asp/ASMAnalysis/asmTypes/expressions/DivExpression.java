@@ -22,4 +22,10 @@ public class DivExpression extends IExpression {
 		return new DivExpression(type, left.clone(), right.clone());
 	}
 
+	@Override
+	public boolean equalExpression(IExpression iExpression) {
+		if (!(iExpression instanceof DivExpression)) return false;
+		return right.equalExpression(iExpression.right) && left.equalExpression(iExpression.left);
+	}
+
 }

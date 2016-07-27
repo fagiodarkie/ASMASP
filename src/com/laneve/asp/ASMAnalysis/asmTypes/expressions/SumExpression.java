@@ -17,4 +17,11 @@ public class SumExpression extends IExpression {
 		return new SumExpression(type, left.clone(), right.clone());
 	}
 
+	@Override
+	public boolean equalExpression(IExpression iExpression) {
+		if (!(iExpression instanceof SumExpression)) return false;
+		return (right.equalExpression(iExpression.right) && left.equalExpression(iExpression.left))
+				|| (right.equalExpression(iExpression.left) && left.equalExpression(iExpression.right));
+	}
+
 }

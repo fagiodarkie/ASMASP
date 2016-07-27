@@ -20,4 +20,11 @@ public class IntXorExpression extends IExpression {
 		return new IntXorExpression(type, left.clone(), right.clone());
 	}
 
+	@Override
+	public boolean equalExpression(IExpression iExpression) {
+		if (!(iExpression instanceof IntXorExpression)) return false;
+		return right.equalExpression(iExpression.right) && left.equalExpression(iExpression.left)
+				|| (left.equalExpression(iExpression.right) && right.equalExpression(iExpression.left));
+	}
+
 }

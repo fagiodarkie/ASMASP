@@ -25,7 +25,7 @@ public class VMAnalyzer extends Analyzer<AnValue> {
 	public BehaviourFrame[] analyze(final String owner, final MethodNode m)
             throws AnalyzerException {
 		
-		methodName = owner + "." + m.name;
+		methodName = owner + "." + m.name + m.desc;
 		
 		/*
 		 * The analyze() method is able to compute actual BehaviourFrames, due to
@@ -33,7 +33,11 @@ public class VMAnalyzer extends Analyzer<AnValue> {
 		 * The analysis proceeds according to the BehaviourFrames logic, all we have to do here is
 		 * to make sure that actual BehaviourFrames are returned and exploit their additional information.
 		 */
-		BehaviourFrame[] result = (BehaviourFrame[]) super.analyze(owner, m);
+		Frame<? extends AnValue>[] temp = super.analyze(owner, m);
+		BehaviourFrame[] result = new BehaviourFrame[temp.length];
+		for (int i = 0; i < temp.length; ++i)
+			result[i] = (BehaviourFrame) temp[i];
+		
 		
 		List<String> deps = new ArrayList<String>();
 		

@@ -41,7 +41,7 @@ public class ASMAnalysis {
 
 		Path p = Paths.get(System.getProperty("user.home"), "git", "ASMASP", "tests");
 		Path directory = (args.length > 2 ? Paths.get(args[2]) : p);
-		String entryPoint = (args.length > 3 ? args[3] : "com/laneve/asp/ASMAnalysis/tests/Tests.main");
+		String entryPoint = (args.length > 3 ? args[3] : "com/laneve/asp/ASMAnalysis/tests/Tests.main()V");
 		
 		List<InputStream> streams = Streamifier.streamifyDirectory(directory);
 		
@@ -51,7 +51,7 @@ public class ASMAnalysis {
 				ClassNode n = new ClassNode();
 				r.accept(n, 0);
 				for (MethodNode m: n.methods) {
-					context.createMethodNode(r.getClassName(), n.name + "." + m.name, m);
+					context.createMethodNode(r.getClassName(), n.name + "." + m.name + m.desc, m);
 				}
 				
 			} catch (IOException e) {

@@ -12,6 +12,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.Behaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
@@ -114,10 +115,21 @@ public class AnalysisContext {
 		// create new methodID
 		methodID.put(methodCounter, methodName);
 		depends.put(methodCounter, new ArrayList<Long>());
+		returnValue.put(methodCounter, new ConstExpression(Type.INT_TYPE, new Long(0)));
 		analyzeMethods.put(methodCounter, true);
 		methodCounter++;
 	}
 
+	public AnValue getReturnValueOfMethod(String methodName) {
+		// All foreign methods are treated as null. actual usage of this value will result in cast errors.
+		long key;
+		try {
+			key = getKeyOfMethod(methodName);
+		} catch (Error e) {
+			return new AnValue(Type.INT_TYPE);
+		}
+		return returnValue.get(key);
+	}
 
 	public void createMethodNode(String className, String name, MethodNode method) {
 		if (methodID.containsValue(name))
@@ -137,7 +149,7 @@ public class AnalysisContext {
 	public void analyze(String entryPoint) throws AnalyzerException {
 		long k = getKeyOfMethod(entryPoint);
 		List<Long> analysisList = new ArrayList<Long>();
-		VMAnalyzer analyzer = new VMAnalyzer(new ValInterpreter(), this);
+		VMAnalyzer analyzer = new VMAnalyzer(new ValInterpreter(this), this);
 				
 		/* deep visit of the dependancies. we assume that:
 		 * 1) no recursion is done within method bodies (no f(n) / f(n - 1);
