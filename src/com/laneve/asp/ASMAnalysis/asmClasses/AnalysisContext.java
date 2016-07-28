@@ -14,7 +14,9 @@ import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
-import com.laneve.asp.ASMAnalysis.bTypes.Behaviour;
+import com.laneve.asp.ASMAnalysis.bTypes.Atom;
+import com.laneve.asp.ASMAnalysis.bTypes.ConcatBehaviour;
+import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 public class AnalysisContext {
@@ -26,7 +28,8 @@ public class AnalysisContext {
 	protected Map<Long, List<BehaviourFrame>> methodFrames;
 	protected long threadCounter, methodCounter;
 	private Map<Long, MethodNode> methodNodes;
-	private Map<Long, Behaviour> methodBehaviour;
+	private Map<Long, IBehaviour> methodBehaviour;
+	private String resourceClass, allocationCall, deallocationCall;
 	
 	
 	public AnalysisContext() {
@@ -39,7 +42,17 @@ public class AnalysisContext {
 		methodFrames = new HashMap<Long, List<BehaviourFrame>>();
 		threadCounter = methodCounter = 0;
 		methodNodes = new HashMap<Long, MethodNode>();
-		methodBehaviour = new HashMap<Long, Behaviour>();
+		methodBehaviour = new HashMap<Long, IBehaviour>();
+		
+		resourceClass = "java/lang/Thread";
+		allocationCall = resourceClass + ".run()V";
+		deallocationCall = resourceClass + ".join()V";
+	}
+	
+	public void setAllocationVariables(String className, String alloc, String dealloc) {
+		resourceClass = className;
+		allocationCall = alloc;
+		deallocationCall = dealloc;
 	}
 	
 	public ThreadValue generateThread() {
@@ -91,13 +104,24 @@ public class AnalysisContext {
 	
 	public void setReturnExpression(String method, AnValue value) {
 		Long key = getKeyOfMethod(method);
-		if (returnValue.get(key) == null)
-			returnValue.put(key, (IExpression) value);
+
+		// TODO compute also dependancies ON this method: if this method is updated, all methods depending ON IT must be analyzed.
+		// simple map long / bool meaning "watch out, this method had an update on its return expression!
+		
+		
+		returnValue.put(key, (IExpression) value);
+
+		
+		/*
+		 * TODO check on equal return expression will be done in a later stage, when we are able
+		 * to understand when we are trying to set 2 different return expression in the same analysis cycle.
+		 * 
+		 * if (returnValue.get(key) == null)
 		else {
 			if (!((IExpression) value).equalExpression(returnValue.get(key))) {
 				throw new Error("Analysis error: unable to analyze methods returning different values.");
 			}
-		}
+		}*/
 	}
 	
 	private Long getKeyOfMethod(String method) {
@@ -120,14 +144,9 @@ public class AnalysisContext {
 		methodCounter++;
 	}
 
-	public AnValue getReturnValueOfMethod(String methodName) {
+	public IExpression getReturnValueOfMethod(String methodName) {
 		// All foreign methods are treated as null. actual usage of this value will result in cast errors.
-		long key;
-		try {
-			key = getKeyOfMethod(methodName);
-		} catch (Error e) {
-			return new AnValue(Type.INT_TYPE);
-		}
+		long key = getKeyOfMethod(methodName);
 		return returnValue.get(key);
 	}
 
@@ -142,7 +161,7 @@ public class AnalysisContext {
 			createMethod(name);
 		long k = getKeyOfMethod(name);
 		methodNodes.put(k, method);
-		methodBehaviour.put(k, null);
+		methodBehaviour.put(k, new Atom(Atom.RETURN));
 		owner.put(k, className);
 	}
 
@@ -160,7 +179,10 @@ public class AnalysisContext {
 		
 		analysisList.add(k);
 		// reanalyze methods until a fixed point is reached
-		for (Long currentMethodID: analysisList) {
+		for (int i = 0; i < analysisList.size(); ++i) {
+			Long currentMethodID = analysisList.get(i);
+			
+			System.out.println("Analyzing method " + methodID.get(currentMethodID));
 			// if the method is already at fixed point don't touch it
 			if (!analyzeMethods.get(currentMethodID))
 				continue;
@@ -169,6 +191,7 @@ public class AnalysisContext {
 			// also all methods which depends on it, if behaviour changes.
 			// as side effect, the return value is automatically updated.
 			BehaviourFrame[] frames = analyzer.analyze(owner.get(currentMethodID), methodNodes.get(currentMethodID));
+
 			for (Long j: depends.get(currentMethodID)) {
 				// we put on all its dependancies
 				analysisList.add(j);
@@ -178,29 +201,72 @@ public class AnalysisContext {
 			methodFrames.put(currentMethodID, Arrays.asList(frames));
 			
 			// if the new behaviour is different from the past one, also update all methods depending on this one.
-			Behaviour old = methodBehaviour.get(currentMethodID);
-			Behaviour updatedBehaviour = computeBehaviour(frames);
+			IBehaviour old = methodBehaviour.get(currentMethodID);
+			IBehaviour updatedBehaviour = computeBehaviour(frames);
 			
 			if (!old.equalBehaviour(updatedBehaviour)) {
 				methodBehaviour.put(currentMethodID, updatedBehaviour);
-				for (long i = 0; ((i < methodCounter) && (i != currentMethodID)); ++i) {
-					if (depends.get(i).contains(currentMethodID) && !analysisList.contains(i)) {
-						analysisList.add(i);
-						analyzeMethods.put(i, true);					
+				for (long j = 0; ((j < methodCounter) && (j != currentMethodID)); ++j) {
+					if (depends.get(j).contains(currentMethodID) && !analysisList.contains(j)) {
+						analysisList.add(j);
+						analyzeMethods.put(j, true);					
 					}
 				}
 			}
 			
-			// finally, notify that we checked the method.
+		// finally, notify that we checked the method.
 			analyzeMethods.put(currentMethodID, false);
 			
 		}
 		
+		for (long i = 0; i < methodCounter; ++i) {
+			System.out.println("Method " + methodID.get(i) + " has behaviour " + methodBehaviour.get(i));
+		}
 		
 	}
 
-	protected Behaviour computeBehaviour(BehaviourFrame[] frames) {
+	protected IBehaviour computeBehaviour(BehaviourFrame[] frames) {
 		// TODO Compute behaviour (LAM?) of frame.
+		
+		List<IBehaviour> l = new ArrayList<IBehaviour>();
+		for (int i = 0; i < frames.length; ++i) {
+			IBehaviour b = frames[i].getBehaviour();
+			if (b != null)
+				l.add(b);
+		}
+		
+		if (l.size() == 0)
+			return new Atom(Atom.RETURN);
+		
+		IBehaviour res = l.get(l.size() - 1);
+		/*
+		for (int i = 1; i < l.size(); ++i) {
+			IBehaviour left = res.clone();
+			IBehaviour right = l.get(i);
+			res = new ConcatBehaviour(left, right);
+			
+		}
+		 */
+		
+		
+		
+		System.out.println(res.toString());
+		
+		return res;
+	}
+
+	public boolean isBehaviour(String currentMethodName) {
+		return currentMethodName.equalsIgnoreCase(allocationCall)
+				|| currentMethodName.equalsIgnoreCase(deallocationCall);
+	}
+
+
+	public ThreadResource createAtom(AnValue anValue, String currentMethodName) {
+		if (isBehaviour(currentMethodName)) {
+			if (currentMethodName.equalsIgnoreCase(allocationCall))
+				return allocateThread((ThreadValue)anValue);
+			else return deallocateThread((ThreadValue)anValue);
+		}
 		return null;
 	}
 

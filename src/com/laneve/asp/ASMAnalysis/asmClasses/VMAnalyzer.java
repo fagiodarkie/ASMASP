@@ -59,7 +59,8 @@ public class VMAnalyzer extends Analyzer<AnValue> {
 
     @Override
     protected BehaviourFrame newFrame(final Frame<? extends AnValue> src) {
-        return new BehaviourFrame(src, methodName, context);
+    	BehaviourFrame r = new BehaviourFrame((BehaviourFrame)src);
+        return r;
     }
 
 }

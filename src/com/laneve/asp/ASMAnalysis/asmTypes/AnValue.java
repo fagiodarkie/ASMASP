@@ -63,7 +63,8 @@ public class AnValue implements Value {
 	
 	public static boolean isThread(Type t) {
 		if (t == null) return false;
-		return (t.getClassName() == THREAD_NAME);
+//		System.out.println(t.getClassName());
+		return (t.getClassName().equalsIgnoreCase("java.lang.Thread"));
 	}
 
 	public static boolean compatible(Type t1, Type t2) {

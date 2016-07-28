@@ -1,6 +1,6 @@
 Classfile /home/students/jacopo.freddi/git/ASMASP/tests/Tests.class
-  Last modified Jul 25, 2016; size 437 bytes
-  MD5 checksum c70bba4cd93982cf8c06bc45a2f5221e
+  Last modified Jul 28, 2016; size 651 bytes
+  MD5 checksum 3b232e0df64380b756641fea6753f575
   Compiled from "Tests.java"
 public class com.laneve.asp.ASMAnalysis.tests.Tests
   SourceFile: "Tests.java"
@@ -8,27 +8,42 @@ public class com.laneve.asp.ASMAnalysis.tests.Tests
   major version: 51
   flags: ACC_PUBLIC, ACC_SUPER
 Constant pool:
-   #1 = Methodref          #6.#17         //  java/lang/Object."<init>":()V
-   #2 = Methodref          #3.#18         //  com/laneve/asp/ASMAnalysis/tests/Tests.bar:(I)I
-   #3 = Class              #19            //  com/laneve/asp/ASMAnalysis/tests/Tests
-   #4 = Methodref          #3.#17         //  com/laneve/asp/ASMAnalysis/tests/Tests."<init>":()V
-   #5 = Methodref          #3.#20         //  com/laneve/asp/ASMAnalysis/tests/Tests.foo:(I)I
-   #6 = Class              #21            //  java/lang/Object
-   #7 = Utf8               <init>
-   #8 = Utf8               ()V
-   #9 = Utf8               Code
-  #10 = Utf8               LineNumberTable
-  #11 = Utf8               foo
-  #12 = Utf8               (I)I
-  #13 = Utf8               bar
-  #14 = Utf8               main
-  #15 = Utf8               SourceFile
-  #16 = Utf8               Tests.java
-  #17 = NameAndType        #7:#8          //  "<init>":()V
-  #18 = NameAndType        #13:#12        //  bar:(I)I
-  #19 = Utf8               com/laneve/asp/ASMAnalysis/tests/Tests
-  #20 = NameAndType        #11:#12        //  foo:(I)I
-  #21 = Utf8               java/lang/Object
+   #1 = Methodref          #11.#25        //  java/lang/Object."<init>":()V
+   #2 = Methodref          #3.#26         //  com/laneve/asp/ASMAnalysis/tests/Tests.bar:(I)I
+   #3 = Class              #27            //  com/laneve/asp/ASMAnalysis/tests/Tests
+   #4 = Methodref          #3.#25         //  com/laneve/asp/ASMAnalysis/tests/Tests."<init>":()V
+   #5 = Methodref          #3.#28         //  com/laneve/asp/ASMAnalysis/tests/Tests.foo:(I)I
+   #6 = Methodref          #3.#29         //  com/laneve/asp/ASMAnalysis/tests/Tests.bar:()I
+   #7 = Class              #30            //  java/lang/Thread
+   #8 = Methodref          #7.#25         //  java/lang/Thread."<init>":()V
+   #9 = Methodref          #7.#31         //  java/lang/Thread.run:()V
+  #10 = Methodref          #7.#32         //  java/lang/Thread.join:()V
+  #11 = Class              #33            //  java/lang/Object
+  #12 = Utf8               <init>
+  #13 = Utf8               ()V
+  #14 = Utf8               Code
+  #15 = Utf8               LineNumberTable
+  #16 = Utf8               foo
+  #17 = Utf8               (I)I
+  #18 = Utf8               bar
+  #19 = Utf8               ()I
+  #20 = Utf8               main
+  #21 = Utf8               Exceptions
+  #22 = Class              #34            //  java/lang/InterruptedException
+  #23 = Utf8               SourceFile
+  #24 = Utf8               Tests.java
+  #25 = NameAndType        #12:#13        //  "<init>":()V
+  #26 = NameAndType        #18:#17        //  bar:(I)I
+  #27 = Utf8               com/laneve/asp/ASMAnalysis/tests/Tests
+  #28 = NameAndType        #16:#17        //  foo:(I)I
+  #29 = NameAndType        #18:#19        //  bar:()I
+  #30 = Utf8               java/lang/Thread
+  #31 = NameAndType        #35:#13        //  run:()V
+  #32 = NameAndType        #36:#13        //  join:()V
+  #33 = Utf8               java/lang/Object
+  #34 = Utf8               java/lang/InterruptedException
+  #35 = Utf8               run
+  #36 = Utf8               join
 {
   public com.laneve.asp.ASMAnalysis.tests.Tests();
     flags: ACC_PUBLIC
@@ -66,10 +81,19 @@ Constant pool:
       LineNumberTable:
         line 10: 0
 
-  public static void main();
+  public int bar();
+    flags: ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: iconst_2      
+         1: ireturn       
+      LineNumberTable:
+        line 14: 0
+
+  public static void main() throws java.lang.InterruptedException;
     flags: ACC_PUBLIC, ACC_STATIC
     Code:
-      stack=4, locals=3, args_size=0
+      stack=4, locals=4, args_size=0
          0: new           #3                  // class com/laneve/asp/ASMAnalysis/tests/Tests
          3: dup           
          4: invokespecial #4                  // Method "<init>":()V
@@ -79,19 +103,38 @@ Constant pool:
         10: invokevirtual #5                  // Method foo:(I)I
         13: istore_1      
         14: iload_1       
-        15: iconst_2      
-        16: imul          
-        17: aload_0       
-        18: aload_0       
-        19: iload_1       
-        20: invokevirtual #2                  // Method bar:(I)I
-        23: invokevirtual #5                  // Method foo:(I)I
-        26: iadd          
-        27: istore_2      
-        28: return        
+        15: aload_0       
+        16: invokevirtual #6                  // Method bar:()I
+        19: iadd          
+        20: istore_1      
+        21: iload_1       
+        22: iconst_2      
+        23: imul          
+        24: aload_0       
+        25: aload_0       
+        26: iload_1       
+        27: invokevirtual #2                  // Method bar:(I)I
+        30: invokevirtual #5                  // Method foo:(I)I
+        33: iadd          
+        34: istore_2      
+        35: new           #7                  // class java/lang/Thread
+        38: dup           
+        39: invokespecial #8                  // Method java/lang/Thread."<init>":()V
+        42: astore_3      
+        43: aload_3       
+        44: invokevirtual #9                  // Method java/lang/Thread.run:()V
+        47: aload_3       
+        48: invokevirtual #10                 // Method java/lang/Thread.join:()V
+        51: return        
       LineNumberTable:
-        line 15: 0
-        line 17: 8
-        line 19: 14
-        line 21: 28
+        line 19: 0
+        line 21: 8
+        line 23: 14
+        line 25: 21
+        line 27: 35
+        line 29: 43
+        line 30: 47
+        line 32: 51
+    Exceptions:
+      throws java.lang.InterruptedException
 }

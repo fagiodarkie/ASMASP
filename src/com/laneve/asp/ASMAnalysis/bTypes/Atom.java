@@ -4,7 +4,7 @@ public class Atom implements IBehaviour {
 
 	public static int ACQUIRE = 0, RELEASE = 1, RETURN = 2;
 	
-	protected static final String acq = "acquired", rel = ":released";
+	protected static final String acq = ":acquired", rel = ":released";
 	
 	protected static int released = 0, acquired = 0;
 	
@@ -40,11 +40,24 @@ public class Atom implements IBehaviour {
 		return new Atom(type, ID);
 	}
 	
-	@Override
-	public String printBehaviour() {
+	public String toString() {
 		if (type == RETURN)
 			return "0";
 		return ID + (type == ACQUIRE ? acq : rel);
+	}
+
+
+	@Override
+	public boolean equalBehaviour(IBehaviour updatedBehaviour) {
+		if (! (updatedBehaviour instanceof Atom))
+			return false;
+		return type == ((Atom)updatedBehaviour).type;
+	}
+
+	@Override
+	public void mergeWith(IBehaviour frameBehaviour) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

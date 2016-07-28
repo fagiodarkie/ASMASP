@@ -14,7 +14,7 @@ public class Tests {
 		return 2;
 	}
 	
-	public static void main() {
+	public static void main() throws InterruptedException {
 		
 		Tests x = new Tests();
 	
@@ -23,6 +23,11 @@ public class Tests {
 		a += x.bar();
 		
 		int b = a * 2 + x.foo(x.bar(a));
+		
+		Thread t = new Thread();
+		
+		t.run();
+		t.join();
 		
 	}
 }

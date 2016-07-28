@@ -33,12 +33,14 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SumExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.USHRExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.IBoolExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.OrExpression;
+import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 
 public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
 	protected AnalysisContext context;
 	protected String currentMethodName;
+	private ThreadResource createdBehaviour;
 	
 	protected ValInterpreter(int api) {
 		super(api);
@@ -51,10 +53,10 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	
 	@Override
 	public AnValue newValue(Type type) {
+		if (type == null || type == Type.VOID_TYPE)
+			return null;
 		if (AnValue.isThread(type))
 			return context.generateThread();
-		if (type == Type.VOID_TYPE)
-			return null;
 		return new AnValue(type);
 	}
 
@@ -99,9 +101,6 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
             	return new ConstExpression(Type.LONG_TYPE, AnValue.getConstValue(insn.getOpcode()));
             } else if (cst instanceof Double) {
             	return newValue(Type.DOUBLE_TYPE);
-            } else if (cst instanceof String) {
-            	// FIXME do we need strings?
-                return newValue(Type.getType("java.lang.String"));
             } else if (cst instanceof Type) {
                 int sort = ((Type) cst).getSort();
                 if (sort == Type.OBJECT || sort == Type.ARRAY) {
@@ -329,6 +328,15 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	if (t == null)
         		t = Type.getReturnType(((InvokeDynamicInsnNode)insn).desc);
 
+        	if (context.isBehaviour(currentMethodName)) {
+        		createdBehaviour = context.createAtom(values.get(0), currentMethodName);
+        	}
+        	
+        	
+        	
+        	if (t == Type.VOID_TYPE)
+        		return null;
+
         	AnValue a = context.getReturnValueOfMethod(currentMethodName);
         	// now we take the method return value, with its eventual variables,
         	IExpression exp = (IExpression)a;
@@ -336,9 +344,9 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	// and we istantiate it with the actual values with which the method is called.
         	Long result = exp.evaluate(values);
         	
-        	if (t == Type.VOID_TYPE)
-        		return null;
-        	return new ConstExpression(t, result);
+        	ConstExpression res = new ConstExpression(t, result);
+        	
+        	return res;
         	
         case Opcodes.MULTIANEWARRAY:
     	default:
@@ -368,6 +376,16 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
 	public void setCurrentMethod(String methodName) {
 		currentMethodName = methodName;
+	}
+
+
+	public ThreadResource getBehaviour() {
+		return createdBehaviour;
+	}
+
+	public void resetCurrentMethod() {
+		currentMethodName = null;
+		createdBehaviour = null;
 	}
 
 }

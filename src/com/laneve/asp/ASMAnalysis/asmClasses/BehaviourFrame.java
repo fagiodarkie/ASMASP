@@ -11,7 +11,10 @@ import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.VarExpression;
+import com.laneve.asp.ASMAnalysis.bTypes.ConcatBehaviour;
+import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 
@@ -22,7 +25,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 	 * TODO: behaviour for method calls is 0 unless methods are typed. In which case..?
 	 */
 	
-	protected ThreadResource frameBehaviour;
+	protected IBehaviour frameBehaviour;
 	protected AnalysisContext context;
 	protected String methodName;
 	private String invokedMethod;
@@ -45,12 +48,21 @@ public class BehaviourFrame extends Frame<AnValue> {
 		invokedMethod = null;
 	}
 	
+	public BehaviourFrame(BehaviourFrame src) {
+		super(src);
+		addAnalysisInformations(src.methodName, src.context);
+		invokedMethod = src.invokedMethod;
+		if (src.frameBehaviour != null)
+			frameBehaviour = src.frameBehaviour.clone();
+		else frameBehaviour = null;
+	}
+
 	public void addAnalysisInformations(String methodName, AnalysisContext context) {
 		this.methodName = methodName;
 		this.context = context;
 	}
 
-	public ThreadResource getBehaviour() {
+	public IBehaviour getBehaviour() {
 		return frameBehaviour;
 	}
 
@@ -58,19 +70,20 @@ public class BehaviourFrame extends Frame<AnValue> {
 	public void execute(final AbstractInsnNode insn,
 			final Interpreter<AnValue> interpreter) throws AnalyzerException {
 		
+		ValInterpreter in = (ValInterpreter) interpreter; 
 		// we only redefine the opcodes which behaviour differs from the standard.
 
 		switch (insn.getOpcode()) {
 		case Opcodes.ILOAD:
 			// If the local is null, we load a VarIntExpression - the method is loading a parameter.
-			if (getLocal(((VarInsnNode) insn).var) != null)
+			if (getLocal(((VarInsnNode) insn).var) instanceof IExpression)
 				push(interpreter.copyOperation(insn,
                     getLocal(((VarInsnNode) insn).var)));
 			else push(new VarExpression(Type.INT_TYPE, ((VarInsnNode) insn).var));
 			break;
 		case Opcodes.LLOAD:
 			// If the local is null, we load a VarIntExpression - the method is loading a parameter.
-			if (getLocal(((VarInsnNode) insn).var) != null)
+			if (getLocal(((VarInsnNode) insn).var) instanceof IExpression)
 				push(interpreter.copyOperation(insn,
                     getLocal(((VarInsnNode) insn).var)));
 			else push(new VarExpression(Type.LONG_TYPE, ((VarInsnNode) insn).var));
@@ -81,8 +94,8 @@ public class BehaviourFrame extends Frame<AnValue> {
 		case Opcodes.DRETURN:
 		case Opcodes.ARETURN:
 		case Opcodes.RETURN:
-			((ValInterpreter)interpreter).setCurrentMethod(methodName);
-			super.execute(insn, interpreter);
+			in.setCurrentMethod(methodName);
+			super.execute(insn, in);
 			break;
 		case Opcodes.INVOKEVIRTUAL:
 		case Opcodes.INVOKESPECIAL:
@@ -98,18 +111,29 @@ public class BehaviourFrame extends Frame<AnValue> {
 				MethodInsnNode invoke = ((MethodInsnNode) insn);
 				invokedMethod = invoke.owner + "." + invoke.name + invoke.desc;				
 			}
-			((ValInterpreter)interpreter).setCurrentMethod(invokedMethod);
+			in.setCurrentMethod(invokedMethod);
 			super.execute(insn, interpreter);
+			
+			if (in.getBehaviour() != null)
+				frameBehaviour = (frameBehaviour == null ? in.getBehaviour().clone() : new ConcatBehaviour(frameBehaviour.clone(), in.getBehaviour().clone()));
+			in.resetCurrentMethod();
+					
 			break;
 		default:
-			if (insn.getOpcode() < 200) super.execute(insn, interpreter);
+			if (insn.getOpcode() < 200) super.execute(insn, in);
 			else throw new RuntimeException("Illegal opcode " + insn.getOpcode());
 		}
 	}
 
-	protected boolean isInScope(String methodName) {
-		// TODO Auto-generated method stub
-		return false;
+	@Override
+	public boolean merge(final Frame<? extends AnValue> other, final Interpreter<AnValue> interpreter) throws AnalyzerException {
+		boolean r = super.merge(other, interpreter);
+		BehaviourFrame o = (BehaviourFrame)other;
+		if (o.frameBehaviour.equalBehaviour(frameBehaviour))
+			return r;
+		
+		frameBehaviour.mergeWith(o.frameBehaviour);
+			return true;
 	}
-
+	
 }
