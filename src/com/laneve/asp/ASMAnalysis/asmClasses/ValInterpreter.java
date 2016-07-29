@@ -325,8 +325,11 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.INVOKESTATIC:
         	t = Type.getReturnType(((MethodInsnNode)insn).desc);
         case Opcodes.INVOKEDYNAMIC:
-        	if (t == null)
+        	if (t == null) {
         		t = Type.getReturnType(((InvokeDynamicInsnNode)insn).desc);
+        		// add the class name
+        		currentMethodName = values.get(0).getClassName() + currentMethodName;
+        	}
 
         	if (context.isBehaviour(currentMethodName)) {
         		createdBehaviour = context.createAtom(values.get(0), currentMethodName);
@@ -373,11 +376,9 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		return v;
 	}
 
-
 	public void setCurrentMethod(String methodName) {
 		currentMethodName = methodName;
 	}
-
 
 	public ThreadResource getBehaviour() {
 		return createdBehaviour;

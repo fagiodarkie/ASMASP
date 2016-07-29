@@ -70,6 +70,9 @@ public class BehaviourFrame extends Frame<AnValue> {
 	public void execute(final AbstractInsnNode insn,
 			final Interpreter<AnValue> interpreter) throws AnalyzerException {
 		
+		frameBehaviour = null;
+		invokedMethod = null;
+		
 		ValInterpreter in = (ValInterpreter) interpreter; 
 		// we only redefine the opcodes which behaviour differs from the standard.
 
@@ -96,26 +99,31 @@ public class BehaviourFrame extends Frame<AnValue> {
 		case Opcodes.RETURN:
 			in.setCurrentMethod(methodName);
 			super.execute(insn, in);
+			in.resetCurrentMethod();
 			break;
 		case Opcodes.INVOKEVIRTUAL:
 		case Opcodes.INVOKESPECIAL:
 		case Opcodes.INVOKESTATIC:
 		case Opcodes.INVOKEINTERFACE:
 		case Opcodes.INVOKEDYNAMIC:
-			// TODO
 			if (insn.getType() == AbstractInsnNode.INVOKE_DYNAMIC_INSN) {	
 				InvokeDynamicInsnNode invoke = ((InvokeDynamicInsnNode) insn);
-				// TODO
 				invokedMethod = "." + invoke.name + invoke.desc;
 			} else if (insn.getType() == AbstractInsnNode.METHOD_INSN) {
 				MethodInsnNode invoke = ((MethodInsnNode) insn);
 				invokedMethod = invoke.owner + "." + invoke.name + invoke.desc;				
 			}
 			in.setCurrentMethod(invokedMethod);
-			super.execute(insn, interpreter);
+			super.execute(insn, in);
 			
 			if (in.getBehaviour() != null)
-				frameBehaviour = (frameBehaviour == null ? in.getBehaviour().clone() : new ConcatBehaviour(frameBehaviour.clone(), in.getBehaviour().clone()));
+				frameBehaviour = in.getBehaviour().clone();
+				/*
+				 * For the sake of correct analysis,  we need to separate the frame behaviours.
+				 * Also, we probably will need lines to understand ifs and cycles.
+				 * 
+				 * frameBehaviour = (frameBehaviour == null ? in.getBehaviour().clone() : new ConcatBehaviour(frameBehaviour.clone(), in.getBehaviour().clone()));
+				 */
 			in.resetCurrentMethod();
 					
 			break;
@@ -132,8 +140,10 @@ public class BehaviourFrame extends Frame<AnValue> {
 		if (o.frameBehaviour.equalBehaviour(frameBehaviour))
 			return r;
 		
-		frameBehaviour.mergeWith(o.frameBehaviour);
-			return true;
+		// frameBehaviour.mergeWith(o.frameBehaviour);
+		invokedMethod = o.invokedMethod;
+		frameBehaviour = o.frameBehaviour.clone();
+		return true;
 	}
 	
 }

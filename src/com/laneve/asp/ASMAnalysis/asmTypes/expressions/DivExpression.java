@@ -22,6 +22,10 @@ public class DivExpression extends IExpression {
 		return new DivExpression(type, left.clone(), right.clone());
 	}
 
+	public String toString() {
+		return "(" + left.toString() + " / " + right.toString() + ")";
+	}
+
 	@Override
 	public boolean equalExpression(IExpression iExpression) {
 		if (!(iExpression instanceof DivExpression)) return false;

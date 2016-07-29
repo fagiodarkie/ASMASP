@@ -28,6 +28,9 @@ public abstract class IExpression extends AnValue{
 	}
 
 	public abstract Long evaluate();
+
+	@Override
+	public abstract String toString();
 	
 	public Long evaluate(List<? extends AnValue> values) {
 		setParameters(values);

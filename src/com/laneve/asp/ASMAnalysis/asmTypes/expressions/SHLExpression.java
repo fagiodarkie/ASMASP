@@ -20,6 +20,10 @@ public class SHLExpression extends IExpression {
 		return new SHLExpression(type, left.clone(), right.clone());
 	}
 
+	public String toString() {
+		return "(" + left.toString() + " << " + right.toString() + ")";
+	}
+
 	@Override
 	public boolean equalExpression(IExpression iExpression) {
 		if (!(iExpression instanceof SHLExpression)) return false;

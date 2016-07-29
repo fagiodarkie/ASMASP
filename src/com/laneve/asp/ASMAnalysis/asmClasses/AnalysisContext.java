@@ -21,7 +21,7 @@ import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 public class AnalysisContext {
 
-	protected Map<Long, Boolean> threadsStatus, analyzeMethods;
+	protected Map<Long, Boolean> threadsStatus, analyzeMethods, modifiedReturnExpression;
 	protected Map<Long, IExpression> returnValue;
 	protected Map<Long, String> methodID, owner;
 	protected Map<Long, List<Long>> depends;
@@ -35,6 +35,7 @@ public class AnalysisContext {
 	public AnalysisContext() {
 		threadsStatus = new HashMap<Long, Boolean>();
 		analyzeMethods = new HashMap<Long, Boolean>();
+		modifiedReturnExpression = new HashMap<Long, Boolean>();
 		returnValue = new HashMap<Long, IExpression>();
 		methodID = new HashMap<Long, String>();
 		owner = new HashMap<Long, String>();
@@ -105,12 +106,10 @@ public class AnalysisContext {
 	public void setReturnExpression(String method, AnValue value) {
 		Long key = getKeyOfMethod(method);
 
-		// TODO compute also dependancies ON this method: if this method is updated, all methods depending ON IT must be analyzed.
-		// simple map long / bool meaning "watch out, this method had an update on its return expression!
-		
-		
-		returnValue.put(key, (IExpression) value);
-
+		if (!returnValue.get(key).equalExpression((IExpression)value)) {
+			returnValue.put(key, (IExpression) value);
+			modifiedReturnExpression.put(key, true);
+		}
 		
 		/*
 		 * TODO check on equal return expression will be done in a later stage, when we are able
@@ -135,15 +134,6 @@ public class AnalysisContext {
 		return null;
 	}
 	
-	private void createMethod(String methodName) {
-		// create new methodID
-		methodID.put(methodCounter, methodName);
-		depends.put(methodCounter, new ArrayList<Long>());
-		returnValue.put(methodCounter, new ConstExpression(Type.INT_TYPE, new Long(0)));
-		analyzeMethods.put(methodCounter, true);
-		methodCounter++;
-	}
-
 	public IExpression getReturnValueOfMethod(String methodName) {
 		// All foreign methods are treated as null. actual usage of this value will result in cast errors.
 		long key = getKeyOfMethod(methodName);
@@ -151,41 +141,32 @@ public class AnalysisContext {
 	}
 
 	public void createMethodNode(String className, String name, MethodNode method) {
-		if (methodID.containsValue(name))
-			try {
-				throw new Exception("Nome gia esistente: " + name);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		else
-			createMethod(name);
-		long k = getKeyOfMethod(name);
-		methodNodes.put(k, method);
-		methodBehaviour.put(k, new Atom(Atom.RETURN));
-		owner.put(k, className);
+		methodNodes.put(methodCounter, method);
+		methodBehaviour.put(methodCounter, new Atom(Atom.RETURN));
+		owner.put(methodCounter, className);
+		methodID.put(methodCounter, name);
+		depends.put(methodCounter, new ArrayList<Long>());
+		analyzeMethods.put(methodCounter, true);
+		returnValue.put(methodCounter, new ConstExpression(Type.INT_TYPE, new Long(0)));
+		modifiedReturnExpression.put(methodCounter, false);
+		methodCounter++;
 	}
 
 	public void analyze(String entryPoint) throws AnalyzerException {
 		long k = getKeyOfMethod(entryPoint);
 		List<Long> analysisList = new ArrayList<Long>();
 		VMAnalyzer analyzer = new VMAnalyzer(new ValInterpreter(this), this);
-				
-		/* deep visit of the dependancies. we assume that:
-		 * 1) no recursion is done within method bodies (no f(n) / f(n - 1);
-		 * 2) no circular definitions (no f = g and g = f);
-		 * 
-		 * Once deep visit ends (it must end) we type following the queue.
-		 */
 		
 		analysisList.add(k);
 		// reanalyze methods until a fixed point is reached
 		for (int i = 0; i < analysisList.size(); ++i) {
 			Long currentMethodID = analysisList.get(i);
 			
-			System.out.println("Analyzing method " + methodID.get(currentMethodID));
 			// if the method is already at fixed point don't touch it
 			if (!analyzeMethods.get(currentMethodID))
 				continue;
+
+			System.out.println("Analyzing method " + methodID.get(currentMethodID));
 			
 			// else, analyze it and put all its dependancies to be analyzed too.
 			// also all methods which depends on it, if behaviour changes.
@@ -196,8 +177,18 @@ public class AnalysisContext {
 				// we put on all its dependancies
 				analysisList.add(j);
 			}
-
-			// Initialize entrypoint behaviour. As side effect, analyzer updates the dependancies of the method.
+			
+			// if the return value was updated, also examine all methods depending on this.
+			if (modifiedReturnExpression.get(currentMethodID)) {
+				for (long j = 0; j < methodCounter; ++j) {
+					if (depends.get(j).contains(currentMethodID)) {
+						analysisList.add(j);
+						analyzeMethods.put(j, true);
+					}
+				}
+				modifiedReturnExpression.put(currentMethodID, false);
+			}
+			
 			methodFrames.put(currentMethodID, Arrays.asList(frames));
 			
 			// if the new behaviour is different from the past one, also update all methods depending on this one.
@@ -221,6 +212,7 @@ public class AnalysisContext {
 		
 		for (long i = 0; i < methodCounter; ++i) {
 			System.out.println("Method " + methodID.get(i) + " has behaviour " + methodBehaviour.get(i));
+			System.out.println("Method " + methodID.get(i) + " has return value " + returnValue.get(i));
 		}
 		
 	}
@@ -230,25 +222,23 @@ public class AnalysisContext {
 		
 		List<IBehaviour> l = new ArrayList<IBehaviour>();
 		for (int i = 0; i < frames.length; ++i) {
-			IBehaviour b = frames[i].getBehaviour();
-			if (b != null)
-				l.add(b);
+			if (frames[i] != null) {
+				IBehaviour b = frames[i].getBehaviour();
+				if (b != null)
+					l.add(b);
+			}
 		}
 		
 		if (l.size() == 0)
 			return new Atom(Atom.RETURN);
 		
-		IBehaviour res = l.get(l.size() - 1);
-		/*
+		IBehaviour res = l.get(0);
 		for (int i = 1; i < l.size(); ++i) {
 			IBehaviour left = res.clone();
 			IBehaviour right = l.get(i);
 			res = new ConcatBehaviour(left, right);
 			
-		}
-		 */
-		
-		
+		}		
 		
 		System.out.println(res.toString());
 		
@@ -259,7 +249,6 @@ public class AnalysisContext {
 		return currentMethodName.equalsIgnoreCase(allocationCall)
 				|| currentMethodName.equalsIgnoreCase(deallocationCall);
 	}
-
 
 	public ThreadResource createAtom(AnValue anValue, String currentMethodName) {
 		if (isBehaviour(currentMethodName)) {

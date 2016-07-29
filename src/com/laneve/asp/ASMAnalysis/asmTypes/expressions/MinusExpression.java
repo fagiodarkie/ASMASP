@@ -17,6 +17,10 @@ public class MinusExpression extends IExpression {
 		return new MinusExpression(type, left.clone());
 	}
 
+	public String toString() {
+		return "(-" + left.toString() + ")";
+	}
+
 	@Override
 	public boolean equalExpression(IExpression iExpression) {
 		if (!(iExpression instanceof MinusExpression)) return false;

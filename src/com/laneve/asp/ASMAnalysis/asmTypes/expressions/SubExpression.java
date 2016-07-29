@@ -17,6 +17,10 @@ public class SubExpression extends IExpression {
 		return new SubExpression(type, left.clone(), right.clone());
 	}
 
+	public String toString() {
+		return "(" + left.toString() + " - " + right.toString() + ")";
+	}
+
 	@Override
 	public boolean equalExpression(IExpression iExpression) {
 		if (!(iExpression instanceof SubExpression)) return false;

@@ -19,7 +19,7 @@ public class VarExpression extends IExpression {
 	@Override
 	public void setParameters(List<? extends AnValue> parameters) {
 		if (parameters == null || parameters.size() <= index) {
-			throw new Error("Tried to istantiate parameter #" + index + " with a list of parameters " + ( parameters == null ? "null" : "with length " + parameters.size()));
+			intExp = null;
 		}
 		try {
 			intExp = ((IExpression) parameters.get(index));
@@ -47,6 +47,9 @@ public class VarExpression extends IExpression {
 		
 	}
 
+	public String toString() {
+		return "x" + index;
+	}
 
 	@Override
 	public boolean equalExpression(IExpression iExpression) {

@@ -21,6 +21,10 @@ protected Long constExp;
 		return new ConstExpression(type, constExp);
 	}
 
+	public String toString() {
+		return constExp.toString();
+	}
+
 	@Override
 	public boolean equalExpression(IExpression iExpression) {
 		if (!(iExpression instanceof ConstExpression)) return false;

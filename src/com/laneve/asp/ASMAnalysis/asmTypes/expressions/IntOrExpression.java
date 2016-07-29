@@ -20,6 +20,10 @@ public class IntOrExpression extends IExpression {
 		return new IntOrExpression(type, left.clone(), right.clone());
 	}
 
+	public String toString() {
+		return "(" + left.toString() + " | " + right.toString() + ")";
+	}
+
 	@Override
 	public boolean equalExpression(IExpression iExpression) {
 		if (!(iExpression instanceof IntOrExpression)) return false;

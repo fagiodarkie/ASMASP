@@ -42,7 +42,7 @@ public class VMAnalyzer extends Analyzer<AnValue> {
 		List<String> deps = new ArrayList<String>();
 		
 		for (int i = 0; i < result.length; ++i)
-			if (result[i].getInvokedMethod() != null)
+			if (result[i] != null && result[i].getInvokedMethod() != null)
 				deps.add(result[i].getInvokedMethod());
 		
 		context.signalDependancy(methodName, deps);

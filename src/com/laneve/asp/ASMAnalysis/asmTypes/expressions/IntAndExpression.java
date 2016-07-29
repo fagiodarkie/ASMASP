@@ -20,6 +20,10 @@ public class IntAndExpression extends IExpression {
 		return new IntAndExpression(type, left.clone(), right.clone());
 	}
 
+	public String toString() {
+		return "(" + left.toString() + " & " + right.toString() + ")";
+	}
+
 	@Override
 	public boolean equalExpression(IExpression iExpression) {
 		if (!(iExpression instanceof IntAndExpression)) return false;

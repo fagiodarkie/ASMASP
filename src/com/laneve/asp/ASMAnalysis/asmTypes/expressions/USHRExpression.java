@@ -19,6 +19,9 @@ public class USHRExpression extends IExpression {
 		return new USHRExpression(type, left.clone(), right.clone());
 	}
 
+	public String toString() {
+		return "(" + left.toString() + " >> " + right.toString() + ")";
+	}
 
 	@Override
 	public boolean equalExpression(IExpression iExpression) {

@@ -17,6 +17,10 @@ public class RemExpression extends IExpression {
 		return new RemExpression(type, left.clone(), right.clone());
 	}
 
+	public String toString() {
+		return "(" + left.toString() + " % " + right.toString() + ")";
+	}
+	
 	@Override
 	public boolean equalExpression(IExpression iExpression) {
 		if (!(iExpression instanceof RemExpression)) return false;
