@@ -1,4 +1,4 @@
-package com.laneve.asp.ASMAnalysis.tests;
+package com.laneve.asp.ASMAnalysis.otherTests;
 
 import java.io.IOException;
 import java.io.InputStream;

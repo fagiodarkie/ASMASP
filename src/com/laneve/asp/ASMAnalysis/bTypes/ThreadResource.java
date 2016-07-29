@@ -21,7 +21,6 @@ public class ThreadResource implements IBehaviour {
 		}
 	}
 
-	
 	public ThreadResource clone() {
 		return new ThreadResource(ID, status);
 	}
@@ -31,6 +30,10 @@ public class ThreadResource implements IBehaviour {
 		return (updatedBehaviour instanceof ThreadResource) && (status == ((ThreadResource)updatedBehaviour).status);
 	}
 
+	@Override
+	public boolean equal(IBehaviour o) {
+		return equalBehaviour(o) && ID == ((ThreadResource)o).ID;
+	}
 	
 	@Override
 	public void mergeWith(IBehaviour frameBehaviour) {

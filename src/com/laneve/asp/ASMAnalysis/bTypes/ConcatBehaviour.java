@@ -2,7 +2,7 @@ package com.laneve.asp.ASMAnalysis.bTypes;
 
 public class ConcatBehaviour implements IBehaviour {
 
-	IBehaviour left, right;
+	protected IBehaviour left, right;
 	
 	public ConcatBehaviour(IBehaviour l, IBehaviour r) {
 		left = l; right = r;
@@ -25,6 +25,9 @@ public class ConcatBehaviour implements IBehaviour {
 		return left.equalBehaviour(b.left) && right.equalBehaviour(b.right);
 	}
 
+	public boolean equal(IBehaviour o) {
+		return equalBehaviour(o) && left.equal(((ConcatBehaviour)o).left) && right.equal(((ConcatBehaviour)o).right);
+	}
 
 	@Override
 	public void mergeWith(IBehaviour frameBehaviour) {

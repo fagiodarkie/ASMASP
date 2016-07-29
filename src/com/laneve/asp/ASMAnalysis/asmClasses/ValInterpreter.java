@@ -1,5 +1,6 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.objectweb.asm.Handle;
@@ -33,6 +34,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SumExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.USHRExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.IBoolExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.OrExpression;
+import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 
@@ -40,7 +42,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
 	protected AnalysisContext context;
 	protected String currentMethodName;
-	private ThreadResource createdBehaviour;
+	private IBehaviour createdBehaviour;
 	
 	protected ValInterpreter(int api) {
 		super(api);
@@ -331,23 +333,28 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         		currentMethodName = values.get(0).getClassName() + currentMethodName;
         	}
 
-        	if (context.isBehaviour(currentMethodName)) {
+        	if (context.isAtomicBehaviour(currentMethodName)) {
         		createdBehaviour = context.createAtom(values.get(0), currentMethodName);
+        	} else if (context.hasBehaviour(currentMethodName)) {
+        		List<AnValue> c = new ArrayList<AnValue>();
+        		for (AnValue a: values)
+        			c.add(a);
+        		if (insn.getOpcode() == Opcodes.INVOKEDYNAMIC || insn.getOpcode() != Opcodes.INVOKESTATIC)
+        			c.remove(0);
+        		createdBehaviour = context.getBehaviour(currentMethodName, c);
         	}
-        	
-        	
         	
         	if (t == Type.VOID_TYPE)
         		return null;
 
         	AnValue a = context.getReturnValueOfMethod(currentMethodName);
+        	System.out.println("Method " + currentMethodName + " typed with value " + a.toString());
         	// now we take the method return value, with its eventual variables,
         	IExpression exp = (IExpression)a;
         	
         	// and we istantiate it with the actual values with which the method is called.
-        	Long result = exp.evaluate(values);
-        	
-        	ConstExpression res = new ConstExpression(t, result);
+        	IExpression res = exp.evaluate(values);
+        	res.setType(t);
         	
         	return res;
         	
@@ -380,7 +387,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		currentMethodName = methodName;
 	}
 
-	public ThreadResource getBehaviour() {
+	public IBehaviour getBehaviour() {
 		return createdBehaviour;
 	}
 

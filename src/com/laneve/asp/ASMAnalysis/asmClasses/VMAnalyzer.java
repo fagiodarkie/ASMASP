@@ -10,6 +10,7 @@ import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 
 public class VMAnalyzer extends Analyzer<AnValue> {
 
@@ -35,8 +36,17 @@ public class VMAnalyzer extends Analyzer<AnValue> {
 		 */
 		Frame<? extends AnValue>[] temp = super.analyze(owner, m);
 		BehaviourFrame[] result = new BehaviourFrame[temp.length];
-		for (int i = 0; i < temp.length; ++i)
+		IBehaviour b = null;
+		for (int i = 0; i < temp.length; ++i) {
 			result[i] = (BehaviourFrame) temp[i];
+			if (result[i] == null)
+				continue;
+			if (result[i].frameBehaviour != null && b != null && result[i].frameBehaviour.equal(b))
+				result[i].frameBehaviour = null;
+			else if (result[i].frameBehaviour != null || b != null) {
+				b = (result[i].frameBehaviour == null ? null : result[i].frameBehaviour.clone());
+			}
+		}
 		
 		
 		List<String> deps = new ArrayList<String>();

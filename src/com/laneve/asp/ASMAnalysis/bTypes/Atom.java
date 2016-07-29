@@ -16,36 +16,23 @@ public class Atom implements IBehaviour {
 		return acquired++;
 	}
 
-	private int ID, type;
+	private int type;
 	
 	public Atom(int type) {
 		this.type = type;
-		if (type == RELEASE)
-			ID = getNextReleased();
-		else if (type == ACQUIRE)
-			ID = getNextAcquired();
-		else
-			ID = 0;
-	}
-
-	/*
-	 * this way nobody can define their own ID, save from us.
-	 */
-	protected Atom(int type, int ID) {
-		this.type = type;
-		this.ID = ID;
 	}
 	
 	public Atom clone() {
-		return new Atom(type, ID);
+		return new Atom(type);
 	}
 	
 	public String toString() {
-		if (type == RETURN)
-			return "0";
-		return ID + (type == ACQUIRE ? acq : rel);
+		return "0";
 	}
 
+	public boolean equal(IBehaviour o) {
+		return equalBehaviour(o);
+	}
 
 	@Override
 	public boolean equalBehaviour(IBehaviour updatedBehaviour) {

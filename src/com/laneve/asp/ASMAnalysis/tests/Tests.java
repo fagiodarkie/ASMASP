@@ -7,10 +7,21 @@ public class Tests {
 	}
 	
 	public int bar(int a) {
-		return a * (a + 3);
+		
+		Thread t = new Thread();
+		t.run();
+		int x = a * (a + 3);
+		
+		return x;
 	}
 	
-	public int bar() {
+	public int bar() throws InterruptedException {
+		
+		Thread t5 = new Thread();
+		
+		t5.run();
+		t5.join();
+		
 		return 2;
 	}
 	
@@ -24,10 +35,19 @@ public class Tests {
 		
 		int b = a * 2 + x.foo(x.bar(a));
 		
-		Thread t = new Thread();
+		Thread t1 = new Thread(),
+			t2 = new Thread(),
+			t3 = new Thread(),
+			t4 = new Thread();
 		
-		t.run();
-		t.join();
+		t1.run();
+		t2.run();
+		t3.run();
+		t1.join();
+		t4.run();
+		t3.join();
+		t4.join();
+		t2.join();
 		
 	}
 }

@@ -28,13 +28,18 @@ public abstract class IExpression extends AnValue{
 	}
 
 	public abstract Long evaluate();
-
-	@Override
-	public abstract String toString();
 	
-	public Long evaluate(List<? extends AnValue> values) {
+	@Override
+ 	public abstract String toString();
+	
+	public IExpression evaluate(List<? extends AnValue> values) {
 		setParameters(values);
-		Long res = evaluate();
+		IExpression res;
+		try {
+			res = new ConstExpression(Type.INT_TYPE, evaluate());
+		} catch(Error e) {
+			res = this;
+		}
 		setParameters(null);
 		return res;
 	}
@@ -50,5 +55,9 @@ public abstract class IExpression extends AnValue{
 	}
 
 	public abstract boolean equalExpression(IExpression iExpression);
+
+	public void setType(Type t) {
+		type = t;
+	}
 
 }

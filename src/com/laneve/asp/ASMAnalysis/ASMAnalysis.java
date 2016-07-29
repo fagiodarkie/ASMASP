@@ -39,7 +39,7 @@ public class ASMAnalysis {
 		 */
 		context = new AnalysisContext();
 
-		Path p = Paths.get(System.getProperty("user.home"), "git", "ASMASP", "tests");
+		Path p = Paths.get(System.getProperty("user.home"), "git", "ASMASP", "bin", "com", "laneve", "asp", "ASMAnalysis", "tests");
 		Path directory = (args.length > 2 ? Paths.get(args[2]) : p);
 		String entryPoint = (args.length > 3 ? args[3] : "com/laneve/asp/ASMAnalysis/tests/Tests.main()V");
 		

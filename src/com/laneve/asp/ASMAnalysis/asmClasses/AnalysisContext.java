@@ -17,6 +17,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.Atom;
 import com.laneve.asp.ASMAnalysis.bTypes.ConcatBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
+import com.laneve.asp.ASMAnalysis.bTypes.MethodBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 public class AnalysisContext {
@@ -109,7 +110,9 @@ public class AnalysisContext {
 		if (!returnValue.get(key).equalExpression((IExpression)value)) {
 			returnValue.put(key, (IExpression) value);
 			modifiedReturnExpression.put(key, true);
+			//System.out.println("Method " + method + " was modified: new value is " + value.toString());
 		}
+		
 		
 		/*
 		 * TODO check on equal return expression will be done in a later stage, when we are able
@@ -180,10 +183,12 @@ public class AnalysisContext {
 			
 			// if the return value was updated, also examine all methods depending on this.
 			if (modifiedReturnExpression.get(currentMethodID)) {
+				//System.out.println("Since the method return value was modified, we also reanalyze:");
 				for (long j = 0; j < methodCounter; ++j) {
 					if (depends.get(j).contains(currentMethodID)) {
 						analysisList.add(j);
 						analyzeMethods.put(j, true);
+						//System.out.println(methodID.get(j));
 					}
 				}
 				modifiedReturnExpression.put(currentMethodID, false);
@@ -240,23 +245,33 @@ public class AnalysisContext {
 			
 		}		
 		
-		System.out.println(res.toString());
+		//System.out.println(res.toString());
 		
 		return res;
 	}
 
-	public boolean isBehaviour(String currentMethodName) {
+	public boolean hasBehaviour(String currentMethodName) {
+		
+		return methodID.containsValue(currentMethodName);
+	}
+	
+	public boolean isAtomicBehaviour(String currentMethodName) {
 		return currentMethodName.equalsIgnoreCase(allocationCall)
 				|| currentMethodName.equalsIgnoreCase(deallocationCall);
 	}
 
 	public ThreadResource createAtom(AnValue anValue, String currentMethodName) {
-		if (isBehaviour(currentMethodName)) {
+		if (isAtomicBehaviour(currentMethodName)) {
 			if (currentMethodName.equalsIgnoreCase(allocationCall))
 				return allocateThread((ThreadValue)anValue);
 			else return deallocateThread((ThreadValue)anValue);
 		}
 		return null;
+	}
+
+	public IBehaviour getBehaviour(String currentMethodName, List<? extends AnValue> values) {
+		return new MethodBehaviour(currentMethodName, values);
+		//return methodBehaviour.get(getKeyOfMethod(currentMethodName));
 	}
 
 }
