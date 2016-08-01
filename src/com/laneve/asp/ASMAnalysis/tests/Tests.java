@@ -6,6 +6,10 @@ public class Tests {
 		return a * bar(a);
 	}
 	
+	public void release(Thread t, int i) throws InterruptedException {
+		t.join();
+	}
+	
 	public int bar(int a) {
 		
 		Thread t = new Thread();
@@ -29,7 +33,7 @@ public class Tests {
 		
 		Tests x = new Tests();
 	
-		int a = x.foo(3);
+		/*int a = x.foo(3);
 		
 		a += x.bar();
 		
@@ -46,8 +50,10 @@ public class Tests {
 		t1.join();
 		t4.run();
 		t3.join();
-		t4.join();
-		t2.join();
+		t4.join();*/
+		
+		x.release(new Thread(), 0);
+		
 		
 	}
 }

@@ -10,6 +10,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 
+import com.laneve.asp.ASMAnalysis.asmTypes.AbstractThread;
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
@@ -66,20 +67,30 @@ public class AnalysisContext {
 		return t;
 	}
 	
-	public ThreadResource allocateThread(ThreadValue t) {
-		if (threadsStatus.get(t.getID()) == ThreadResource.ALLOCATED) {
-			threadsStatus.put(t.getID(), ThreadResource.ACQUIRE);
-			return new ThreadResource(t.getID(), ThreadResource.ACQUIRE);			
+	public ThreadResource allocateThread(AbstractThread thr) {
+		if (thr instanceof ThreadValue) {
+			ThreadValue t = (ThreadValue) thr; 
+			if (threadsStatus.get(t.getID()) == ThreadResource.ALLOCATED) {
+				threadsStatus.put(t.getID(), ThreadResource.ACQUIRE);
+				return new ThreadResource(t, ThreadResource.ACQUIRE);			
+			} else {
+				return new ThreadResource(t, ThreadResource.ALREADY_ACQUIRED);
+			}
 		} else {
-			return new ThreadResource(t.getID(), ThreadResource.ALREADY_ACQUIRED);
+			return new ThreadResource(thr, ThreadResource.ACQUIRE);
 		}
 	}
 
-	public ThreadResource deallocateThread(ThreadValue t) {
-		if (threadsStatus.get(t.getID()) == ThreadResource.ACQUIRE) {
-			threadsStatus.put(t.getID(), ThreadResource.RELEASE);
-			return new ThreadResource(t.getID(), ThreadResource.RELEASE);
-		} else return new ThreadResource(t.getID(), ThreadResource.ALREADY_RELEASED);
+	public ThreadResource deallocateThread(AbstractThread thr) {
+		if (thr instanceof ThreadValue) {
+			ThreadValue t = (ThreadValue) thr; 
+			if (threadsStatus.get(t.getID()) == ThreadResource.ACQUIRE) {
+				threadsStatus.put(t.getID(), ThreadResource.RELEASE);
+				return new ThreadResource(t, ThreadResource.RELEASE);
+			} else return new ThreadResource(t, ThreadResource.ALREADY_RELEASED);
+		} else {
+			return new ThreadResource(thr, ThreadResource.RELEASE);
+		}
 	}
 
 	public void signalDependancy(String methodName, List<String> deps) {
@@ -171,7 +182,7 @@ public class AnalysisContext {
 			if (!analyzeMethods.get(currentMethodID))
 				continue;
 
-			System.out.println("Analyzing method " + methodID.get(currentMethodID));
+			//System.out.println("Analyzing method " + methodID.get(currentMethodID));
 			
 			// else, analyze it and put all its dependancies to be analyzed too.
 			// also all methods which depends on it, if behaviour changes.
@@ -265,8 +276,8 @@ public class AnalysisContext {
 	public ThreadResource createAtom(AnValue anValue, String currentMethodName) {
 		if (isAtomicBehaviour(currentMethodName)) {
 			if (currentMethodName.equalsIgnoreCase(allocationCall))
-				return allocateThread((ThreadValue)anValue);
-			else return deallocateThread((ThreadValue)anValue);
+				return allocateThread((AbstractThread)anValue);
+			else return deallocateThread((AbstractThread)anValue);
 		}
 		return null;
 	}
@@ -276,9 +287,22 @@ public class AnalysisContext {
 		//return methodBehaviour.get(getKeyOfMethod(currentMethodName));
 	}
 
-
 	public Integer getStatusOfThread(long id) {
 		return threadsStatus.get(id);
+	}
+
+	public List<String> getParametersOf(String methodName) {
+		List<String> res = new ArrayList<String>();
+		String d = methodNodes.get(getKeyOfMethod(methodName)).desc;
+		String[] r = d.replace('(', ' ').replace(')', ' ').trim().split(";");
+		for (int i = 0; i < r.length; ++i)
+			res.add(r[i].replace('.', '/'));
+		
+		return res;
+	}
+
+	public boolean isResource(String string) {
+		return resourceClass.equalsIgnoreCase(string.substring(1));
 	}
 
 }

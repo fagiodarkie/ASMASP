@@ -1,29 +1,33 @@
 package com.laneve.asp.ASMAnalysis.bTypes;
 
+import com.laneve.asp.ASMAnalysis.asmTypes.AbstractThread;
+import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
+
 public class ThreadResource implements IBehaviour {
 
 	public static final int ACQUIRE = 0, RELEASE = 1, ALREADY_ACQUIRED = 2,
 			ALREADY_RELEASED = 3, MAYBE_RELEASED = 4, ALLOCATED = 5;
-
-	protected long ID;
+	protected boolean defined;
+	protected AbstractThread thread;
 	protected int status;
 	
-	public ThreadResource(long id, int status) {
-		ID = id;
+	public ThreadResource(AbstractThread t, int status) {
+		defined = t instanceof ThreadValue;
+		thread = t;
 		this.status = status;
 	}
 	
 	public String toString() {
 		switch (status) {
-		case ACQUIRE: return "t" + ID + ".acquire";
-		case RELEASE: return "t" + ID + ".release";
-		case MAYBE_RELEASED: return "t" + ID + ".released?";
+		case ACQUIRE: return thread.toString() + ".acquire";
+		case RELEASE: return thread.toString() + ".release";
+		case MAYBE_RELEASED: return thread.toString() + ".released?";
 		default: return "";
 		}
 	}
 
 	public ThreadResource clone() {
-		return new ThreadResource(ID, status);
+		return new ThreadResource(thread, status);
 	}
 	
 	@Override
@@ -33,7 +37,7 @@ public class ThreadResource implements IBehaviour {
 
 	@Override
 	public boolean equal(IBehaviour o) {
-		return equalBehaviour(o) && ID == ((ThreadResource)o).ID;
+		return equalBehaviour(o) && thread.toString().equalsIgnoreCase(((ThreadResource)o).thread.toString());
 	}
 	
 	@Override

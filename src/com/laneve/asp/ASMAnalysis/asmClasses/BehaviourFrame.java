@@ -1,5 +1,7 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
+import java.util.List;
+
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -11,6 +13,8 @@ import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.VarThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.VarExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.ConcatBehaviour;
@@ -90,6 +94,15 @@ public class BehaviourFrame extends Frame<AnValue> {
 				push(interpreter.copyOperation(insn,
                     getLocal(((VarInsnNode) insn).var)));
 			else push(new VarExpression(Type.LONG_TYPE, ((VarInsnNode) insn).var));
+			break;
+		case Opcodes.ALOAD:
+			// If the local is null but should be a thread, we load a VarThread - the method is loading a parameter.
+			VarInsnNode iNode = (VarInsnNode) insn;
+			List<String> params = context.getParametersOf(methodName);
+			if (iNode.var < params.size() && context.isResource(params.get(iNode.var))) {
+				setLocal(iNode.var, new VarThreadValue(getLocal(iNode.var), iNode.var, context));
+				super.execute(insn, interpreter);
+			} else super.execute(insn, interpreter);
 			break;
 		case Opcodes.IRETURN:
 		case Opcodes.LRETURN:

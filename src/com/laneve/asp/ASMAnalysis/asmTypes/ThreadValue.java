@@ -2,7 +2,7 @@ package com.laneve.asp.ASMAnalysis.asmTypes;
 
 import com.laneve.asp.ASMAnalysis.asmClasses.AnalysisContext;
 
-public class ThreadValue extends AnValue {
+public class ThreadValue extends AbstractThread {
 
 	protected long ID;
 	protected AnalysisContext context;
@@ -22,9 +22,15 @@ public class ThreadValue extends AnValue {
 	public boolean equalValue(AnValue other) {
 		return context.getStatusOfThread(ID) == context.getStatusOfThread(((ThreadValue)other).ID);
 	}
-	
+
 	public long getID() {
 		return ID;
 	}
+
+	@Override
+	public String toString() {
+		return "t" + ID;
+	}
+	
 
 }

@@ -1,6 +1,6 @@
-Classfile /home/students/jacopo.freddi/git/ASMASP/tests/Tests.class
-  Last modified Jul 28, 2016; size 651 bytes
-  MD5 checksum 3b232e0df64380b756641fea6753f575
+Classfile /home/phagio/git/ASMASP/bin/com/laneve/asp/ASMAnalysis/tests/Tests.class
+  Last modified Aug 1, 2016; size 1041 bytes
+  MD5 checksum 858bbcd98afd225a9d593bbf365bd14f
   Compiled from "Tests.java"
 public class com.laneve.asp.ASMAnalysis.tests.Tests
   SourceFile: "Tests.java"
@@ -8,52 +8,65 @@ public class com.laneve.asp.ASMAnalysis.tests.Tests
   major version: 51
   flags: ACC_PUBLIC, ACC_SUPER
 Constant pool:
-   #1 = Methodref          #11.#25        //  java/lang/Object."<init>":()V
-   #2 = Methodref          #3.#26         //  com/laneve/asp/ASMAnalysis/tests/Tests.bar:(I)I
-   #3 = Class              #27            //  com/laneve/asp/ASMAnalysis/tests/Tests
-   #4 = Methodref          #3.#25         //  com/laneve/asp/ASMAnalysis/tests/Tests."<init>":()V
-   #5 = Methodref          #3.#28         //  com/laneve/asp/ASMAnalysis/tests/Tests.foo:(I)I
-   #6 = Methodref          #3.#29         //  com/laneve/asp/ASMAnalysis/tests/Tests.bar:()I
-   #7 = Class              #30            //  java/lang/Thread
-   #8 = Methodref          #7.#25         //  java/lang/Thread."<init>":()V
-   #9 = Methodref          #7.#31         //  java/lang/Thread.run:()V
-  #10 = Methodref          #7.#32         //  java/lang/Thread.join:()V
-  #11 = Class              #33            //  java/lang/Object
-  #12 = Utf8               <init>
-  #13 = Utf8               ()V
-  #14 = Utf8               Code
-  #15 = Utf8               LineNumberTable
-  #16 = Utf8               foo
-  #17 = Utf8               (I)I
+   #1 = Class              #2             //  com/laneve/asp/ASMAnalysis/tests/Tests
+   #2 = Utf8               com/laneve/asp/ASMAnalysis/tests/Tests
+   #3 = Class              #4             //  java/lang/Object
+   #4 = Utf8               java/lang/Object
+   #5 = Utf8               <init>
+   #6 = Utf8               ()V
+   #7 = Utf8               Code
+   #8 = Methodref          #3.#9          //  java/lang/Object."<init>":()V
+   #9 = NameAndType        #5:#6          //  "<init>":()V
+  #10 = Utf8               LineNumberTable
+  #11 = Utf8               LocalVariableTable
+  #12 = Utf8               this
+  #13 = Utf8               Lcom/laneve/asp/ASMAnalysis/tests/Tests;
+  #14 = Utf8               foo
+  #15 = Utf8               (I)I
+  #16 = Methodref          #1.#17         //  com/laneve/asp/ASMAnalysis/tests/Tests.bar:(I)I
+  #17 = NameAndType        #18:#15        //  bar:(I)I
   #18 = Utf8               bar
-  #19 = Utf8               ()I
-  #20 = Utf8               main
-  #21 = Utf8               Exceptions
-  #22 = Class              #34            //  java/lang/InterruptedException
-  #23 = Utf8               SourceFile
-  #24 = Utf8               Tests.java
-  #25 = NameAndType        #12:#13        //  "<init>":()V
-  #26 = NameAndType        #18:#17        //  bar:(I)I
-  #27 = Utf8               com/laneve/asp/ASMAnalysis/tests/Tests
-  #28 = NameAndType        #16:#17        //  foo:(I)I
-  #29 = NameAndType        #18:#19        //  bar:()I
-  #30 = Utf8               java/lang/Thread
-  #31 = NameAndType        #35:#13        //  run:()V
-  #32 = NameAndType        #36:#13        //  join:()V
-  #33 = Utf8               java/lang/Object
-  #34 = Utf8               java/lang/InterruptedException
-  #35 = Utf8               run
-  #36 = Utf8               join
+  #19 = Utf8               a
+  #20 = Utf8               I
+  #21 = Utf8               release
+  #22 = Utf8               (Ljava/lang/Thread;I)V
+  #23 = Utf8               Exceptions
+  #24 = Class              #25            //  java/lang/InterruptedException
+  #25 = Utf8               java/lang/InterruptedException
+  #26 = Methodref          #27.#29        //  java/lang/Thread.join:()V
+  #27 = Class              #28            //  java/lang/Thread
+  #28 = Utf8               java/lang/Thread
+  #29 = NameAndType        #30:#6         //  join:()V
+  #30 = Utf8               join
+  #31 = Utf8               t
+  #32 = Utf8               Ljava/lang/Thread;
+  #33 = Utf8               i
+  #34 = Methodref          #27.#9         //  java/lang/Thread."<init>":()V
+  #35 = Methodref          #27.#36        //  java/lang/Thread.run:()V
+  #36 = NameAndType        #37:#6         //  run:()V
+  #37 = Utf8               run
+  #38 = Utf8               x
+  #39 = Utf8               ()I
+  #40 = Utf8               t5
+  #41 = Utf8               main
+  #42 = Methodref          #1.#9          //  com/laneve/asp/ASMAnalysis/tests/Tests."<init>":()V
+  #43 = Methodref          #1.#44         //  com/laneve/asp/ASMAnalysis/tests/Tests.release:(Ljava/lang/Thread;I)V
+  #44 = NameAndType        #21:#22        //  release:(Ljava/lang/Thread;I)V
+  #45 = Utf8               SourceFile
+  #46 = Utf8               Tests.java
 {
   public com.laneve.asp.ASMAnalysis.tests.Tests();
     flags: ACC_PUBLIC
     Code:
       stack=1, locals=1, args_size=1
          0: aload_0       
-         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         1: invokespecial #8                  // Method java/lang/Object."<init>":()V
          4: return        
       LineNumberTable:
         line 3: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+               0       5     0  this   Lcom/laneve/asp/ASMAnalysis/tests/Tests;
 
   public int foo(int);
     flags: ACC_PUBLIC
@@ -62,79 +75,112 @@ Constant pool:
          0: iload_1       
          1: aload_0       
          2: iload_1       
-         3: invokevirtual #2                  // Method bar:(I)I
+         3: invokevirtual #16                 // Method bar:(I)I
          6: imul          
          7: ireturn       
       LineNumberTable:
         line 6: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+               0       8     0  this   Lcom/laneve/asp/ASMAnalysis/tests/Tests;
+               0       8     1     a   I
+
+  public void release(java.lang.Thread, int) throws java.lang.InterruptedException;
+    flags: ACC_PUBLIC
+    Exceptions:
+      throws java.lang.InterruptedException
+    Code:
+      stack=1, locals=3, args_size=3
+         0: aload_1       
+         1: invokevirtual #26                 // Method java/lang/Thread.join:()V
+         4: return        
+      LineNumberTable:
+        line 10: 0
+        line 11: 4
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+               0       5     0  this   Lcom/laneve/asp/ASMAnalysis/tests/Tests;
+               0       5     1     t   Ljava/lang/Thread;
+               0       5     2     i   I
 
   public int bar(int);
     flags: ACC_PUBLIC
     Code:
-      stack=3, locals=2, args_size=2
-         0: iload_1       
-         1: iload_1       
-         2: iconst_3      
-         3: iadd          
-         4: imul          
-         5: ireturn       
+      stack=3, locals=4, args_size=2
+         0: new           #27                 // class java/lang/Thread
+         3: dup           
+         4: invokespecial #34                 // Method java/lang/Thread."<init>":()V
+         7: astore_2      
+         8: aload_2       
+         9: invokevirtual #35                 // Method java/lang/Thread.run:()V
+        12: iload_1       
+        13: iload_1       
+        14: iconst_3      
+        15: iadd          
+        16: imul          
+        17: istore_3      
+        18: iload_3       
+        19: ireturn       
       LineNumberTable:
-        line 10: 0
+        line 15: 0
+        line 16: 8
+        line 17: 12
+        line 19: 18
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+               0      20     0  this   Lcom/laneve/asp/ASMAnalysis/tests/Tests;
+               0      20     1     a   I
+               8      12     2     t   Ljava/lang/Thread;
+              18       2     3     x   I
 
-  public int bar();
+  public int bar() throws java.lang.InterruptedException;
     flags: ACC_PUBLIC
+    Exceptions:
+      throws java.lang.InterruptedException
     Code:
-      stack=1, locals=1, args_size=1
-         0: iconst_2      
-         1: ireturn       
+      stack=2, locals=2, args_size=1
+         0: new           #27                 // class java/lang/Thread
+         3: dup           
+         4: invokespecial #34                 // Method java/lang/Thread."<init>":()V
+         7: astore_1      
+         8: aload_1       
+         9: invokevirtual #35                 // Method java/lang/Thread.run:()V
+        12: aload_1       
+        13: invokevirtual #26                 // Method java/lang/Thread.join:()V
+        16: iconst_2      
+        17: ireturn       
       LineNumberTable:
-        line 14: 0
+        line 24: 0
+        line 26: 8
+        line 27: 12
+        line 29: 16
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+               0      18     0  this   Lcom/laneve/asp/ASMAnalysis/tests/Tests;
+               8      10     1    t5   Ljava/lang/Thread;
 
   public static void main() throws java.lang.InterruptedException;
     flags: ACC_PUBLIC, ACC_STATIC
-    Code:
-      stack=4, locals=4, args_size=0
-         0: new           #3                  // class com/laneve/asp/ASMAnalysis/tests/Tests
-         3: dup           
-         4: invokespecial #4                  // Method "<init>":()V
-         7: astore_0      
-         8: aload_0       
-         9: iconst_3      
-        10: invokevirtual #5                  // Method foo:(I)I
-        13: istore_1      
-        14: iload_1       
-        15: aload_0       
-        16: invokevirtual #6                  // Method bar:()I
-        19: iadd          
-        20: istore_1      
-        21: iload_1       
-        22: iconst_2      
-        23: imul          
-        24: aload_0       
-        25: aload_0       
-        26: iload_1       
-        27: invokevirtual #2                  // Method bar:(I)I
-        30: invokevirtual #5                  // Method foo:(I)I
-        33: iadd          
-        34: istore_2      
-        35: new           #7                  // class java/lang/Thread
-        38: dup           
-        39: invokespecial #8                  // Method java/lang/Thread."<init>":()V
-        42: astore_3      
-        43: aload_3       
-        44: invokevirtual #9                  // Method java/lang/Thread.run:()V
-        47: aload_3       
-        48: invokevirtual #10                 // Method java/lang/Thread.join:()V
-        51: return        
-      LineNumberTable:
-        line 19: 0
-        line 21: 8
-        line 23: 14
-        line 25: 21
-        line 27: 35
-        line 29: 43
-        line 30: 47
-        line 32: 51
     Exceptions:
       throws java.lang.InterruptedException
+    Code:
+      stack=3, locals=1, args_size=0
+         0: new           #1                  // class com/laneve/asp/ASMAnalysis/tests/Tests
+         3: dup           
+         4: invokespecial #42                 // Method "<init>":()V
+         7: astore_0      
+         8: aload_0       
+         9: new           #27                 // class java/lang/Thread
+        12: dup           
+        13: invokespecial #34                 // Method java/lang/Thread."<init>":()V
+        16: iconst_0      
+        17: invokevirtual #43                 // Method release:(Ljava/lang/Thread;I)V
+        20: return        
+      LineNumberTable:
+        line 34: 0
+        line 55: 8
+        line 58: 20
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+               8      13     0     x   Lcom/laneve/asp/ASMAnalysis/tests/Tests;
 }

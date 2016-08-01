@@ -339,8 +339,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         		List<AnValue> c = new ArrayList<AnValue>();
         		for (AnValue a: values)
         			c.add(a);
-        		if (insn.getOpcode() == Opcodes.INVOKEDYNAMIC || insn.getOpcode() != Opcodes.INVOKESTATIC)
-        			c.remove(0);
+        		/*if (insn.getOpcode() == Opcodes.INVOKEDYNAMIC || insn.getOpcode() != Opcodes.INVOKESTATIC)
+        			c.remove(0);*/
         		createdBehaviour = context.getBehaviour(currentMethodName, c);
         	}
         	
@@ -348,7 +348,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         		return null;
 
         	AnValue a = context.getReturnValueOfMethod(currentMethodName);
-        	System.out.println("Method " + currentMethodName + " typed with value " + a.toString());
+        	//System.out.println("Method " + currentMethodName + " typed with value " + a.toString());
         	// now we take the method return value, with its eventual variables,
         	IExpression exp = (IExpression)a;
         	

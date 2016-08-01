@@ -136,6 +136,11 @@ public class AnValue implements Value {
 		return type.getSize();
 	}
 
+	public String toString() {
+		String[] r = className.split("/");
+		return r[r.length - 1];
+	}
+	
 	public Type getType() {
 		return type;
 	}
