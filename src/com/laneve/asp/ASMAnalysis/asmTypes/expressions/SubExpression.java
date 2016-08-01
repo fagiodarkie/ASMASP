@@ -1,6 +1,8 @@
 package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
 import org.objectweb.asm.Type;
 
+import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+
 public class SubExpression extends IExpression {
 	
 	public SubExpression(Type t, IExpression left, IExpression right) {
@@ -22,9 +24,9 @@ public class SubExpression extends IExpression {
 	}
 
 	@Override
-	public boolean equalExpression(IExpression iExpression) {
+	public boolean equalValue(AnValue iExpression) {
 		if (!(iExpression instanceof SubExpression)) return false;
-		return right.equalExpression(iExpression.right) && left.equalExpression(iExpression.left);
+		return right.equalValue(((IExpression)iExpression).right) && left.equalValue(((IExpression)iExpression).left);
 	}
 
 }

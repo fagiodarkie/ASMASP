@@ -1,6 +1,8 @@
 package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
 import org.objectweb.asm.Type;
 
+import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+
 public class MinusExpression extends IExpression {
 	
 	public MinusExpression(Type t, IExpression exp) {
@@ -22,9 +24,9 @@ public class MinusExpression extends IExpression {
 	}
 
 	@Override
-	public boolean equalExpression(IExpression iExpression) {
+	public boolean equalValue(AnValue iExpression) {
 		if (!(iExpression instanceof MinusExpression)) return false;
-		return left.equalExpression(iExpression.left);
+		return left.equalValue(((IExpression)iExpression).left);
 	}
 
 }

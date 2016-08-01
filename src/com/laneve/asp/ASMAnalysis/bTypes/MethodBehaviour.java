@@ -3,6 +3,7 @@ package com.laneve.asp.ASMAnalysis.bTypes;
 import java.util.List;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 
 
 public class MethodBehaviour implements IBehaviour {
@@ -18,7 +19,17 @@ public class MethodBehaviour implements IBehaviour {
 
 	@Override
 	public boolean equalBehaviour(IBehaviour updatedBehaviour) {
-		return (updatedBehaviour instanceof MethodBehaviour) && ((MethodBehaviour)updatedBehaviour).methodName.equalsIgnoreCase(methodName);
+		boolean r = (updatedBehaviour instanceof MethodBehaviour) && ((MethodBehaviour)updatedBehaviour).methodName.equalsIgnoreCase(methodName);
+		if (!r)
+			return false;
+		MethodBehaviour o = (MethodBehaviour) updatedBehaviour;
+		if (o.vals.size() != vals.size())
+			return false;
+		for (int i = 0; i < vals.size(); ++i) {
+			if (!(vals.get(i)).equalValue(o.vals.get(i)))
+				return false;
+		}
+		return true;
 	}
 
 	public IBehaviour clone() {
@@ -27,12 +38,7 @@ public class MethodBehaviour implements IBehaviour {
 	
 	@Override
 	public boolean equal(IBehaviour o) {
-		if (!equalBehaviour(o)) return false;
-		
-		MethodBehaviour other = (MethodBehaviour)o;
-		if (other.vals.size() != vals.size()) return false;
-		// TODO
-		return true;
+		return equalBehaviour(o);
 	}
 
 	@Override
@@ -44,7 +50,13 @@ public class MethodBehaviour implements IBehaviour {
 	public String toString() {
 		String ret = methodName.substring(methodName.lastIndexOf("/") + 1, methodName.indexOf("(")  + 1);
 		for (AnValue a: vals)
-			ret += a.toString() + ", ";
+			if (a instanceof IExpression) {
+				try {
+					ret += ((IExpression)a).evaluate() + ", ";
+				} catch (Throwable t) {
+					ret += a.toString() + ", ";
+				}
+			} else ret += a.toString() + ", ";
 		
 		if (ret.endsWith(", "))
 			ret = ret.substring(0, ret.lastIndexOf(", "));

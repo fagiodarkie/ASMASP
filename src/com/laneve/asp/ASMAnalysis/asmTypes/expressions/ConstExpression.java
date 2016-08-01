@@ -1,6 +1,8 @@
 package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
 import org.objectweb.asm.Type;
 
+import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+
 public class ConstExpression extends IExpression {
 	
 protected Long constExp;
@@ -26,7 +28,7 @@ protected Long constExp;
 	}
 
 	@Override
-	public boolean equalExpression(IExpression iExpression) {
+	public boolean equalValue(AnValue iExpression) {
 		if (!(iExpression instanceof ConstExpression)) return false;
 		return constExp == ((ConstExpression)iExpression).constExp;
 	}

@@ -52,7 +52,7 @@ public class VarExpression extends IExpression {
 	}
 
 	@Override
-	public boolean equalExpression(IExpression iExpression) {
+	public boolean equalValue(AnValue iExpression) {
 		if (!(iExpression instanceof VarExpression)) return false;
 		return intExp == ((VarExpression)iExpression).intExp;
 	}

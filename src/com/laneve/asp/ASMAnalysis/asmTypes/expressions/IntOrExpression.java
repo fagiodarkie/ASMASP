@@ -2,6 +2,7 @@ package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
 
 import org.objectweb.asm.Type;
 
+import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 
 public class IntOrExpression extends IExpression {
@@ -25,10 +26,10 @@ public class IntOrExpression extends IExpression {
 	}
 
 	@Override
-	public boolean equalExpression(IExpression iExpression) {
+	public boolean equalValue(AnValue iExpression) {
 		if (!(iExpression instanceof IntOrExpression)) return false;
-		return right.equalExpression(iExpression.right) && left.equalExpression(iExpression.left)
-				|| (left.equalExpression(iExpression.right) && right.equalExpression(iExpression.left));
+		return right.equalValue(((IExpression)iExpression).right) && left.equalValue(((IExpression)iExpression).left)
+				|| (left.equalValue(((IExpression)iExpression).right) && right.equalValue(((IExpression)iExpression).left));
 	}
 
 }

@@ -2,7 +2,8 @@ package com.laneve.asp.ASMAnalysis.bTypes;
 
 public class ThreadResource implements IBehaviour {
 
-	public static final int ACQUIRE = 0, RELEASE = 1, ALREADY_ACQUIRED = 2, ALREADY_RELEASED = 3, MAYBE_RELEASED = 4;
+	public static final int ACQUIRE = 0, RELEASE = 1, ALREADY_ACQUIRED = 2,
+			ALREADY_RELEASED = 3, MAYBE_RELEASED = 4, ALLOCATED = 5;
 
 	protected long ID;
 	protected int status;

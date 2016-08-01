@@ -101,6 +101,9 @@ public class AnValue implements Value {
 		}
 	}
 	
+	public boolean equalValue(AnValue other) {
+		return other.type == type && other.className.equalsIgnoreCase(className);
+	}
 	
 	protected Type type;
 	protected String className;

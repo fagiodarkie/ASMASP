@@ -22,7 +22,8 @@ import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 public class AnalysisContext {
 
-	protected Map<Long, Boolean> threadsStatus, analyzeMethods, modifiedReturnExpression;
+	protected Map<Long, Integer> threadsStatus;
+	protected Map<Long, Boolean> analyzeMethods, modifiedReturnExpression;
 	protected Map<Long, IExpression> returnValue;
 	protected Map<Long, String> methodID, owner;
 	protected Map<Long, List<Long>> depends;
@@ -34,7 +35,7 @@ public class AnalysisContext {
 	
 	
 	public AnalysisContext() {
-		threadsStatus = new HashMap<Long, Boolean>();
+		threadsStatus = new HashMap<Long, Integer>();
 		analyzeMethods = new HashMap<Long, Boolean>();
 		modifiedReturnExpression = new HashMap<Long, Boolean>();
 		returnValue = new HashMap<Long, IExpression>();
@@ -59,14 +60,15 @@ public class AnalysisContext {
 	
 	public ThreadValue generateThread() {
 		ThreadValue t = new ThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
-				threadCounter);
+				threadCounter, this);
+		threadsStatus.put(threadCounter, ThreadResource.ALLOCATED);
 		threadCounter++;
 		return t;
 	}
 	
 	public ThreadResource allocateThread(ThreadValue t) {
-		if (!threadsStatus.containsKey(t.getID())) {
-			threadsStatus.put(t.getID(), true);
+		if (threadsStatus.get(t.getID()) == ThreadResource.ALLOCATED) {
+			threadsStatus.put(t.getID(), ThreadResource.ACQUIRE);
 			return new ThreadResource(t.getID(), ThreadResource.ACQUIRE);			
 		} else {
 			return new ThreadResource(t.getID(), ThreadResource.ALREADY_ACQUIRED);
@@ -74,8 +76,8 @@ public class AnalysisContext {
 	}
 
 	public ThreadResource deallocateThread(ThreadValue t) {
-		if (threadsStatus.get(t.getID())) {
-			threadsStatus.put(t.getID(), false);
+		if (threadsStatus.get(t.getID()) == ThreadResource.ACQUIRE) {
+			threadsStatus.put(t.getID(), ThreadResource.RELEASE);
 			return new ThreadResource(t.getID(), ThreadResource.RELEASE);
 		} else return new ThreadResource(t.getID(), ThreadResource.ALREADY_RELEASED);
 	}
@@ -107,7 +109,7 @@ public class AnalysisContext {
 	public void setReturnExpression(String method, AnValue value) {
 		Long key = getKeyOfMethod(method);
 
-		if (!returnValue.get(key).equalExpression((IExpression)value)) {
+		if (!returnValue.get(key).equalValue((IExpression)value)) {
 			returnValue.put(key, (IExpression) value);
 			modifiedReturnExpression.put(key, true);
 			//System.out.println("Method " + method + " was modified: new value is " + value.toString());
@@ -272,6 +274,11 @@ public class AnalysisContext {
 	public IBehaviour getBehaviour(String currentMethodName, List<? extends AnValue> values) {
 		return new MethodBehaviour(currentMethodName, values);
 		//return methodBehaviour.get(getKeyOfMethod(currentMethodName));
+	}
+
+
+	public Integer getStatusOfThread(long id) {
+		return threadsStatus.get(id);
 	}
 
 }

@@ -1,6 +1,8 @@
 package com.laneve.asp.ASMAnalysis.asmTypes.expressions;
 import org.objectweb.asm.Type;
 
+import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+
 public class RemExpression extends IExpression {
 	
 	public RemExpression(Type t, IExpression left, IExpression right) {
@@ -22,9 +24,9 @@ public class RemExpression extends IExpression {
 	}
 	
 	@Override
-	public boolean equalExpression(IExpression iExpression) {
+	public boolean equalValue(AnValue iExpression) {
 		if (!(iExpression instanceof RemExpression)) return false;
-		return right.equalExpression(iExpression.right) && left.equalExpression(iExpression.left);
+		return right.equalValue(((IExpression)iExpression).right) && left.equalValue(((IExpression)iExpression).left);
 	}
 
 }

@@ -54,7 +54,7 @@ public abstract class IExpression extends AnValue{
 			right.setParameters(values);
 	}
 
-	public abstract boolean equalExpression(IExpression iExpression);
+	public abstract boolean equalValue(AnValue other);
 
 	public void setType(Type t) {
 		type = t;
