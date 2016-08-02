@@ -14,6 +14,10 @@ public class ThreadResource implements IBehaviour {
 		this.status = status;
 	}
 	
+	public ThreadValue getThreadValue() {
+		return thread;
+	}
+	
 	public String toString() {
 		switch (status) {
 		case ACQUIRE: return thread.toString() + ".acquire";

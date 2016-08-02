@@ -1,5 +1,7 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
+import java.util.List;
+
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -15,6 +17,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.VarExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
+import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 
 public class BehaviourFrame extends Frame<AnValue> {
@@ -30,7 +33,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 		this.methodName = methodName;
 		invokedMethod = null;
 		
-		normalizeThreadVariables();
+//		normalizeThreadVariables();
 	}
 	
 	public String getInvokedMethod() {
@@ -43,7 +46,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 			setLocal(i, null);
 		invokedMethod = null;
 		
-		normalizeThreadVariables();
+//		normalizeThreadVariables();
 	}
 	
 	private void normalizeThreadVariables() {
@@ -100,12 +103,12 @@ public class BehaviourFrame extends Frame<AnValue> {
 			break;
 		case Opcodes.ALOAD:
 			// If the local is null but should be a thread, we load a VarThread - the method is loading a parameter.
-			/*VarInsnNode iNode = (VarInsnNode) insn;
-			List<String> params = context.getParametersOf(methodName);
+			VarInsnNode iNode = (VarInsnNode) insn;
+			//List<String> params = context.getParametersOf(methodName);
 			AnValue loading = getLocal(iNode.var);
 			if (loading instanceof ThreadValue && ((ThreadValue)loading).isVariable()) {
 				setLocal(iNode.var, context.generateThread(iNode.var));
-			}*/
+			}
 			super.execute(insn, interpreter);
 			break;
 		case Opcodes.IRETURN:
@@ -133,8 +136,15 @@ public class BehaviourFrame extends Frame<AnValue> {
 			in.setCurrentMethod(invokedMethod);
 			super.execute(insn, in);
 			
-			if (in.getBehaviour() != null)
+			if (in.getBehaviour() != null) {
 				frameBehaviour = in.getBehaviour().clone();
+				
+				if (frameBehaviour instanceof ThreadResource) {
+					ThreadResource t = (ThreadResource)frameBehaviour;
+					if (t.getThreadValue().isVariable())
+						context.signalRelease(methodName, t.getThreadValue().getID());
+				}
+			}
 				/*
 				 * For the sake of correct analysis,  we need to separate the frame behaviours.
 				 * Also, we probably will need lines to understand ifs and cycles.

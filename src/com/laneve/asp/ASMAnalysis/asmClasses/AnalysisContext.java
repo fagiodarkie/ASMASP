@@ -26,12 +26,12 @@ public class AnalysisContext {
 	protected Map<Long, Boolean> analyzeMethods, modifiedReturnExpression;
 	protected Map<Long, IExpression> returnValue;
 	protected Map<Long, String> methodID, owner;
-	protected Map<Long, List<Long>> depends;
+	protected Map<Long, List<Long>> depends, releasedParameters;
 	protected Map<Long, List<BehaviourFrame>> methodFrames;
 	protected long threadCounter, methodCounter;
-	private Map<Long, MethodNode> methodNodes;
-	private Map<Long, IBehaviour> methodBehaviour;
-	private String resourceClass, allocationCall, deallocationCall;
+	protected Map<Long, MethodNode> methodNodes;
+	protected Map<Long, IBehaviour> methodBehaviour;
+	protected String resourceClass, allocationCall, deallocationCall;
 	
 	
 	public AnalysisContext() {
@@ -42,6 +42,7 @@ public class AnalysisContext {
 		methodID = new HashMap<Long, String>();
 		owner = new HashMap<Long, String>();
 		depends = new HashMap<Long, List<Long>>();
+		releasedParameters = new HashMap<Long, List<Long>>();
 		methodFrames = new HashMap<Long, List<BehaviourFrame>>();
 		threadCounter = methodCounter = 0;
 		methodNodes = new HashMap<Long, MethodNode>();
@@ -158,6 +159,7 @@ public class AnalysisContext {
 		owner.put(methodCounter, className);
 		methodID.put(methodCounter, name);
 		depends.put(methodCounter, new ArrayList<Long>());
+		releasedParameters.put(methodCounter, new ArrayList<Long>());
 		analyzeMethods.put(methodCounter, true);
 		returnValue.put(methodCounter, new ConstExpression(Type.INT_TYPE, new Long(0)));
 		modifiedReturnExpression.put(methodCounter, false);
@@ -227,6 +229,12 @@ public class AnalysisContext {
 		for (long i = 0; i < methodCounter; ++i) {
 			System.out.println("Method " + methodID.get(i) + " has behaviour " + methodBehaviour.get(i));
 			System.out.println("Method " + methodID.get(i) + " has return value " + returnValue.get(i));
+			if (releasedParameters.get(i).size() > 0) {
+				String rels = "" +  releasedParameters.get(i).get(0);
+				for (int j = 1; j < releasedParameters.get(i).size(); ++j)
+					rels += ", " + releasedParameters.get(i).get(j);
+				System.out.println("Method " + methodID.get(i) + " releases Threads # " + rels);
+			}
 		}
 		
 	}
@@ -309,6 +317,12 @@ public class AnalysisContext {
 		if (string.startsWith("L"))
 			return resourceClass.equalsIgnoreCase(string.substring(1));
 		return resourceClass.equalsIgnoreCase(string);
+	}
+
+	public void signalRelease(String methodName, long id) {
+		long k = getKeyOfMethod(methodName);
+		if (!releasedParameters.get(k).contains(id))
+			releasedParameters.get(k).add(id);
 	}
 
 }

@@ -6,12 +6,14 @@ public class Tests {
 		return a * bar(a);
 	}
 	
-	public void release(Thread t, int i) throws InterruptedException {
+	public void release(Thread t, Thread t2, int i) throws InterruptedException {
 		t.join();
 		
 		t = new Thread();
 		t.run();
 		t.join();
+		
+		t2.join();
 	}
 	
 	public Thread create() {
@@ -63,7 +65,7 @@ public class Tests {
 		t4.join();*/
 		Thread t = new Thread();
 		t.run();
-		x.release(t, 0);
+		x.release(t, new Thread(), 0);
 		
 		
 	}
