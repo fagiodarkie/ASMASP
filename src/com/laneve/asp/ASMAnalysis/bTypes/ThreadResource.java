@@ -1,18 +1,15 @@
 package com.laneve.asp.ASMAnalysis.bTypes;
 
-import com.laneve.asp.ASMAnalysis.asmTypes.AbstractThread;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 
 public class ThreadResource implements IBehaviour {
 
 	public static final int ACQUIRE = 0, RELEASE = 1, ALREADY_ACQUIRED = 2,
 			ALREADY_RELEASED = 3, MAYBE_RELEASED = 4, ALLOCATED = 5;
-	protected boolean defined;
-	protected AbstractThread thread;
+	protected ThreadValue thread;
 	protected int status;
 	
-	public ThreadResource(AbstractThread t, int status) {
-		defined = t instanceof ThreadValue;
+	public ThreadResource(ThreadValue t, int status) {
 		thread = t;
 		this.status = status;
 	}

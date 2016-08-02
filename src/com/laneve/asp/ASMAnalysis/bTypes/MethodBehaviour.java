@@ -48,8 +48,9 @@ public class MethodBehaviour implements IBehaviour {
 	}
 
 	public String toString() {
-		String ret = methodName.substring(methodName.lastIndexOf("/") + 1, methodName.indexOf("(")  + 1);
-		for (AnValue a: vals)
+		String ret = methodName.split("\\(")[0];
+		ret = ret.substring(ret.lastIndexOf("/") + 1) + "(";
+		for (AnValue a: vals) {
 			if (a instanceof IExpression) {
 				try {
 					ret += ((IExpression)a).evaluate() + ", ";
@@ -57,7 +58,7 @@ public class MethodBehaviour implements IBehaviour {
 					ret += a.toString() + ", ";
 				}
 			} else ret += a.toString() + ", ";
-		
+		}
 		if (ret.endsWith(", "))
 			ret = ret.substring(0, ret.lastIndexOf(", "));
 		

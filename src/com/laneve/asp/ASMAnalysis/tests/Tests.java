@@ -8,6 +8,16 @@ public class Tests {
 	
 	public void release(Thread t, int i) throws InterruptedException {
 		t.join();
+		
+		t = new Thread();
+		t.run();
+		t.join();
+	}
+	
+	public Thread create() {
+		Thread t = new Thread();
+		t.run();
+		return t;
 	}
 	
 	public int bar(int a) {
@@ -51,8 +61,9 @@ public class Tests {
 		t4.run();
 		t3.join();
 		t4.join();*/
-		
-		x.release(new Thread(), 0);
+		Thread t = new Thread();
+		t.run();
+		x.release(t, 0);
 		
 		
 	}

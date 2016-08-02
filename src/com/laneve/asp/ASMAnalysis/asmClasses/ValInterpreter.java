@@ -7,7 +7,6 @@ import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.InvokeDynamicInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
@@ -17,7 +16,6 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
-import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.DivExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
@@ -32,10 +30,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SHRExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SubExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SumExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.USHRExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.IBoolExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.OrExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
-import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 
 public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
@@ -58,7 +53,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		if (type == null || type == Type.VOID_TYPE)
 			return null;
 		if (AnValue.isThread(type))
-			return context.generateThread();
+			return context.generateThread(0);
 		return new AnValue(type);
 	}
 
@@ -68,7 +63,6 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	
 	@Override
 	public AnValue newOperation(AbstractInsnNode insn) throws AnalyzerException {
-		AnValue v;
 		switch (insn.getOpcode()) {
         case ACONST_NULL:
             return newValue(Type.getObjectType("null"));
@@ -123,7 +117,10 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	// TODO maybe rewrite instance of FieldInsnNode to map actual values of fields?
         	throw new Error("Static fields are not analyzed.");
         case NEW:
-            return newValue(Type.getObjectType(((TypeInsnNode) insn).desc));
+            if (context.isResource(((TypeInsnNode) insn).desc)) {
+            	return context.generateThread(-1);
+            }
+        	return newValue(Type.getObjectType(((TypeInsnNode) insn).desc));
         default:
             throw new Error("Internal error.");
         }
@@ -138,7 +135,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	@Override
 	public AnValue unaryOperation(AbstractInsnNode insn, AnValue value)
 			throws AnalyzerException {
-		AnValue v = value.clone();
+		//AnValue v = value.clone();
 		switch (insn.getOpcode()) {
 		case INEG:
 		case LNEG:

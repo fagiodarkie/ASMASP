@@ -1,7 +1,5 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
-import java.util.List;
-
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -14,20 +12,12 @@ import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
-import com.laneve.asp.ASMAnalysis.asmTypes.VarThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.VarExpression;
-import com.laneve.asp.ASMAnalysis.bTypes.ConcatBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
-import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 
 public class BehaviourFrame extends Frame<AnValue> {
-
-	
-	/*
-	 * TODO: behaviour for method calls is 0 unless methods are typed. In which case..?
-	 */
 	
 	protected IBehaviour frameBehaviour;
 	protected AnalysisContext context;
@@ -39,6 +29,8 @@ public class BehaviourFrame extends Frame<AnValue> {
 		this.context = context;
 		this.methodName = methodName;
 		invokedMethod = null;
+		
+		normalizeThreadVariables();
 	}
 	
 	public String getInvokedMethod() {
@@ -50,6 +42,17 @@ public class BehaviourFrame extends Frame<AnValue> {
 		for (int i = 0; i < getLocals(); ++i)
 			setLocal(i, null);
 		invokedMethod = null;
+		
+		normalizeThreadVariables();
+	}
+	
+	private void normalizeThreadVariables() {
+		for (int i = 0; i < getLocals(); ++i)
+			if (getLocal(i) instanceof ThreadValue) {
+				ThreadValue t = (ThreadValue) getLocal(i);
+				if (t.isVariable() && t.getID() != i)
+					setLocal(i, context.generateThread(i));
+			}
 	}
 	
 	public BehaviourFrame(BehaviourFrame src) {
@@ -97,12 +100,13 @@ public class BehaviourFrame extends Frame<AnValue> {
 			break;
 		case Opcodes.ALOAD:
 			// If the local is null but should be a thread, we load a VarThread - the method is loading a parameter.
-			VarInsnNode iNode = (VarInsnNode) insn;
+			/*VarInsnNode iNode = (VarInsnNode) insn;
 			List<String> params = context.getParametersOf(methodName);
-			if (iNode.var < params.size() && context.isResource(params.get(iNode.var))) {
-				setLocal(iNode.var, new VarThreadValue(getLocal(iNode.var), iNode.var, context));
-				super.execute(insn, interpreter);
-			} else super.execute(insn, interpreter);
+			AnValue loading = getLocal(iNode.var);
+			if (loading instanceof ThreadValue && ((ThreadValue)loading).isVariable()) {
+				setLocal(iNode.var, context.generateThread(iNode.var));
+			}*/
+			super.execute(insn, interpreter);
 			break;
 		case Opcodes.IRETURN:
 		case Opcodes.LRETURN:

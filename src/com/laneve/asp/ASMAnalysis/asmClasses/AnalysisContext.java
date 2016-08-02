@@ -10,7 +10,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 
-import com.laneve.asp.ASMAnalysis.asmTypes.AbstractThread;
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
@@ -59,38 +58,35 @@ public class AnalysisContext {
 		deallocationCall = dealloc;
 	}
 	
-	public ThreadValue generateThread() {
+	public ThreadValue generateThread(int index) {
 		ThreadValue t = new ThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
-				threadCounter, this);
-		threadsStatus.put(threadCounter, ThreadResource.ALLOCATED);
-		threadCounter++;
+				index >= 0 ? index : threadCounter,
+				this, index >= 0);
+		if (index < 0) {
+			threadsStatus.put(threadCounter, ThreadResource.ALLOCATED);
+			threadCounter++;
+		}
 		return t;
 	}
 	
-	public ThreadResource allocateThread(AbstractThread thr) {
-		if (thr instanceof ThreadValue) {
-			ThreadValue t = (ThreadValue) thr; 
-			if (threadsStatus.get(t.getID()) == ThreadResource.ALLOCATED) {
-				threadsStatus.put(t.getID(), ThreadResource.ACQUIRE);
-				return new ThreadResource(t, ThreadResource.ACQUIRE);			
-			} else {
-				return new ThreadResource(t, ThreadResource.ALREADY_ACQUIRED);
-			}
+	public ThreadResource allocateThread(ThreadValue t) {
+		if (t.isVariable()) {
+			return new ThreadResource(t, ThreadResource.ACQUIRE);
+		} else if (threadsStatus.get(t.getID()) == ThreadResource.ALLOCATED) {
+			threadsStatus.put(t.getID(), ThreadResource.ACQUIRE);
+			return new ThreadResource(t, ThreadResource.ACQUIRE);			
 		} else {
-			return new ThreadResource(thr, ThreadResource.ACQUIRE);
+			return new ThreadResource(t, ThreadResource.ALREADY_ACQUIRED);
 		}
 	}
 
-	public ThreadResource deallocateThread(AbstractThread thr) {
-		if (thr instanceof ThreadValue) {
-			ThreadValue t = (ThreadValue) thr; 
-			if (threadsStatus.get(t.getID()) == ThreadResource.ACQUIRE) {
-				threadsStatus.put(t.getID(), ThreadResource.RELEASE);
-				return new ThreadResource(t, ThreadResource.RELEASE);
-			} else return new ThreadResource(t, ThreadResource.ALREADY_RELEASED);
-		} else {
-			return new ThreadResource(thr, ThreadResource.RELEASE);
-		}
+	public ThreadResource deallocateThread(ThreadValue t) {
+		if (t.isVariable()) {
+			return new ThreadResource(t, ThreadResource.RELEASE);
+		} else if (threadsStatus.get(t.getID()) == ThreadResource.ACQUIRE) {
+			threadsStatus.put(t.getID(), ThreadResource.RELEASE);
+			return new ThreadResource(t, ThreadResource.RELEASE);
+		} else return new ThreadResource(t, ThreadResource.ALREADY_RELEASED);
 	}
 
 	public void signalDependancy(String methodName, List<String> deps) {
@@ -276,8 +272,8 @@ public class AnalysisContext {
 	public ThreadResource createAtom(AnValue anValue, String currentMethodName) {
 		if (isAtomicBehaviour(currentMethodName)) {
 			if (currentMethodName.equalsIgnoreCase(allocationCall))
-				return allocateThread((AbstractThread)anValue);
-			else return deallocateThread((AbstractThread)anValue);
+				return allocateThread((ThreadValue)anValue);
+			else return deallocateThread((ThreadValue)anValue);
 		}
 		return null;
 	}
@@ -293,16 +289,26 @@ public class AnalysisContext {
 
 	public List<String> getParametersOf(String methodName) {
 		List<String> res = new ArrayList<String>();
-		String d = methodNodes.get(getKeyOfMethod(methodName)).desc;
-		String[] r = d.replace('(', ' ').replace(')', ' ').trim().split(";");
-		for (int i = 0; i < r.length; ++i)
-			res.add(r[i].replace('.', '/'));
+
+		MethodNode m = methodNodes.get(getKeyOfMethod(methodName));
+		String d = m.desc;
+		d = d.substring(1, d.lastIndexOf(")"));
+		if (d.length() > 0) {
+			String[] r = d.split(";");
+			for (int i = 0; i < r.length; ++i)
+				res.add(r[i].replace('.', '/'));
+		}
 		
+		if (res.size() < m.localVariables.size())
+			res.add(0, m.localVariables.get(0).name);
+			
 		return res;
 	}
 
 	public boolean isResource(String string) {
-		return resourceClass.equalsIgnoreCase(string.substring(1));
+		if (string.startsWith("L"))
+			return resourceClass.equalsIgnoreCase(string.substring(1));
+		return resourceClass.equalsIgnoreCase(string);
 	}
 
 }
