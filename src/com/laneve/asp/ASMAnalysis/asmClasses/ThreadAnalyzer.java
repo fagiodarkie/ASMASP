@@ -1,33 +1,4 @@
-/***
- * ASM: a very small and fast Java bytecode manipulation framework
- * Copyright (c) 2000-2011 INRIA, France Telecom
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the copyright holders nor the names of its
- *    contributors may be used to endorse or promote products derived from
- *    this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- * THE POSSIBILITY OF SUCH DAMAGE.
- */
-package org.objectweb.asm.tree.analysis;
+package com.laneve.asp.ASMAnalysis.asmClasses;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,19 +17,18 @@ import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TableSwitchInsnNode;
 import org.objectweb.asm.tree.TryCatchBlockNode;
 import org.objectweb.asm.tree.VarInsnNode;
+import org.objectweb.asm.tree.analysis.AnalyzerException;
+import org.objectweb.asm.tree.analysis.Frame;
 
-/**
- * A semantic bytecode analyzer. <i>This class does not fully check that JSR and
- * RET instructions are valid.</i>
- * 
- * @param <V>
- *            type of the Value used for the analysis.
- * 
- * @author Eric Bruneton
- */
-public class Analyzer<V extends Value> implements Opcodes {
+import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 
-    private final Interpreter<V> interpreter;
+public class ThreadAnalyzer implements Opcodes {
+
+	protected AnalysisContext context;
+	protected String methodName;
+
+	private final ValInterpreter interpreter;
 
     private int n;
 
@@ -66,9 +36,9 @@ public class Analyzer<V extends Value> implements Opcodes {
 
     private List<TryCatchBlockNode>[] handlers;
 
-    private Frame<V>[] frames;
+    private BehaviourFrame[] frames;
 
-    private Subroutine[] subroutines;
+    private OwnedSubroutine[] subroutines;
 
     private boolean[] queued;
 
@@ -76,44 +46,23 @@ public class Analyzer<V extends Value> implements Opcodes {
 
     private int top;
 
-    /**
-     * Constructs a new {@link Analyzer}.
-     * 
-     * @param interpreter
-     *            the interpreter to be used to symbolically interpret the
-     *            bytecode instructions.
-     */
-    public Analyzer(final Interpreter<V> interpreter) {
+    public ThreadAnalyzer(final ValInterpreter interpreter, AnalysisContext c) {
         this.interpreter = interpreter;
+        context = c;
     }
 
-    /**
-     * Analyzes the given method.
-     * 
-     * @param owner
-     *            the internal name of the class to which the method belongs.
-     * @param m
-     *            the method to be analyzed.
-     * @return the symbolic state of the execution stack frame at each bytecode
-     *         instruction of the method. The size of the returned array is
-     *         equal to the number of instructions (and labels) of the method. A
-     *         given frame is <tt>null</tt> if and only if the corresponding
-     *         instruction cannot be reached (dead code).
-     * @throws AnalyzerException
-     *             if a problem occurs during the analysis.
-     */
     @SuppressWarnings("unchecked")
-    public Frame<V>[] analyze(final String owner, final MethodNode m)
+    public BehaviourFrame[] analyzePrivately(final String owner, final MethodNode m)
             throws AnalyzerException {
         if ((m.access & (ACC_ABSTRACT | ACC_NATIVE)) != 0) {
-            frames = (Frame<V>[]) new Frame<?>[0];
+            frames = (BehaviourFrame[]) new BehaviourFrame[0];
             return frames;
         }
         n = m.instructions.size();
         insns = m.instructions;
         handlers = (List<TryCatchBlockNode>[]) new List<?>[n];
-        frames = (Frame<V>[]) new Frame<?>[n];
-        subroutines = new Subroutine[n];
+        frames = (BehaviourFrame[]) new BehaviourFrame[n];
+        subroutines = new OwnedSubroutine[n];
         queued = new boolean[n];
         queue = new int[n];
         top = 0;
@@ -134,15 +83,15 @@ public class Analyzer<V extends Value> implements Opcodes {
         }
 
         // computes the subroutine for each instruction:
-        Subroutine main = new Subroutine(null, m.maxLocals, null);
+        OwnedSubroutine main = new OwnedSubroutine(null, m.maxLocals, null);
         List<AbstractInsnNode> subroutineCalls = new ArrayList<AbstractInsnNode>();
-        Map<LabelNode, Subroutine> subroutineHeads = new HashMap<LabelNode, Subroutine>();
+        Map<LabelNode, OwnedSubroutine> subroutineHeads = new HashMap<LabelNode, OwnedSubroutine>();
         findSubroutine(0, main, subroutineCalls);
         while (!subroutineCalls.isEmpty()) {
             JumpInsnNode jsr = (JumpInsnNode) subroutineCalls.remove(0);
-            Subroutine sub = subroutineHeads.get(jsr.label);
+            OwnedSubroutine sub = subroutineHeads.get(jsr.label);
             if (sub == null) {
-                sub = new Subroutine(jsr.label, m.maxLocals, jsr);
+                sub = new OwnedSubroutine(jsr.label, m.maxLocals, jsr);
                 subroutineHeads.put(jsr.label, sub);
                 findSubroutine(insns.indexOf(jsr.label), sub, subroutineCalls);
             } else {
@@ -156,8 +105,8 @@ public class Analyzer<V extends Value> implements Opcodes {
         }
 
         // initializes the data structures for the control flow analysis
-        Frame<V> current = newFrame(m.maxLocals, m.maxStack);
-        Frame<V> handler = newFrame(m.maxLocals, m.maxStack);
+        BehaviourFrame current = newFrame(m.maxLocals, m.maxStack);
+        BehaviourFrame handler = newFrame(m.maxLocals, m.maxStack);
         current.setReturn(interpreter.newValue(Type.getReturnType(m.desc)));
         Type[] args = Type.getArgumentTypes(m.desc);
         int local = 0;
@@ -181,8 +130,8 @@ public class Analyzer<V extends Value> implements Opcodes {
         // control flow analysis
         while (top > 0) {
             int insn = queue[--top];
-            Frame<V> f = frames[insn];
-            Subroutine subroutine = subroutines[insn];
+            BehaviourFrame f = frames[insn];
+            OwnedSubroutine subroutine = subroutines[insn];
             queued[insn] = false;
 
             AbstractInsnNode insnNode = null;
@@ -208,7 +157,7 @@ public class Analyzer<V extends Value> implements Opcodes {
                         }
                         int jump = insns.indexOf(j.label);
                         if (insnOpcode == JSR) {
-                            merge(jump, current, new Subroutine(j.label,
+                            merge(jump, current, new OwnedSubroutine(j.label,
                                     m.maxLocals, j));
                         } else {
                             merge(jump, current, subroutine);
@@ -302,7 +251,7 @@ public class Analyzer<V extends Value> implements Opcodes {
         return frames;
     }
 
-    private void findSubroutine(int insn, final Subroutine sub,
+    private void findSubroutine(int insn, final OwnedSubroutine sub,
             final List<AbstractInsnNode> calls) throws AnalyzerException {
         while (true) {
             if (insn < 0 || insn >= n) {
@@ -379,7 +328,7 @@ public class Analyzer<V extends Value> implements Opcodes {
      *         cannot be reached, or if an error occured during the analysis of
      *         the method.
      */
-    public Frame<V>[] getFrames() {
+    public BehaviourFrame[] getFrames() {
         return frames;
     }
 
@@ -395,98 +344,18 @@ public class Analyzer<V extends Value> implements Opcodes {
         return handlers[insn];
     }
 
-    /**
-     * Initializes this analyzer. This method is called just before the
-     * execution of control flow analysis loop in #analyze. The default
-     * implementation of this method does nothing.
-     * 
-     * @param owner
-     *            the internal name of the class to which the method belongs.
-     * @param m
-     *            the method to be analyzed.
-     * @throws AnalyzerException
-     *             if a problem occurs.
-     */
+
     protected void init(String owner, MethodNode m) throws AnalyzerException {
     }
 
-    /**
-     * Constructs a new frame with the given size.
-     * 
-     * @param nLocals
-     *            the maximum number of local variables of the frame.
-     * @param nStack
-     *            the maximum stack size of the frame.
-     * @return the created frame.
-     */
-    protected Frame<V> newFrame(final int nLocals, final int nStack) {
-        return new Frame<V>(nLocals, nStack);
-    }
-
-    /**
-     * Constructs a new frame that is identical to the given frame.
-     * 
-     * @param src
-     *            a frame.
-     * @return the created frame.
-     */
-    protected Frame<V> newFrame(final Frame<? extends V> src) {
-        return new Frame<V>(src);
-    }
-
-    /**
-     * Creates a control flow graph edge. The default implementation of this
-     * method does nothing. It can be overriden in order to construct the
-     * control flow graph of a method (this method is called by the
-     * {@link #analyze analyze} method during its visit of the method's code).
-     * 
-     * @param insn
-     *            an instruction index.
-     * @param successor
-     *            index of a successor instruction.
-     */
     protected void newControlFlowEdge(final int insn, final int successor) {
     }
 
-    /**
-     * Creates a control flow graph edge corresponding to an exception handler.
-     * The default implementation of this method does nothing. It can be
-     * overridden in order to construct the control flow graph of a method (this
-     * method is called by the {@link #analyze analyze} method during its visit
-     * of the method's code).
-     * 
-     * @param insn
-     *            an instruction index.
-     * @param successor
-     *            index of a successor instruction.
-     * @return true if this edge must be considered in the data flow analysis
-     *         performed by this analyzer, or false otherwise. The default
-     *         implementation of this method always returns true.
-     */
     protected boolean newControlFlowExceptionEdge(final int insn,
             final int successor) {
         return true;
     }
 
-    /**
-     * Creates a control flow graph edge corresponding to an exception handler.
-     * The default implementation of this method delegates to
-     * {@link #newControlFlowExceptionEdge(int, int)
-     * newControlFlowExceptionEdge(int, int)}. It can be overridden in order to
-     * construct the control flow graph of a method (this method is called by
-     * the {@link #analyze analyze} method during its visit of the method's
-     * code).
-     * 
-     * @param insn
-     *            an instruction index.
-     * @param tcb
-     *            TryCatchBlockNode corresponding to this edge.
-     * @return true if this edge must be considered in the data flow analysis
-     *         performed by this analyzer, or false otherwise. The default
-     *         implementation of this method delegates to
-     *         {@link #newControlFlowExceptionEdge(int, int)
-     *         newControlFlowExceptionEdge(int, int)}.
-     */
     protected boolean newControlFlowExceptionEdge(final int insn,
             final TryCatchBlockNode tcb) {
         return newControlFlowExceptionEdge(insn, insns.indexOf(tcb.handler));
@@ -494,10 +363,10 @@ public class Analyzer<V extends Value> implements Opcodes {
 
     // -------------------------------------------------------------------------
 
-    private void merge(final int insn, final Frame<V> frame,
-            final Subroutine subroutine) throws AnalyzerException {
-    	Frame<V> oldFrame = frames[insn];
-        Subroutine oldSubroutine = subroutines[insn];
+    private void merge(final int insn, final BehaviourFrame frame,
+            final OwnedSubroutine subroutine) throws AnalyzerException {
+        BehaviourFrame oldFrame = frames[insn];
+        OwnedSubroutine oldSubroutine = subroutines[insn];
         boolean changes;
 
         if (oldFrame == null) {
@@ -523,11 +392,11 @@ public class Analyzer<V extends Value> implements Opcodes {
         }
     }
 
-    private void merge(final int insn, final Frame<V> beforeJSR,
-            final Frame<V> afterRET, final Subroutine subroutineBeforeJSR,
+    private void merge(final int insn, final BehaviourFrame beforeJSR,
+            final BehaviourFrame afterRET, final OwnedSubroutine subroutineBeforeJSR,
             final boolean[] access) throws AnalyzerException {
-    	Frame<V> oldFrame = frames[insn];
-        Subroutine oldSubroutine = subroutines[insn];
+        BehaviourFrame oldFrame = frames[insn];
+        OwnedSubroutine oldSubroutine = subroutines[insn];
         boolean changes;
 
         afterRET.merge(beforeJSR, access);
@@ -547,4 +416,52 @@ public class Analyzer<V extends Value> implements Opcodes {
             queue[top++] = insn;
         }
     }
+    
+	public BehaviourFrame[] analyze(final String owner, final MethodNode m)
+            throws AnalyzerException {
+		
+		methodName = owner + "." + m.name + m.desc;
+		
+		/*
+		 * The analyze() method is able to compute actual BehaviourFrames, due to
+		 * the redefinition of the frame creation methods.
+		 * The analysis proceeds according to the BehaviourFrames logic, all we have to do here is
+		 * to make sure that actual BehaviourFrames are returned and exploit their additional information.
+		 */
+		Frame<? extends AnValue>[] temp = analyzePrivately(owner, m);
+		BehaviourFrame[] result = new BehaviourFrame[temp.length];
+		IBehaviour b = null;
+		for (int i = 0; i < temp.length; ++i) {
+			result[i] = (BehaviourFrame) temp[i];
+			if (result[i] == null)
+				continue;
+			if (result[i].frameBehaviour != null && b != null && result[i].frameBehaviour.equal(b))
+				result[i].frameBehaviour = null;
+			else if (result[i].frameBehaviour != null || b != null) {
+				b = (result[i].frameBehaviour == null ? null : result[i].frameBehaviour.clone());
+			}
+		}
+		
+		List<String> deps = new ArrayList<String>();
+		
+		for (int i = 0; i < result.length; ++i)
+			if (result[i] != null && result[i].getInvokedMethod() != null)
+				deps.add(result[i].getInvokedMethod());
+		
+		context.signalDependancy(methodName, deps);
+
+		return result;
+	}
+	
+    protected BehaviourFrame newFrame(final int nLocals, final int nStack) {
+		BehaviourFrame res = new BehaviourFrame(nLocals, nStack);
+		res.addAnalysisInformations(methodName, context);
+        return res;
+    }
+
+    protected BehaviourFrame newFrame(final Frame<? extends AnValue> src) {
+    	BehaviourFrame r = new BehaviourFrame((BehaviourFrame)src);
+        return r;
+    }
+
 }

@@ -13,6 +13,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.FunctionCallExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.Atom;
 import com.laneve.asp.ASMAnalysis.bTypes.ConcatBehaviour;
@@ -150,7 +151,13 @@ public class AnalysisContext {
 	public IExpression getReturnValueOfMethod(String methodName) {
 		// All foreign methods are treated as null. actual usage of this value will result in cast errors.
 		long key = getKeyOfMethod(methodName);
-		return returnValue.get(key);
+		
+		if (returnValue.get(key) instanceof IExpression)
+			return new FunctionCallExpression(returnValue.get(key).getType(), methodName);
+					
+		return null;
+		
+		// return returnValue.get(key);
 	}
 
 	public void createMethodNode(String className, String name, MethodNode method) {
@@ -169,7 +176,7 @@ public class AnalysisContext {
 	public void analyze(String entryPoint) throws AnalyzerException {
 		long k = getKeyOfMethod(entryPoint);
 		List<Long> analysisList = new ArrayList<Long>();
-		VMAnalyzer analyzer = new VMAnalyzer(new ValInterpreter(this), this);
+		ThreadAnalyzer analyzer = new ThreadAnalyzer(new ValInterpreter(this), this);
 		
 		analysisList.add(k);
 		// reanalyze methods until a fixed point is reached
@@ -241,6 +248,8 @@ public class AnalysisContext {
 
 	protected IBehaviour computeBehaviour(BehaviourFrame[] frames) {
 		// TODO Compute behaviour (LAM?) of frame.
+		
+		// TODO compute also behaviour of a part of the array (from i to j)
 		
 		List<IBehaviour> l = new ArrayList<IBehaviour>();
 		for (int i = 0; i < frames.length; ++i) {

@@ -317,6 +317,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	public AnValue naryOperation(AbstractInsnNode insn,
 			List<? extends AnValue> values) throws AnalyzerException {
 		Type t = null;
+		boolean hasClassParameter = false;
 		switch(insn.getOpcode()) {
         case Opcodes.INVOKEVIRTUAL:
         case Opcodes.INVOKESPECIAL:
@@ -330,14 +331,21 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         		currentMethodName = values.get(0).getClassName() + currentMethodName;
         	}
 
+    		List<AnValue> c = new ArrayList<AnValue>();
+    		for (AnValue a: values)
+    			c.add(a.clone());
+    		// TODO do we need to remove it?
+    		if (insn.getOpcode() == Opcodes.INVOKEDYNAMIC || insn.getOpcode() != Opcodes.INVOKESTATIC) {
+    			c.remove(0);
+        		hasClassParameter = true;
+    		}
+
         	if (context.isAtomicBehaviour(currentMethodName)) {
         		createdBehaviour = context.createAtom(values.get(0), currentMethodName);
         	} else if (context.hasBehaviour(currentMethodName)) {
-        		List<AnValue> c = new ArrayList<AnValue>();
-        		for (AnValue a: values)
-        			c.add(a);
-        		/*if (insn.getOpcode() == Opcodes.INVOKEDYNAMIC || insn.getOpcode() != Opcodes.INVOKESTATIC)
-        			c.remove(0);*/
+        		
+        		// TODO check if there are threads, and how many of these are duplicates.
+        		
         		createdBehaviour = context.getBehaviour(currentMethodName, c);
         	}
         	
@@ -347,10 +355,16 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	AnValue a = context.getReturnValueOfMethod(currentMethodName);
         	//System.out.println("Method " + currentMethodName + " typed with value " + a.toString());
         	// now we take the method return value, with its eventual variables,
+        	if (a == null) {
+        		// the method has a non-typable return value (eg. float)
+        		return null;
+        	}
         	IExpression exp = (IExpression)a;
         	
         	// and we istantiate it with the actual values with which the method is called.
-        	IExpression res = exp.evaluate(values);
+        	// IExpression res = exp.evaluate(values);
+        	IExpression res = exp;
+        	res.setParameters(hasClassParameter ? c : values);
         	res.setType(t);
         	
         	return res;

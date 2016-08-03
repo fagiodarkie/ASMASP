@@ -22,6 +22,10 @@ public class Tests {
 		return t;
 	}
 	
+	public int fact(int n) {
+		return n * fact(n - 1);
+	}
+	
 	public int bar(int a) {
 		
 		Thread t = new Thread();
@@ -45,6 +49,8 @@ public class Tests {
 		
 		Tests x = new Tests();
 	
+		x.fact(5);
+		
 		/*int a = x.foo(3);
 		
 		a += x.bar();
@@ -64,8 +70,10 @@ public class Tests {
 		t3.join();
 		t4.join();*/
 		Thread t = new Thread();
+		Thread t2 = new Thread();
 		t.run();
-		x.release(t, new Thread(), 0);
+		t2.run();
+		x.release(t, t2, 0);
 		
 		
 	}

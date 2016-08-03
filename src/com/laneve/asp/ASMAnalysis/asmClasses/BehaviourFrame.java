@@ -49,15 +49,6 @@ public class BehaviourFrame extends Frame<AnValue> {
 //		normalizeThreadVariables();
 	}
 	
-	private void normalizeThreadVariables() {
-		for (int i = 0; i < getLocals(); ++i)
-			if (getLocal(i) instanceof ThreadValue) {
-				ThreadValue t = (ThreadValue) getLocal(i);
-				if (t.isVariable() && t.getID() != i)
-					setLocal(i, context.generateThread(i));
-			}
-	}
-	
 	public BehaviourFrame(BehaviourFrame src) {
 		super(src);
 		addAnalysisInformations(src.methodName, src.context);
