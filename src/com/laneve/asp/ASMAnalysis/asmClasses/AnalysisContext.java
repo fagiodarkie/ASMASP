@@ -28,10 +28,11 @@ public class AnalysisContext {
 	protected Map<Long, IExpression> returnValue;
 	protected Map<Long, String> methodID, owner;
 	protected Map<Long, List<Long>> depends, releasedParameters;
+	protected Map<Long, List<String>> paramString;
 	protected Map<Long, List<BehaviourFrame>> methodFrames;
 	protected long threadCounter, methodCounter;
 	protected Map<Long, MethodNode> methodNodes;
-	protected Map<Long, IBehaviour> methodBehaviour;
+	protected Map<Long, Map<String, IBehaviour>> methodBehaviour;
 	protected String resourceClass, allocationCall, deallocationCall;
 	
 	
@@ -44,10 +45,11 @@ public class AnalysisContext {
 		owner = new HashMap<Long, String>();
 		depends = new HashMap<Long, List<Long>>();
 		releasedParameters = new HashMap<Long, List<Long>>();
+		paramString = new HashMap<Long, List<String>>();
 		methodFrames = new HashMap<Long, List<BehaviourFrame>>();
 		threadCounter = methodCounter = 0;
 		methodNodes = new HashMap<Long, MethodNode>();
-		methodBehaviour = new HashMap<Long, IBehaviour>();
+		methodBehaviour = new HashMap<Long, Map<String, IBehaviour>>();
 		
 		resourceClass = "java/lang/Thread";
 		allocationCall = resourceClass + ".run()V";
@@ -162,7 +164,11 @@ public class AnalysisContext {
 
 	public void createMethodNode(String className, String name, MethodNode method) {
 		methodNodes.put(methodCounter, method);
-		methodBehaviour.put(methodCounter, new Atom(Atom.RETURN));
+		methodBehaviour.put(methodCounter, new HashMap<String, IBehaviour>());
+		String defaultString = ( method.desc.contains(";") ? "abcdefghijklmnopqrstuvwxyz".substring(0, method.desc.split(";").length) : "");
+		methodBehaviour.get(methodCounter).put(defaultString, new Atom(Atom.RETURN));
+		paramString.put(methodCounter, new ArrayList<String>());
+		paramString.get(methodCounter).add(defaultString);
 		owner.put(methodCounter, className);
 		methodID.put(methodCounter, name);
 		depends.put(methodCounter, new ArrayList<Long>());
@@ -192,55 +198,59 @@ public class AnalysisContext {
 			// else, analyze it and put all its dependancies to be analyzed too.
 			// also all methods which depends on it, if behaviour changes.
 			// as side effect, the return value is automatically updated.
-			BehaviourFrame[] frames = analyzer.analyze(owner.get(currentMethodID), methodNodes.get(currentMethodID));
-
-			for (Long j: depends.get(currentMethodID)) {
-				// we put on all its dependancies
-				analysisList.add(j);
-			}
-			
-			// if the return value was updated, also examine all methods depending on this.
-			if (modifiedReturnExpression.get(currentMethodID)) {
-				//System.out.println("Since the method return value was modified, we also reanalyze:");
-				for (long j = 0; j < methodCounter; ++j) {
-					if (depends.get(j).contains(currentMethodID)) {
-						analysisList.add(j);
-						analyzeMethods.put(j, true);
-						//System.out.println(methodID.get(j));
-					}
+			for (String s: paramString.get(currentMethodID)) {
+				BehaviourFrame[] frames = analyzer.analyze(owner.get(currentMethodID), methodNodes.get(currentMethodID), s);
+	
+				for (Long j: depends.get(currentMethodID)) {
+					// we put on all its dependancies
+					analysisList.add(j);
 				}
-				modifiedReturnExpression.put(currentMethodID, false);
-			}
-			
-			methodFrames.put(currentMethodID, Arrays.asList(frames));
-			
-			// if the new behaviour is different from the past one, also update all methods depending on this one.
-			IBehaviour old = methodBehaviour.get(currentMethodID);
-			IBehaviour updatedBehaviour = computeBehaviour(frames);
-			
-			if (!old.equalBehaviour(updatedBehaviour)) {
-				methodBehaviour.put(currentMethodID, updatedBehaviour);
-				for (long j = 0; ((j < methodCounter) && (j != currentMethodID)); ++j) {
-					if (depends.get(j).contains(currentMethodID) && !analysisList.contains(j)) {
-						analysisList.add(j);
-						analyzeMethods.put(j, true);					
+				
+				// if the return value was updated, also examine all methods depending on this.
+				if (modifiedReturnExpression.get(currentMethodID)) {
+					//System.out.println("Since the method return value was modified, we also reanalyze:");
+					for (long j = 0; j < methodCounter; ++j) {
+						if (depends.get(j).contains(currentMethodID)) {
+							analysisList.add(j);
+							analyzeMethods.put(j, true);
+							//System.out.println(methodID.get(j));
+						}
 					}
+					modifiedReturnExpression.put(currentMethodID, false);
 				}
+				
+				methodFrames.put(currentMethodID, Arrays.asList(frames));
+				
+				// if the new behaviour is different from the past one, also update all methods depending on this one.
+				IBehaviour old = methodBehaviour.get(currentMethodID).get(s);
+				IBehaviour updatedBehaviour = computeBehaviour(frames);
+				
+				if (!old.equalBehaviour(updatedBehaviour)) {
+					methodBehaviour.get(currentMethodID).put(s, updatedBehaviour);
+					for (long j = 0; ((j < methodCounter) && (j != currentMethodID)); ++j) {
+						if (depends.get(j).contains(currentMethodID) && !analysisList.contains(j)) {
+							analysisList.add(j);
+							analyzeMethods.put(j, true);					
+						}
+					}
+				}				
 			}
-			
-		// finally, notify that we checked the method.
+			// finally, notify that we checked the method.
 			analyzeMethods.put(currentMethodID, false);
-			
 		}
 		
 		for (long i = 0; i < methodCounter; ++i) {
-			System.out.println("Method " + methodID.get(i) + " has behaviour " + methodBehaviour.get(i));
-			System.out.println("Method " + methodID.get(i) + " has return value " + returnValue.get(i));
+			String mName = methodID.get(i);
+			String[] parts = mName.split("\\.");
+			mName = parts[0].substring(parts[0].lastIndexOf("/") + 1) + "." + parts[1];
+			for (String s: paramString.get(i))
+				System.out.println("Method " + mName + "(" + s + ") has behaviour " + methodBehaviour.get(i).get(s));
+			System.out.println("Method " + mName + " has return value " + returnValue.get(i));
 			if (releasedParameters.get(i).size() > 0) {
 				String rels = "" +  releasedParameters.get(i).get(0);
 				for (int j = 1; j < releasedParameters.get(i).size(); ++j)
 					rels += ", " + releasedParameters.get(i).get(j);
-				System.out.println("Method " + methodID.get(i) + " releases Threads # " + rels);
+				System.out.println("Method " + mName + " releases Threads # " + rels);
 			}
 		}
 		

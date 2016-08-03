@@ -417,7 +417,7 @@ public class ThreadAnalyzer implements Opcodes {
         }
     }
     
-	public BehaviourFrame[] analyze(final String owner, final MethodNode m)
+	public BehaviourFrame[] analyze(final String owner, final MethodNode m, String s)
             throws AnalyzerException {
 		
 		methodName = owner + "." + m.name + m.desc;

@@ -51,24 +51,12 @@ public class Tests {
 	
 		x.fact(5);
 		
-		/*int a = x.foo(3);
+		int a = x.foo(3);
 		
 		a += x.bar();
 		
 		int b = a * 2 + x.foo(x.bar(a));
 		
-		Thread t1 = new Thread(),
-			t2 = new Thread(),
-			t3 = new Thread(),
-			t4 = new Thread();
-		
-		t1.run();
-		t2.run();
-		t3.run();
-		t1.join();
-		t4.run();
-		t3.join();
-		t4.join();*/
 		Thread t = new Thread();
 		Thread t2 = new Thread();
 		t.run();
