@@ -1,6 +1,7 @@
 package com.laneve.asp.ASMAnalysis.asmTypes;
 
 import com.laneve.asp.ASMAnalysis.asmClasses.AnalysisContext;
+import com.laneve.asp.ASMAnalysis.utils.Names;
 
 public class ThreadValue extends AbstractThread {
 
@@ -29,9 +30,16 @@ public class ThreadValue extends AbstractThread {
 		return ID;
 	}
 
+	public char getVariableName() {
+		if (!variable) {
+			// ?
+		}
+		return Names.alpha.charAt((int)ID);
+	}
+	
 	@Override
 	public String toString() {
-		return (variable ? "x" : "t") + ID;
+		return (variable ? "" + getVariableName() : "t" + ID);
 	}
 
 

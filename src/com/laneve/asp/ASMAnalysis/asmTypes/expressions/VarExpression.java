@@ -4,6 +4,7 @@ import java.util.List;
 import org.objectweb.asm.Type;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.utils.Names;
 
 public class VarExpression extends IExpression {
 	
@@ -48,7 +49,7 @@ public class VarExpression extends IExpression {
 	}
 
 	public String toString() {
-		return "x" + index;
+		return "" + Names.alpha.charAt(index);
 	}
 
 	@Override

@@ -25,15 +25,18 @@ public class BehaviourFrame extends Frame<AnValue> {
 	protected IBehaviour frameBehaviour;
 	protected AnalysisContext context;
 	protected String methodName;
-	private String invokedMethod;
+	protected String invokedMethod, methodParametersPattern;
 	
 	public BehaviourFrame(Frame<? extends AnValue> src, String methodName, AnalysisContext context) {
 		super(src);
 		this.context = context;
 		this.methodName = methodName;
 		invokedMethod = null;
-		
-//		normalizeThreadVariables();
+		methodParametersPattern = "";
+	}
+	
+	public void setParameterPattern(String s) {
+		methodParametersPattern = s;
 	}
 	
 	public String getInvokedMethod() {
@@ -45,8 +48,8 @@ public class BehaviourFrame extends Frame<AnValue> {
 		for (int i = 0; i < getLocals(); ++i)
 			setLocal(i, null);
 		invokedMethod = null;
+		methodParametersPattern = "";
 		
-//		normalizeThreadVariables();
 	}
 	
 	public BehaviourFrame(BehaviourFrame src) {
@@ -56,6 +59,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 		if (src.frameBehaviour != null)
 			frameBehaviour = src.frameBehaviour.clone();
 		else frameBehaviour = null;
+		methodParametersPattern = src.methodParametersPattern;
 	}
 
 	public void addAnalysisInformations(String methodName, AnalysisContext context) {
@@ -78,7 +82,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 		// we only redefine the opcodes which behaviour differs from the standard.
 
 		switch (insn.getOpcode()) {
-		case Opcodes.ILOAD:
+		/*case Opcodes.ILOAD:
 			// If the local is null, we load a VarIntExpression - the method is loading a parameter.
 			if (getLocal(((VarInsnNode) insn).var) instanceof IExpression)
 				push(interpreter.copyOperation(insn,
@@ -101,7 +105,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 				setLocal(iNode.var, context.generateThread(iNode.var));
 			}
 			super.execute(insn, interpreter);
-			break;
+			break;*/
 		case Opcodes.IRETURN:
 		case Opcodes.LRETURN:
 		case Opcodes.FRETURN:
@@ -133,7 +137,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 				if (frameBehaviour instanceof ThreadResource) {
 					ThreadResource t = (ThreadResource)frameBehaviour;
 					if (t.getThreadValue().isVariable())
-						context.signalRelease(methodName, t.getThreadValue().getID());
+						context.signalRelease(methodName, methodParametersPattern, t.getThreadValue().getVariableName());
 				}
 			}
 				/*

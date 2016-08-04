@@ -22,6 +22,7 @@ import org.objectweb.asm.tree.analysis.Frame;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
+import com.laneve.asp.ASMAnalysis.utils.Names;
 
 public class ThreadAnalyzer implements Opcodes {
 
@@ -52,7 +53,7 @@ public class ThreadAnalyzer implements Opcodes {
     }
 
     @SuppressWarnings("unchecked")
-    public BehaviourFrame[] analyzePrivately(final String owner, final MethodNode m)
+    public BehaviourFrame[] analyzePrivately(final String owner, final MethodNode m, final String parameters)
             throws AnalyzerException {
         if ((m.access & (ACC_ABSTRACT | ACC_NATIVE)) != 0) {
             frames = (BehaviourFrame[]) new BehaviourFrame[0];
@@ -108,14 +109,17 @@ public class ThreadAnalyzer implements Opcodes {
         BehaviourFrame current = newFrame(m.maxLocals, m.maxStack);
         BehaviourFrame handler = newFrame(m.maxLocals, m.maxStack);
         current.setReturn(interpreter.newValue(Type.getReturnType(m.desc)));
+        current.setParameterPattern(parameters);
+        handler.setParameterPattern(parameters);
         Type[] args = Type.getArgumentTypes(m.desc);
         int local = 0;
         if ((m.access & ACC_STATIC) == 0) {
             Type ctype = Type.getObjectType(owner);
-            current.setLocal(local++, interpreter.newValue(ctype));
+            current.setLocal(local++, interpreter.newValue(ctype, true));
+            context.signalDynamicMethod(methodName);
         }
         for (int i = 0; i < args.length; ++i) {
-            current.setLocal(local++, interpreter.newValue(args[i]));
+            current.setLocal(local++, interpreter.newValue(args[i], i));
             if (args[i].getSize() == 2) {
                 current.setLocal(local++, interpreter.newValue(null));
             }
@@ -428,7 +432,7 @@ public class ThreadAnalyzer implements Opcodes {
 		 * The analysis proceeds according to the BehaviourFrames logic, all we have to do here is
 		 * to make sure that actual BehaviourFrames are returned and exploit their additional information.
 		 */
-		Frame<? extends AnValue>[] temp = analyzePrivately(owner, m);
+		Frame<? extends AnValue>[] temp = analyzePrivately(owner, m, s);
 		BehaviourFrame[] result = new BehaviourFrame[temp.length];
 		IBehaviour b = null;
 		for (int i = 0; i < temp.length; ++i) {

@@ -20,14 +20,16 @@ import com.laneve.asp.ASMAnalysis.bTypes.ConcatBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.MethodBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
+import com.laneve.asp.ASMAnalysis.utils.Names;
 
 public class AnalysisContext {
 
 	protected Map<Long, Integer> threadsStatus;
-	protected Map<Long, Boolean> analyzeMethods, modifiedReturnExpression;
+	protected Map<Long, Boolean> analyzeMethods, modifiedReturnExpression, dynamicMethod;
 	protected Map<Long, IExpression> returnValue;
 	protected Map<Long, String> methodID, owner;
-	protected Map<Long, List<Long>> depends, releasedParameters;
+	protected Map<Long, List<Long>> depends;
+	protected Map<Long, Map<String, String>> releasedParameters;
 	protected Map<Long, List<String>> paramString;
 	protected Map<Long, List<BehaviourFrame>> methodFrames;
 	protected long threadCounter, methodCounter;
@@ -39,12 +41,13 @@ public class AnalysisContext {
 	public AnalysisContext() {
 		threadsStatus = new HashMap<Long, Integer>();
 		analyzeMethods = new HashMap<Long, Boolean>();
+		dynamicMethod = new HashMap<Long, Boolean>();
 		modifiedReturnExpression = new HashMap<Long, Boolean>();
 		returnValue = new HashMap<Long, IExpression>();
 		methodID = new HashMap<Long, String>();
 		owner = new HashMap<Long, String>();
 		depends = new HashMap<Long, List<Long>>();
-		releasedParameters = new HashMap<Long, List<Long>>();
+		releasedParameters = new HashMap<Long, Map<String, String>>();
 		paramString = new HashMap<Long, List<String>>();
 		methodFrames = new HashMap<Long, List<BehaviourFrame>>();
 		threadCounter = methodCounter = 0;
@@ -165,17 +168,21 @@ public class AnalysisContext {
 	public void createMethodNode(String className, String name, MethodNode method) {
 		methodNodes.put(methodCounter, method);
 		methodBehaviour.put(methodCounter, new HashMap<String, IBehaviour>());
-		String defaultString = ( method.desc.contains(";") ? "abcdefghijklmnopqrstuvwxyz".substring(0, method.desc.split(";").length) : "");
+		String params = method.desc.substring(1, method.desc.indexOf(')'));
+		String defaultString = ( params.contains(";") ? Names.alpha.substring(0, params.split(";").length) :
+			params.length() > 0 ? "a" : "");
 		methodBehaviour.get(methodCounter).put(defaultString, new Atom(Atom.RETURN));
 		paramString.put(methodCounter, new ArrayList<String>());
 		paramString.get(methodCounter).add(defaultString);
 		owner.put(methodCounter, className);
 		methodID.put(methodCounter, name);
 		depends.put(methodCounter, new ArrayList<Long>());
-		releasedParameters.put(methodCounter, new ArrayList<Long>());
+		releasedParameters.put(methodCounter, new HashMap<String, String>());
+		releasedParameters.get(methodCounter).put(defaultString, "");
 		analyzeMethods.put(methodCounter, true);
 		returnValue.put(methodCounter, new ConstExpression(Type.INT_TYPE, new Long(0)));
 		modifiedReturnExpression.put(methodCounter, false);
+		dynamicMethod.put(methodCounter, false);
 		methodCounter++;
 	}
 
@@ -240,20 +247,38 @@ public class AnalysisContext {
 		}
 		
 		for (long i = 0; i < methodCounter; ++i) {
-			String mName = methodID.get(i);
-			String[] parts = mName.split("\\.");
-			mName = parts[0].substring(parts[0].lastIndexOf("/") + 1) + "." + parts[1];
-			for (String s: paramString.get(i))
-				System.out.println("Method " + mName + "(" + s + ") has behaviour " + methodBehaviour.get(i).get(s));
-			System.out.println("Method " + mName + " has return value " + returnValue.get(i));
-			if (releasedParameters.get(i).size() > 0) {
-				String rels = "" +  releasedParameters.get(i).get(0);
-				for (int j = 1; j < releasedParameters.get(i).size(); ++j)
-					rels += ", " + releasedParameters.get(i).get(j);
-				System.out.println("Method " + mName + " releases Threads # " + rels);
-			}
+			printMethodInformations(i);
 		}
 		
+	}
+	
+	protected void printMethodInformations(long index) {
+
+		String mName = methodNodes.get(index).name;
+		mName = mName.substring(mName.lastIndexOf('/') + 1, mName.length());
+		for (String s: paramString.get(index)) {
+			String actualName = mName;
+			for (int i = 0; i < s.length(); ++i) {
+				if (i == 0 && s.length() == 1)
+					actualName += "(a)";
+				else if (i == 0)
+					actualName += "(a, ";
+				else if (i == s.length() - 1)
+					actualName += s.charAt(i) + ")";
+				else actualName += s.charAt(i) + ", ";
+			}
+			if (actualName.equalsIgnoreCase(mName))
+				actualName += "()";
+			System.out.println("Method " + actualName + " has behaviour " + methodBehaviour.get(index).get(s));
+			
+			if (releasedParameters.get(index).get(s).length() >0) {
+				String rels = "" + releasedParameters.get(index).get(s).charAt(0);
+				for (int i = 1; i < releasedParameters.get(index).get(s).length(); ++i)
+					rels += ", " + releasedParameters.get(index).get(s).charAt(i);
+				System.out.println("Method " + actualName + " releases Threads " + rels);
+			}
+		}
+		System.out.println("Method " + mName + " has return value " + returnValue.get(index));
 	}
 
 	protected IBehaviour computeBehaviour(BehaviourFrame[] frames) {
@@ -338,10 +363,19 @@ public class AnalysisContext {
 		return resourceClass.equalsIgnoreCase(string);
 	}
 
-	public void signalRelease(String methodName, long id) {
+	public void signalRelease(String methodName, String parameterSetup, char parameter) {
 		long k = getKeyOfMethod(methodName);
-		if (!releasedParameters.get(k).contains(id))
-			releasedParameters.get(k).add(id);
+		String actualPars = releasedParameters.get(k).get(parameterSetup);
+		if (!actualPars.contains("" + parameter))
+			releasedParameters.get(k).put(parameterSetup, actualPars + parameter);
 	}
 
+	public void signalDynamicMethod(String currentMethodName) {
+		dynamicMethod.put(getKeyOfMethod(currentMethodName), true);
+	}
+
+	public boolean isDynamic(String methodName) {
+		return dynamicMethod.get(getKeyOfMethod(methodName));
+	}
+	
 }

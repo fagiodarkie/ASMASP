@@ -16,6 +16,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.DivExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
@@ -30,6 +31,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SHRExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SubExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SumExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.USHRExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.VarExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 
 
@@ -346,6 +348,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         		
         		// TODO check if there are threads, and how many of these are duplicates.
         		
+        		if (hasClassParameter)
+        			context.signalDynamicMethod(currentMethodName);
         		createdBehaviour = context.getBehaviour(currentMethodName, c);
         	}
         	
@@ -405,6 +409,20 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	public void resetCurrentMethod() {
 		currentMethodName = null;
 		createdBehaviour = null;
+	}
+
+	public AnValue newValue(Type ctype, boolean b) {
+		AnValue r = new AnValue(ctype, "this");
+		return r;
+	}
+
+	public AnValue newValue(Type ctype, int i) {
+		AnValue r = newValue(ctype);
+		if (r instanceof ThreadValue)
+			r = new ThreadValue(r, i, context, true);
+		else if (r.getType() == Type.INT_TYPE || r.getType() == Type.LONG_TYPE)
+			r = new VarExpression(r.getType(), i);
+		return r;
 	}
 
 }

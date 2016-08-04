@@ -107,24 +107,36 @@ public class AnValue implements Value {
 	
 	protected Type type;
 	protected String className;
+	protected String name;
 	
 	
 	public AnValue(Type t) {
 		type = t;
 		className = getClassName(t);
+		name = "?";
 	}
 	
 	public AnValue(AnValue a) {
 		type = a.type;
 		className = a.className;
+		name = a.name;
 	}
 			
+	public AnValue(Type ctype, String string) {
+		this(ctype);
+		name = string;
+	}
+
 	public String getClassName() {
 		return className;
 	}
 
 	public AnValue clone() {
 		return new AnValue(this);
+	}
+	
+	public String getName() {
+		return name;
 	}
 	
 	public void setClassName(String name) {
