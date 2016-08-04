@@ -53,6 +53,11 @@ public class VarExpression extends IExpression {
 	}
 
 	@Override
+	public boolean canEvaluate() {
+		return intExp != null && intExp instanceof ConstExpression;
+	}
+	
+	@Override
 	public boolean equalValue(AnValue iExpression) {
 		if (!(iExpression instanceof VarExpression)) return false;
 		return intExp == ((VarExpression)iExpression).intExp;

@@ -63,6 +63,10 @@ public class Tests {
 		t2.run();
 		x.release(t, t2, 0);
 		
+		t = new Thread();		
+		t.run();
+		x.release(t, t, b);
+		
 		
 	}
 }

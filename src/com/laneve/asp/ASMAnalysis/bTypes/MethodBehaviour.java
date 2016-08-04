@@ -1,8 +1,10 @@
 package com.laneve.asp.ASMAnalysis.bTypes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 
 
@@ -50,12 +52,27 @@ public class MethodBehaviour implements IBehaviour {
 	public String toString() {
 		String ret = methodName.split("\\(")[0];
 		ret = ret.substring(ret.lastIndexOf("/") + 1) + "(";
+		List<ThreadValue> t = new ArrayList<ThreadValue>();
 		for (AnValue a: vals) {
 			if (a instanceof IExpression) {
-				try {
-					ret += ((IExpression)a).evaluate() + ", ";
-				} catch (Throwable t) {
+				IExpression x = ((IExpression)a);
+				if (x.canEvaluate()) {
+					ret += x.evaluate() + ", ";
+				} else {
+					ret += x.toString();
+				}
+			}  else if (a instanceof ThreadValue) {
+				ThreadValue x = (ThreadValue)a;
+				boolean found = false;
+				for (int i = 0; i < t.size(); ++i) {
+					if (t.get(i).equalThread(x)) {
+						found = true;
+						break;
+					}
+				}
+				if (!found) {
 					ret += a.toString() + ", ";
+					t.add(x);
 				}
 			} else ret += a.toString() + ", ";
 		}

@@ -5,7 +5,8 @@ import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 public class ThreadResource implements IBehaviour {
 
 	public static final int ACQUIRE = 0, RELEASE = 1, ALREADY_ACQUIRED = 2,
-			ALREADY_RELEASED = 3, MAYBE_RELEASED = 4, ALLOCATED = 5;
+			ALREADY_RELEASED = 3, MAYBE_RELEASED = 4, ALLOCATED = 5, DELTA = 6;
+
 	protected ThreadValue thread;
 	protected int status;
 	

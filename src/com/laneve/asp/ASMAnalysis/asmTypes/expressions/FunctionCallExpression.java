@@ -22,9 +22,13 @@ public class FunctionCallExpression extends IExpression {
 		values = vals;
 	}
 	
-
 	@Override
-	public Long evaluate() {
+	public boolean canEvaluate() {
+		return false;
+	}
+	
+	@Override
+ 	public Long evaluate() {
 		return null;
 	}
 
@@ -34,11 +38,11 @@ public class FunctionCallExpression extends IExpression {
 		ret = ret.substring(ret.lastIndexOf("/") + 1) + "(";
 		for (AnValue a: values) {
 			if (a instanceof IExpression) {
-				try {
-					ret += ((IExpression)a).evaluate() + ", ";
-				} catch (Throwable t) {
+				IExpression x = ((IExpression)a);
+				if (x.canEvaluate())
+					ret += x.evaluate() + ", ";
+				else
 					ret += a.toString() + ", ";
-				}
 			} else ret += a.toString() + ", ";
 		}
 		if (ret.endsWith(", "))

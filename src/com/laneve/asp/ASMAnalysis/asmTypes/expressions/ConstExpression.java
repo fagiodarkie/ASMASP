@@ -23,6 +23,11 @@ protected Long constExp;
 		return new ConstExpression(type, constExp);
 	}
 
+	@Override
+	public boolean canEvaluate() {
+		return true;
+	}
+	
 	public String toString() {
 		return constExp.toString();
 	}

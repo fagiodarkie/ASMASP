@@ -36,6 +36,7 @@ public class AnalysisContext {
 	protected Map<Long, MethodNode> methodNodes;
 	protected Map<Long, Map<String, IBehaviour>> methodBehaviour;
 	protected String resourceClass, allocationCall, deallocationCall;
+	protected Map<Character, Integer> threadVariableStatus;
 	
 	
 	public AnalysisContext() {
@@ -59,6 +60,73 @@ public class AnalysisContext {
 		deallocationCall = resourceClass + ".join()V";
 	}
 	
+	
+	public void analyze(String entryPoint) throws AnalyzerException {
+		long k = getKeyOfMethod(entryPoint);
+		List<Long> analysisList = new ArrayList<Long>();
+		ThreadAnalyzer analyzer = new ThreadAnalyzer(new ValInterpreter(this), this);
+		
+		analysisList.add(k);
+		// reanalyze methods until a fixed point is reached
+		for (int i = 0; i < analysisList.size(); ++i) {
+			Long currentMethodID = analysisList.get(i);
+			
+			// if the method is already at fixed point don't touch it
+			if (!analyzeMethods.get(currentMethodID))
+				continue;
+
+			// else, analyze it and put all its dependancies to be analyzed too.
+			// also all methods which depends on it, if behaviour changes.
+			// as side effect, the return value is automatically updated.
+			for (String s: paramString.get(currentMethodID)) {
+				BehaviourFrame[] frames = analyzer.analyze(owner.get(currentMethodID), methodNodes.get(currentMethodID), s);
+	
+				for (Long j: depends.get(currentMethodID)) {
+					// we put on all its dependancies
+					analysisList.add(j);
+				}
+				
+				// if the return value was updated, also examine all methods depending on this.
+				if (modifiedReturnExpression.get(currentMethodID)) {
+					//System.out.println("Since the method return value was modified, we also reanalyze:");
+					for (long j = 0; j < methodCounter; ++j) {
+						if (depends.get(j).contains(currentMethodID)) {
+							analysisList.add(j);
+							analyzeMethods.put(j, true);
+							//System.out.println(methodID.get(j));
+						}
+					}
+					modifiedReturnExpression.put(currentMethodID, false);
+				}
+				
+				methodFrames.put(currentMethodID, Arrays.asList(frames));
+				
+				// if the new behaviour is different from the past one, also update all methods depending on this one.
+				IBehaviour old = methodBehaviour.get(currentMethodID).get(s);
+				IBehaviour updatedBehaviour = computeBehaviour(frames);
+				
+				if (!old.equalBehaviour(updatedBehaviour)) {
+					methodBehaviour.get(currentMethodID).put(s, updatedBehaviour);
+					for (long j = 0; ((j < methodCounter) && (j != currentMethodID)); ++j) {
+						if (depends.get(j).contains(currentMethodID) && !analysisList.contains(j)) {
+							analysisList.add(j);
+							analyzeMethods.put(j, true);					
+						}
+					}
+				}				
+			}
+			// finally, notify that we checked the method.
+			analyzeMethods.put(currentMethodID, false);
+		}
+		
+		for (long i = 0; i < methodCounter; ++i) {
+			printMethodInformations(i);
+		}
+		
+	}
+	
+	
+	
 	public void setAllocationVariables(String className, String alloc, String dealloc) {
 		resourceClass = className;
 		allocationCall = alloc;
@@ -68,7 +136,7 @@ public class AnalysisContext {
 	public ThreadValue generateThread(int index) {
 		ThreadValue t = new ThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
 				index >= 0 ? index : threadCounter,
-				this, index >= 0);
+				this, index >= 0, ' ');
 		if (index < 0) {
 			threadsStatus.put(threadCounter, ThreadResource.ALLOCATED);
 			threadCounter++;
@@ -89,7 +157,12 @@ public class AnalysisContext {
 
 	public ThreadResource deallocateThread(ThreadValue t) {
 		if (t.isVariable()) {
-			return new ThreadResource(t, ThreadResource.RELEASE);
+			if (threadVariableStatus.get(t.getVariableName()) != ThreadResource.RELEASE) {
+				threadVariableStatus.put(t.getVariableName(), ThreadResource.RELEASE);
+				return new ThreadResource(t, ThreadResource.RELEASE);
+			} else {
+				return new ThreadResource(t, ThreadResource.ALREADY_RELEASED);
+			}
 		} else if (threadsStatus.get(t.getID()) == ThreadResource.ACQUIRE) {
 			threadsStatus.put(t.getID(), ThreadResource.RELEASE);
 			return new ThreadResource(t, ThreadResource.RELEASE);
@@ -186,72 +259,6 @@ public class AnalysisContext {
 		methodCounter++;
 	}
 
-	public void analyze(String entryPoint) throws AnalyzerException {
-		long k = getKeyOfMethod(entryPoint);
-		List<Long> analysisList = new ArrayList<Long>();
-		ThreadAnalyzer analyzer = new ThreadAnalyzer(new ValInterpreter(this), this);
-		
-		analysisList.add(k);
-		// reanalyze methods until a fixed point is reached
-		for (int i = 0; i < analysisList.size(); ++i) {
-			Long currentMethodID = analysisList.get(i);
-			
-			// if the method is already at fixed point don't touch it
-			if (!analyzeMethods.get(currentMethodID))
-				continue;
-
-			//System.out.println("Analyzing method " + methodID.get(currentMethodID));
-			
-			// else, analyze it and put all its dependancies to be analyzed too.
-			// also all methods which depends on it, if behaviour changes.
-			// as side effect, the return value is automatically updated.
-			for (String s: paramString.get(currentMethodID)) {
-				BehaviourFrame[] frames = analyzer.analyze(owner.get(currentMethodID), methodNodes.get(currentMethodID), s);
-	
-				for (Long j: depends.get(currentMethodID)) {
-					// we put on all its dependancies
-					analysisList.add(j);
-				}
-				
-				// if the return value was updated, also examine all methods depending on this.
-				if (modifiedReturnExpression.get(currentMethodID)) {
-					//System.out.println("Since the method return value was modified, we also reanalyze:");
-					for (long j = 0; j < methodCounter; ++j) {
-						if (depends.get(j).contains(currentMethodID)) {
-							analysisList.add(j);
-							analyzeMethods.put(j, true);
-							//System.out.println(methodID.get(j));
-						}
-					}
-					modifiedReturnExpression.put(currentMethodID, false);
-				}
-				
-				methodFrames.put(currentMethodID, Arrays.asList(frames));
-				
-				// if the new behaviour is different from the past one, also update all methods depending on this one.
-				IBehaviour old = methodBehaviour.get(currentMethodID).get(s);
-				IBehaviour updatedBehaviour = computeBehaviour(frames);
-				
-				if (!old.equalBehaviour(updatedBehaviour)) {
-					methodBehaviour.get(currentMethodID).put(s, updatedBehaviour);
-					for (long j = 0; ((j < methodCounter) && (j != currentMethodID)); ++j) {
-						if (depends.get(j).contains(currentMethodID) && !analysisList.contains(j)) {
-							analysisList.add(j);
-							analyzeMethods.put(j, true);					
-						}
-					}
-				}				
-			}
-			// finally, notify that we checked the method.
-			analyzeMethods.put(currentMethodID, false);
-		}
-		
-		for (long i = 0; i < methodCounter; ++i) {
-			printMethodInformations(i);
-		}
-		
-	}
-	
 	protected void printMethodInformations(long index) {
 
 		String mName = methodNodes.get(index).name;
@@ -259,13 +266,15 @@ public class AnalysisContext {
 		for (String s: paramString.get(index)) {
 			String actualName = mName;
 			for (int i = 0; i < s.length(); ++i) {
-				if (i == 0 && s.length() == 1)
+				if (i == 0 && (s.length() == 1 || s.equalsIgnoreCase("aa")))
 					actualName += "(a)";
 				else if (i == 0)
 					actualName += "(a, ";
-				else if (i == s.length() - 1)
-					actualName += s.charAt(i) + ")";
-				else actualName += s.charAt(i) + ", ";
+				else if (s.charAt(i) == Names.alpha.charAt(i))
+					actualName += s.charAt(i) + ", ";
+			}
+			if (actualName.endsWith(", ")) {
+				actualName = actualName.substring(0, actualName.lastIndexOf(", ")) + ")";
 			}
 			if (actualName.equalsIgnoreCase(mName))
 				actualName += "()";
@@ -377,5 +386,27 @@ public class AnalysisContext {
 	public boolean isDynamic(String methodName) {
 		return dynamicMethod.get(getKeyOfMethod(methodName));
 	}
+
+
+	public void signalParametersPattern(String currentMethodName,
+			String paramsPattern) {
+		long k = getKeyOfMethod(currentMethodName);
+		if (!paramString.get(k).contains(paramsPattern)) {
+			paramString.get(k).add(paramsPattern);
+			releasedParameters.get(k).put(paramsPattern, "");
+			methodBehaviour.get(k).put(paramsPattern, new Atom(Atom.RETURN));
+			analyzeMethods.put(k, true);
+		}
+		
+	}
+
+	public void resetVariables() {
+		threadVariableStatus = new HashMap<Character, Integer>();
+	}
+	
+	public void newThreadVariable(char tName) {
+		threadVariableStatus.put(tName, ThreadResource.DELTA);
+	}
+
 	
 }

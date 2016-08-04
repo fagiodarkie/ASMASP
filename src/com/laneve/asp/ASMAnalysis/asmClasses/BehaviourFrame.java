@@ -82,30 +82,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 		// we only redefine the opcodes which behaviour differs from the standard.
 
 		switch (insn.getOpcode()) {
-		/*case Opcodes.ILOAD:
-			// If the local is null, we load a VarIntExpression - the method is loading a parameter.
-			if (getLocal(((VarInsnNode) insn).var) instanceof IExpression)
-				push(interpreter.copyOperation(insn,
-                    getLocal(((VarInsnNode) insn).var)));
-			else push(new VarExpression(Type.INT_TYPE, ((VarInsnNode) insn).var));
-			break;
-		case Opcodes.LLOAD:
-			// If the local is null, we load a VarIntExpression - the method is loading a parameter.
-			if (getLocal(((VarInsnNode) insn).var) instanceof IExpression)
-				push(interpreter.copyOperation(insn,
-                    getLocal(((VarInsnNode) insn).var)));
-			else push(new VarExpression(Type.LONG_TYPE, ((VarInsnNode) insn).var));
-			break;
-		case Opcodes.ALOAD:
-			// If the local is null but should be a thread, we load a VarThread - the method is loading a parameter.
-			VarInsnNode iNode = (VarInsnNode) insn;
-			//List<String> params = context.getParametersOf(methodName);
-			AnValue loading = getLocal(iNode.var);
-			if (loading instanceof ThreadValue && ((ThreadValue)loading).isVariable()) {
-				setLocal(iNode.var, context.generateThread(iNode.var));
-			}
-			super.execute(insn, interpreter);
-			break;*/
+
 		case Opcodes.IRETURN:
 		case Opcodes.LRETURN:
 		case Opcodes.FRETURN:
@@ -140,12 +117,6 @@ public class BehaviourFrame extends Frame<AnValue> {
 						context.signalRelease(methodName, methodParametersPattern, t.getThreadValue().getVariableName());
 				}
 			}
-				/*
-				 * For the sake of correct analysis,  we need to separate the frame behaviours.
-				 * Also, we probably will need lines to understand ifs and cycles.
-				 * 
-				 * frameBehaviour = (frameBehaviour == null ? in.getBehaviour().clone() : new ConcatBehaviour(frameBehaviour.clone(), in.getBehaviour().clone()));
-				 */
 			in.resetCurrentMethod();
 					
 			break;

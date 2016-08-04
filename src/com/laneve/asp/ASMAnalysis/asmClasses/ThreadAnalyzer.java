@@ -119,7 +119,7 @@ public class ThreadAnalyzer implements Opcodes {
             context.signalDynamicMethod(methodName);
         }
         for (int i = 0; i < args.length; ++i) {
-            current.setLocal(local++, interpreter.newValue(args[i], i));
+            current.setLocal(local++, interpreter.newValue(args[i], i, parameters.charAt(i)));
             if (args[i].getSize() == 2) {
                 current.setLocal(local++, interpreter.newValue(null));
             }
@@ -426,6 +426,7 @@ public class ThreadAnalyzer implements Opcodes {
 		
 		methodName = owner + "." + m.name + m.desc;
 		
+		context.resetVariables();
 		/*
 		 * The analyze() method is able to compute actual BehaviourFrames, due to
 		 * the redefinition of the frame creation methods.

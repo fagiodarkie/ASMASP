@@ -60,4 +60,13 @@ public abstract class IExpression extends AnValue{
 		type = t;
 	}
 
+	public boolean canEvaluate() {
+		boolean res = true;
+		if (left != null)
+			res = res && left.canEvaluate();
+		if (right != null)
+			res = res && right.canEvaluate();
+		return res;
+	}
+
 }

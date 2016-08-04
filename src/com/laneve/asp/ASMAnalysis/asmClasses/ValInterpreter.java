@@ -33,6 +33,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SumExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.USHRExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.VarExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
+import com.laneve.asp.ASMAnalysis.utils.Names;
 
 
 public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
@@ -336,7 +337,6 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     		List<AnValue> c = new ArrayList<AnValue>();
     		for (AnValue a: values)
     			c.add(a.clone());
-    		// TODO do we need to remove it?
     		if (insn.getOpcode() == Opcodes.INVOKEDYNAMIC || insn.getOpcode() != Opcodes.INVOKESTATIC) {
     			c.remove(0);
         		hasClassParameter = true;
@@ -346,10 +346,35 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         		createdBehaviour = context.createAtom(values.get(0), currentMethodName);
         	} else if (context.hasBehaviour(currentMethodName)) {
         		
-        		// TODO check if there are threads, and how many of these are duplicates.
+        		String paramsPattern = "";
+        		List<ThreadValue> threads = new ArrayList<ThreadValue>();
+        		String threadNames = "";
+        		for (int i = 0; i < c.size(); ++i) {
+        			if (c.get(i) instanceof ThreadValue) {
+        				ThreadValue x = (ThreadValue)c.get(i);
+        				boolean found = false;
+        				for (int j = 0; j < threads.size(); ++j) {
+        					if (threads.get(j).equalThread(x)) { 
+        						paramsPattern += threadNames.charAt(j);
+        						found = true;
+        						break;
+        					}
+        				}
+        				if (!found) {
+        					threads.add(x.clone());
+        					threadNames += Names.alpha.charAt(i);
+        					paramsPattern += Names.alpha.charAt(i);
+        				}
+        			} else {
+        				paramsPattern += Names.alpha.charAt(i);
+        			}
+        		}
+        			
         		
         		if (hasClassParameter)
         			context.signalDynamicMethod(currentMethodName);
+        		
+        		context.signalParametersPattern(currentMethodName, paramsPattern);
         		createdBehaviour = context.getBehaviour(currentMethodName, c);
         	}
         	
@@ -416,10 +441,12 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		return r;
 	}
 
-	public AnValue newValue(Type ctype, int i) {
+	public AnValue newValue(Type ctype, int i, char c) {
 		AnValue r = newValue(ctype);
-		if (r instanceof ThreadValue)
-			r = new ThreadValue(r, i, context, true);
+		if (r instanceof ThreadValue) {
+			r = new ThreadValue(r, i, context, true, c);
+			context.newThreadVariable(c);
+		}
 		else if (r.getType() == Type.INT_TYPE || r.getType() == Type.LONG_TYPE)
 			r = new VarExpression(r.getType(), i);
 		return r;
