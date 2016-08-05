@@ -6,6 +6,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InvokeDynamicInsnNode;
+import org.objectweb.asm.tree.JumpInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
@@ -38,7 +39,6 @@ public class BehaviourFrame extends Frame<AnValue> {
 	protected AnalysisContext context;
 	protected String methodName;
 	protected String invokedMethod, methodParametersPattern;
-	protected boolean resetBehaviour;
 	
 	public BehaviourFrame(Frame<? extends AnValue> src, String methodName, AnalysisContext context) {
 		super(src);
@@ -46,7 +46,6 @@ public class BehaviourFrame extends Frame<AnValue> {
 		this.methodName = methodName;
 		invokedMethod = null;
 		methodParametersPattern = "";
-		resetBehaviour = true;
 	}
 	
 	public void setParameterPattern(String s) {
@@ -62,9 +61,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 		for (int i = 0; i < getLocals(); ++i)
 			setLocal(i, null);
 		invokedMethod = null;
-		methodParametersPattern = "";
-		resetBehaviour = true;
-		
+		methodParametersPattern = "";		
 	}
 	
 	public BehaviourFrame(BehaviourFrame src) {
@@ -75,7 +72,6 @@ public class BehaviourFrame extends Frame<AnValue> {
 			frameBehaviour = src.frameBehaviour.clone();
 		else frameBehaviour = null;
 		methodParametersPattern = src.methodParametersPattern;
-		resetBehaviour = true;
 	}
 
 	public void addAnalysisInformations(String methodName, AnalysisContext context) {
@@ -95,11 +91,8 @@ public class BehaviourFrame extends Frame<AnValue> {
 	public void execute(final AbstractInsnNode insn,
 			final Interpreter<AnValue> interpreter) throws AnalyzerException {
 		
-		if (resetBehaviour) {
-			frameBehaviour = null;
-			invokedMethod = null;
-			resetBehaviour = false;
-		}
+		frameBehaviour = null;
+		invokedMethod = null;
 		
 		ValInterpreter in = (ValInterpreter) interpreter; 
 		// we only redefine the opcodes which behaviour differs from the standard.
@@ -153,7 +146,12 @@ public class BehaviourFrame extends Frame<AnValue> {
 	public boolean merge(final Frame<? extends AnValue> other, final Interpreter<AnValue> interpreter) throws AnalyzerException {
 		boolean r = super.merge(other, interpreter);
 		BehaviourFrame o = (BehaviourFrame)other;
-		if (o.frameBehaviour.equalBehaviour(frameBehaviour))
+		if (o.frameBehaviour != frameBehaviour) {
+			invokedMethod = o.invokedMethod;
+			frameBehaviour = (o.frameBehaviour != null ? o.frameBehaviour.clone() : null);
+			return true;
+		}
+		if (o.frameBehaviour == frameBehaviour || o.frameBehaviour.equalBehaviour(frameBehaviour))
 			return r;
 		
 		// frameBehaviour.mergeWith(o.frameBehaviour);
@@ -161,89 +159,16 @@ public class BehaviourFrame extends Frame<AnValue> {
 		frameBehaviour = o.frameBehaviour.clone();
 		return true;
 	}
-
-
-	public void processJumpInstruction(int insnOpcode, int insn, int i, int jump) {
-		resetBehaviour = false;
-		Type b = Type.BOOLEAN_TYPE;
-		IExpression l, r, zero = new ConstExpression(Type.INT_TYPE, new Long(0));
-		IBoolExpression lb, rb, cond;
-		switch (insnOpcode) {
-		case Opcodes.IFEQ:
-			l = (IExpression)getStack(getStackSize() - 1);
-			cond = new EqExpression(b, l, zero);
-			frameBehaviour = new ConditionalJump(insn, cond, jump, new NotExpression(b, cond), i);
-			break;
-		case Opcodes.IFNE:
-			l = (IExpression)getStack(getStackSize() - 1);
-			cond = new NeExpression(b, l, zero);
-			frameBehaviour = new ConditionalJump(insn, cond, jump, new NotExpression(b, cond), i);
-			break;
-		case Opcodes.IFLT:
-			l = (IExpression)getStack(getStackSize() - 1);
-			cond = new LtExpression(b, l, zero);
-			frameBehaviour = new ConditionalJump(insn, cond, jump, new NotExpression(b, cond), i);
-			break;
-		case Opcodes.IFGE:
-			l = (IExpression)getStack(getStackSize() - 1);
-			cond = new GeExpression(b, l, zero);
-			frameBehaviour = new ConditionalJump(insn, cond, jump, new NotExpression(b, cond), i);
-			break;
-		case Opcodes.IFGT:
-			l = (IExpression)getStack(getStackSize() - 1);
-			cond = new GtExpression(b, l, zero);
-			frameBehaviour = new ConditionalJump(insn, cond, jump, new NotExpression(b, cond), i);
-			break;
-		case Opcodes.IFLE:
-			l = (IExpression)getStack(getStackSize() - 1);
-			cond = new LeExpression(b, l, zero);
-			frameBehaviour = new ConditionalJump(insn, cond, jump, new NotExpression(b, cond), i);
-			break;
-		case Opcodes.IF_ICMPEQ:
-			l = (IExpression)getStack(getStackSize() - 1);
-			r = (IExpression)getStack(getStackSize() - 2);
-			cond = new EqExpression(b, l, r);
-			frameBehaviour = new ConditionalJump(insn, cond, jump, new NotExpression(b, cond), i);
-			break;
-		case Opcodes.IF_ICMPNE:
-			l = (IExpression)getStack(getStackSize() - 1);
-			r = (IExpression)getStack(getStackSize() - 2);
-			cond = new NeExpression(b, l, r);
-			frameBehaviour = new ConditionalJump(insn, cond, jump, new NotExpression(b, cond), i);
-			break;
-		case Opcodes.IF_ICMPLT:
-			l = (IExpression)getStack(getStackSize() - 1);
-			r = (IExpression)getStack(getStackSize() - 2);
-			cond = new LtExpression(b, l, r);
-			frameBehaviour = new ConditionalJump(insn, cond, jump, new NotExpression(b, cond), i);
-			break;
-		case Opcodes.IF_ICMPGE:
-			l = (IExpression)getStack(getStackSize() - 1);
-			r = (IExpression)getStack(getStackSize() - 2);
-			cond = new GeExpression(b, l, r);
-			frameBehaviour = new ConditionalJump(insn, cond, jump, new NotExpression(b, cond), i);
-			break;
-		case Opcodes.IF_ICMPGT:
-			l = (IExpression)getStack(getStackSize() - 1);
-			r = (IExpression)getStack(getStackSize() - 2);
-			cond = new GtExpression(b, l, r);
-			frameBehaviour = new ConditionalJump(insn, cond, jump, new NotExpression(b, cond), i);
-			break;
-		case Opcodes.IF_ICMPLE:
-			l = (IExpression)getStack(getStackSize() - 1);
-			r = (IExpression)getStack(getStackSize() - 2);
-			cond = new LeExpression(b, l, r);
-			frameBehaviour = new ConditionalJump(insn, cond, jump, new NotExpression(b, cond), i);
-			break;
-		case Opcodes.GOTO:
-			frameBehaviour = new ConditionalJump(insn, new TrueExpression(b), jump, new FalseExpression(b), -1);
-		case Opcodes.IF_ACMPEQ:
-		case Opcodes.IF_ACMPNE:
-		case Opcodes.IFNONNULL:
-		case Opcodes.IFNULL:
-			frameBehaviour = new ConditionalJump(insn, null, jump, null,i);
+	
+	public String toString() {
+		if (frameBehaviour != null) {
+			if (frameBehaviour instanceof ConditionalJump)
+				return "jump instruction";
+			return frameBehaviour.toString();
 		}
+		return "";
 	}
+
 
 	public BehaviourFrame init(BehaviourFrame src) {
 		super.init(src);
@@ -253,8 +178,17 @@ public class BehaviourFrame extends Frame<AnValue> {
 			frameBehaviour = src.frameBehaviour.clone();
 		else frameBehaviour = null;
 		methodParametersPattern = src.methodParametersPattern;
-		resetBehaviour = true;
 		return this;
+	}
+
+
+	public void executeJump(JumpInsnNode j, ValInterpreter in,
+			int insn, int sInsn, int jump) throws AnalyzerException {
+		in.setJumpLabels(insn, sInsn, jump);
+		execute(j, in);
+		frameBehaviour = in.getBehaviour();
+		in.resetCurrentMethod();
+
 	}
 	
 }

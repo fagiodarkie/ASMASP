@@ -49,13 +49,14 @@ public class Tests {
 		
 		Tests x = new Tests();
 	
-		x.fact(5);
+//		x.fact(5);
 		
 		int a = x.foo(3);
 		
-		a += x.bar();
+		if (a == 0)
+			a += x.bar();
 		
-		int b = a * 2 + x.foo(x.bar(a));
+/*		int b = a * 2 + x.foo(x.bar(a));
 		
 		Thread t = new Thread();
 		Thread t2 = new Thread();
@@ -65,7 +66,7 @@ public class Tests {
 		
 		t = new Thread();		
 		t.run();
-		x.release(t, t, b);
+		x.release(t, t, b);*/
 		
 		
 	}

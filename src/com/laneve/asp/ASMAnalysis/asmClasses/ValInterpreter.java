@@ -32,6 +32,17 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SubExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SumExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.USHRExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.VarExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.EqExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.FalseExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.GeExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.GtExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.IBoolExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.LeExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.LtExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.NeExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.NotExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.TrueExpression;
+import com.laneve.asp.ASMAnalysis.bTypes.ConditionalJump;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.utils.Names;
 
@@ -40,7 +51,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
 	protected AnalysisContext context;
 	protected String currentMethodName;
-	private IBehaviour createdBehaviour;
+	protected int current, next, jumpTo;
+	protected IBehaviour createdBehaviour;
 	
 	protected ValInterpreter(int api) {
 		super(api);
@@ -178,6 +190,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.IFLE:
         case Opcodes.IFNULL:
         case Opcodes.IFNONNULL:
+        	processJumpInstruction(insn.getOpcode(), current, next, jumpTo, (IExpression)value, null);
+        	return new AnValue(Type.VOID_TYPE);        	
         case Opcodes.IRETURN:
         case Opcodes.LRETURN:
         case Opcodes.FRETURN:
@@ -288,8 +302,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.IF_ICMPLE:
         case Opcodes.IF_ACMPEQ:
         case Opcodes.IF_ACMPNE:
-        	// no object is created. jump instruction must be modeled in frame.
-        	return null;
+        	processJumpInstruction(insn.getOpcode(), current, next, jumpTo, (IExpression)value1, (IExpression)value2);
         case Opcodes.PUTFIELD:
         
         default:
@@ -297,6 +310,81 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		}
 	}
 
+	public void processJumpInstruction(int insnOpcode, int insn, int i, int jump, IExpression l, IExpression r) {
+		Type b = Type.BOOLEAN_TYPE;
+		IExpression zero = new ConstExpression(Type.INT_TYPE, new Long(0));
+		IBoolExpression cond, ncond;
+		switch (insnOpcode) {
+		case Opcodes.IFEQ:
+			cond = new EqExpression(b, l, zero);
+			ncond = new NeExpression(b, l, zero);
+			createdBehaviour = new ConditionalJump(insn, cond, jump, ncond, i);
+			break;
+		case Opcodes.IFNE:
+			cond = new NeExpression(b, l, zero);
+			ncond = new EqExpression(b, l, zero);
+			createdBehaviour = new ConditionalJump(insn, cond, jump, ncond, i);
+			break;
+		case Opcodes.IFLT:
+			cond = new LtExpression(b, l, zero);
+			ncond = new GeExpression(b, l, zero);
+			createdBehaviour = new ConditionalJump(insn, cond, jump, ncond, i);
+			break;
+		case Opcodes.IFGE:
+			cond = new GeExpression(b, l, zero);
+			ncond = new LtExpression(b, l, zero);
+			createdBehaviour = new ConditionalJump(insn, cond, jump, ncond, i);
+			break;
+		case Opcodes.IFGT:
+			cond = new GtExpression(b, l, zero);
+			ncond = new LeExpression(b, l, zero);
+			createdBehaviour = new ConditionalJump(insn, cond, jump, ncond, i);
+			break;
+		case Opcodes.IFLE:
+			cond = new LeExpression(b, l, zero);
+			ncond = new GtExpression(b, l, zero);
+			createdBehaviour = new ConditionalJump(insn, cond, jump, ncond, i);
+			break;
+		case Opcodes.IF_ICMPEQ:
+			cond = new EqExpression(b, l, r);
+			ncond = new NeExpression(b, l, r);
+			createdBehaviour = new ConditionalJump(insn, cond, jump, ncond, i);
+			break;
+		case Opcodes.IF_ICMPNE:
+			cond = new NeExpression(b, l, r);
+			ncond = new EqExpression(b, l, r);
+			createdBehaviour = new ConditionalJump(insn, cond, jump, ncond, i);
+			break;
+		case Opcodes.IF_ICMPLT:
+			cond = new LtExpression(b, l, r);
+			ncond = new GeExpression(b, l, r);
+			createdBehaviour = new ConditionalJump(insn, cond, jump, ncond, i);
+			break;
+		case Opcodes.IF_ICMPGE:
+			cond = new GeExpression(b, l, r);
+			ncond = new LtExpression(b, l, r);
+			createdBehaviour = new ConditionalJump(insn, cond, jump, ncond, i);
+			break;
+		case Opcodes.IF_ICMPGT:
+			cond = new GtExpression(b, l, r);
+			ncond = new LeExpression(b, l, r);
+			createdBehaviour = new ConditionalJump(insn, cond, jump, ncond, i);
+			break;
+		case Opcodes.IF_ICMPLE:
+			cond = new LeExpression(b, l, r);
+			ncond = new GtExpression(b, l, r);
+			createdBehaviour = new ConditionalJump(insn, cond, jump, ncond, i);
+			break;
+		case Opcodes.GOTO:
+			createdBehaviour = new ConditionalJump(insn, new TrueExpression(b), jump, new FalseExpression(b), -1);
+		case Opcodes.IF_ACMPEQ:
+		case Opcodes.IF_ACMPNE:
+		case Opcodes.IFNONNULL:
+		case Opcodes.IFNULL:
+			createdBehaviour = new ConditionalJump(insn, null, jump, null,i);
+		}
+	}
+	
 	@Override
 	public AnValue ternaryOperation(AbstractInsnNode insn, AnValue value1,
 			AnValue value2, AnValue value3) throws AnalyzerException {
@@ -433,6 +521,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	public void resetCurrentMethod() {
 		currentMethodName = null;
 		createdBehaviour = null;
+		current = next = jumpTo = -1;
 	}
 
 	public AnValue newValue(Type ctype, boolean b) {
@@ -449,6 +538,13 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		else if (r.getType() == Type.INT_TYPE || r.getType() == Type.LONG_TYPE)
 			r = new VarExpression(r.getType(), i);
 		return r;
+	}
+
+
+	public void setJumpLabels(int insn, int sInsn, int jump) {
+		current = insn;
+		next = sInsn;
+		jumpTo = jump;
 	}
 
 }

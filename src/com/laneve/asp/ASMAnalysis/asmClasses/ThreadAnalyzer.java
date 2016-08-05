@@ -151,18 +151,30 @@ public class ThreadAnalyzer implements Opcodes {
                     mergeCopy(insn + 1, f, subroutine);
                     newControlFlowEdge(insn, insn + 1);
                 } else {
-                	if (!(insnNode instanceof JumpInsnNode) || insnOpcode == JSR) {
-                		current.init(f).execute(insnNode, interpreter);
-                		subroutine = subroutine == null ? null : subroutine.copy();
+                	if (insnNode instanceof JumpInsnNode) {
+                        JumpInsnNode j = (JumpInsnNode) insnNode;
+                        int jump = insns.indexOf(j.label);
+                        current.init(f).executeJump(j, interpreter, insn, insn + 1, jump);
                 	}
+                    else {
+                    	current.init(f).execute(insnNode, interpreter);
+                    }
+                    subroutine = subroutine == null ? null : subroutine.copy();
 
-                    // we don't care about JSRs
-                    if (insnNode instanceof JumpInsnNode && insnOpcode != JSR) {
-                    	
-                    	current.init(f);
-                		subroutine = subroutine == null ? null : subroutine.copy();
-                    	executeJump((JumpInsnNode) insnNode, current, subroutine, insn, insnOpcode);
-                    	
+                    if (insnNode instanceof JumpInsnNode) {
+                        JumpInsnNode j = (JumpInsnNode) insnNode;
+                        if (insnOpcode != GOTO && insnOpcode != JSR) {
+                            merge(insn + 1, current, subroutine);
+                            newControlFlowEdge(insn, insn + 1);
+                        }
+                        int jump = insns.indexOf(j.label);
+                        if (insnOpcode == JSR) {
+                            merge(jump, current, new OwnedSubroutine(j.label,
+                                    m.maxLocals, j));
+                        } else {
+                            merge(jump, current, subroutine);
+                        }
+                        newControlFlowEdge(insn, jump);
                     } else if (insnNode instanceof LookupSwitchInsnNode) {
                         LookupSwitchInsnNode lsi = (LookupSwitchInsnNode) insnNode;
                         int jump = insns.indexOf(lsi.dflt);
@@ -250,25 +262,6 @@ public class ThreadAnalyzer implements Opcodes {
 
         return frames;
     }
-
-    private void executeJump(JumpInsnNode j, BehaviourFrame current,
-    		OwnedSubroutine subroutine, int insn, int insnOpcode) throws AnalyzerException {
-
-    	int jump = insns.indexOf(j.label);
-    	
-    	current.processJumpInstruction(insnOpcode, insn, insn + 1, jump);
-    	current.execute(j, interpreter);
-        if (insnOpcode != GOTO) {
-            merge(insn + 1, current, subroutine);
-            newControlFlowEdge(insn, insn + 1);
-            merge(jump, current, subroutine);
-            newControlFlowEdge(insn, jump);
-        } else if (insnOpcode == GOTO) {
-            merge(jump, current, subroutine);
-            newControlFlowEdge(insn, jump);
-        }
-		
-	}
 
 	private void findSubroutine(int insn, final OwnedSubroutine sub,
             final List<AbstractInsnNode> calls) throws AnalyzerException {
