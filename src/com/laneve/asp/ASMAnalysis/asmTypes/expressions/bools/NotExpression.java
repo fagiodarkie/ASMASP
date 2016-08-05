@@ -13,4 +13,9 @@ public class NotExpression extends IBoolExpression {
 		return !leftB.evaluate();
 	}	
 
+	@Override
+	public String toString() {
+		return "(!" + leftB.toString() + ")";
+	}
+
 }

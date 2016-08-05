@@ -5,6 +5,7 @@ import org.objectweb.asm.Type;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
+import com.laneve.asp.ASMAnalysis.utils.Names;
 
 public class BoolVarExpression extends IBoolExpression {
 	
@@ -43,4 +44,16 @@ public class BoolVarExpression extends IBoolExpression {
 		
 	}
 
+	@Override
+	public boolean equal(IBoolExpression o) {
+		return o instanceof BoolVarExpression
+				&& ((BoolVarExpression)o).index == index;
+	}
+	
+	@Override
+	public String toString() {
+		if (exp != null)
+			return exp.toString();
+		return "" + Names.alpha.charAt(index);
+	}
 }

@@ -369,7 +369,6 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         				paramsPattern += Names.alpha.charAt(i);
         			}
         		}
-        			
         		
         		if (hasClassParameter)
         			context.signalDynamicMethod(currentMethodName);

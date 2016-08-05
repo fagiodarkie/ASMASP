@@ -58,4 +58,24 @@ public abstract class IBoolExpression extends AnValue {
 			rightB.setParameters(parameters);
 	}
 
+	public boolean equal(IBoolExpression other) {
+		
+		if (!(getClass().isInstance(other)))
+			return false;
+		
+		boolean res = true;
+		if (left != null)
+			res &= left.equalValue(other.left);
+		if (right != null)
+			res &= right.equalValue(other.right);
+		if (leftB != null)
+			res &= leftB.equal(other.leftB);
+		if (rightB != null)
+			res &= rightB.equal(other.rightB);
+			
+		return res;
+	}
+
+	public abstract String toString();
+	
 }

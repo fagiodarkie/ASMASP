@@ -15,4 +15,8 @@ public class EqExpression extends IBoolExpression {
 		return (left.evaluate() == right.evaluate()); 
 	}
 
+	@Override
+	public String toString() {
+		return "(" + left.toString() + " == " + right.toString() + ")";
+	}
 }

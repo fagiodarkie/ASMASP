@@ -15,4 +15,8 @@ public class AndExpression extends IBoolExpression {
 		return (leftB.evaluate() && rightB.evaluate()); 
 	}
 
+	@Override
+	public String toString() {
+		return "(" + leftB.toString() + " && " + rightB.toString() + ")";
+	}
 }

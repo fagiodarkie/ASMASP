@@ -291,9 +291,13 @@ public class AnalysisContext {
 	}
 
 	protected IBehaviour computeBehaviour(BehaviourFrame[] frames) {
-		// TODO Compute behaviour (LAM?) of frame.
 		
-		// TODO compute also behaviour of a part of the array (from i to j)
+		return computeBehaviour(null, frames, 0, frames.length - 1);
+		
+	}
+	
+	protected IBehaviour computeBehaviour(IBehaviour start, BehaviourFrame[] frames, int begin, int end) {
+
 		
 		List<IBehaviour> l = new ArrayList<IBehaviour>();
 		for (int i = 0; i < frames.length; ++i) {
@@ -314,9 +318,7 @@ public class AnalysisContext {
 			res = new ConcatBehaviour(left, right);
 			
 		}		
-		
-		//System.out.println(res.toString());
-		
+				
 		return res;
 	}
 

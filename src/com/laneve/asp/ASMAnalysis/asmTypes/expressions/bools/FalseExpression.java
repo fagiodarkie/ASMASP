@@ -13,4 +13,13 @@ public class FalseExpression extends IBoolExpression {
 		return false; 
 	}
 
+	@Override
+	public boolean equal(IBoolExpression o) {
+		return o instanceof FalseExpression;
+	}
+
+	@Override
+	public String toString() {
+		return "false";
+	}
 }
