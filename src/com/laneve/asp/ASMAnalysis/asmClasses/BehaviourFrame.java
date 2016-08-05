@@ -244,5 +244,17 @@ public class BehaviourFrame extends Frame<AnValue> {
 			frameBehaviour = new ConditionalJump(insn, null, jump, null,i);
 		}
 	}
+
+	public BehaviourFrame init(BehaviourFrame src) {
+		super.init(src);
+		addAnalysisInformations(src.methodName, src.context);
+		invokedMethod = src.invokedMethod;
+		if (src.frameBehaviour != null)
+			frameBehaviour = src.frameBehaviour.clone();
+		else frameBehaviour = null;
+		methodParametersPattern = src.methodParametersPattern;
+		resetBehaviour = true;
+		return this;
+	}
 	
 }

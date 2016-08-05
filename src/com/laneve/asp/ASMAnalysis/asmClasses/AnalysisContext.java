@@ -17,6 +17,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.FunctionCallExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.Atom;
 import com.laneve.asp.ASMAnalysis.bTypes.ConcatBehaviour;
+import com.laneve.asp.ASMAnalysis.bTypes.ConditionalJump;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.MethodBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
@@ -297,29 +298,34 @@ public class AnalysisContext {
 	}
 	
 	protected IBehaviour computeBehaviour(IBehaviour start, BehaviourFrame[] frames, int begin, int end) {
-
 		
-		List<IBehaviour> l = new ArrayList<IBehaviour>();
-		for (int i = 0; i < frames.length; ++i) {
-			if (frames[i] != null) {
-				IBehaviour b = frames[i].getBehaviour();
-				if (b != null)
-					l.add(b);
+		if (begin >= end)
+			return start;
+		
+		IBehaviour b = frames[begin].frameBehaviour;
+		if (start == null) {
+			// we compute from the current behaviour.
+			if (b == null)
+				return computeBehaviour(start, frames, begin + 1, end);
+			else {
+				if (b instanceof ConditionalJump) {
+					ConditionalJump con = (ConditionalJump) b;
+					con.setBranches(computeBehaviour(null, frames, con.getThenIndex(), end), computeBehaviour(null, frames, con.getElseIndex(), end));
+					return con;
+				} else {
+					IBehaviour future = computeBehaviour(null, frames, begin + 1, end);
+					if (future != null)
+						return new ConcatBehaviour(b, future);
+					else return b;
+				}
 			}
+		} else {
+			IBehaviour future = computeBehaviour(null, frames, begin, end);
+			if (future != null)
+				return new ConcatBehaviour(start, future);
+			else return start;
 		}
 		
-		if (l.size() == 0)
-			return new Atom(Atom.RETURN);
-		
-		IBehaviour res = l.get(0);
-		for (int i = 1; i < l.size(); ++i) {
-			IBehaviour left = res.clone();
-			IBehaviour right = l.get(i);
-			res = new ConcatBehaviour(left, right);
-			
-		}		
-				
-		return res;
 	}
 
 	public boolean hasBehaviour(String currentMethodName) {
