@@ -310,10 +310,12 @@ public class AnalysisContext {
 			else {
 				if (b instanceof ConditionalJump) {
 					ConditionalJump con = (ConditionalJump) b;
-					IBehaviour thenBranch = computeBehaviour(null, frames, con.getThenIndex(), end);
-					IBehaviour elseBranch = computeBehaviour(null, frames, con.getElseIndex(), end);
-					con.setBranches(thenBranch, elseBranch);
-					return con;
+					if (con.getThenIndex() > begin && con.getElseIndex() > begin) {
+						IBehaviour thenBranch = computeBehaviour(null, frames, con.getThenIndex(), end);
+						IBehaviour elseBranch = computeBehaviour(null, frames, con.getElseIndex(), end);
+						con.setBranches(thenBranch, elseBranch);
+						return con;
+					} else return computeBehaviour(start, frames, begin + 1, end);
 				} else {
 					IBehaviour future = computeBehaviour(null, frames, begin + 1, end);
 					if (future != null)

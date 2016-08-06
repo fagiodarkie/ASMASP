@@ -184,7 +184,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 
 	public void executeJump(JumpInsnNode j, ValInterpreter in,
 			int insn, int sInsn, int jump) throws AnalyzerException {
-		in.setJumpLabels(insn, sInsn, jump);
+		in.setJumpLabels(insn + 1, sInsn + 1, jump + 1);
 		execute(j, in);
 		frameBehaviour = in.getBehaviour();
 		in.resetCurrentMethod();
