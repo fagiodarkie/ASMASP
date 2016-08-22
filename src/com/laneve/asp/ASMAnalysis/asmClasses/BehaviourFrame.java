@@ -1,33 +1,15 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
-import java.util.List;
-
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InvokeDynamicInsnNode;
 import org.objectweb.asm.tree.JumpInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.VarInsnNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
-import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.VarExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.EqExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.FalseExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.GeExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.GtExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.IBoolExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.LeExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.LtExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.NeExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.NotExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.TrueExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.ConditionalJump;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;

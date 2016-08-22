@@ -422,6 +422,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         		currentMethodName = values.get(0).getClassName() + currentMethodName;
         	}
 
+        	// FIXME here we manage the argument list!
     		List<AnValue> c = new ArrayList<AnValue>();
     		for (AnValue a: values)
     			c.add(a.clone());
@@ -429,6 +430,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     			c.remove(0);
         		hasClassParameter = true;
     		}
+    		
 
         	if (context.isAtomicBehaviour(currentMethodName)) {
         		createdBehaviour = context.createAtom(values.get(0), currentMethodName);

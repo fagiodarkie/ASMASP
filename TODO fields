@@ -1,0 +1,6 @@
+1) alla "return" dei metodi, copiamo le variabili locali nella mappa del contesto relativa al metodo in oggetto;
+2) gli AnValues hanno una mappa String->AnValue che ne gestisce i campi, che vengono anche riferiti come interi tramite ordinamento;
+3) le signatures dei metodi vengono estese con gli ordinali dei campi: un oggetto con 2 campi figura come "a12", ma se è istanziato con i campi uguali sarà "a11";
+4) all'invocazione di un metodo, l'interprete va a recuperare gli oggetti modificati, li istanzia con i parametri attuali con cui il metodo viene chiamato e li segnala al frame, che li aggiorna;
+5) gli AnValues recuperano l'ID per gestire modifiche a cascata durante i metodi;
+6) vengono inseriti gli AnValues variabili e le "espressioni" di AnValues, per poter gestire le modifiche ai campi (da definire).
