@@ -77,9 +77,11 @@ public class ConditionalJump implements IBehaviour {
 		if (thenBranch == null && null == elseBranch) {
 			return "";
 		} else if (thenBranch == null) {
-			return elseBranch.toString();
+			return (elseCondition == null ? "" : "[" + elseCondition.toString() + "]") 
+					+ elseBranch.toString();
 		} else if (elseBranch == null) {
-			return thenBranch.toString();
+			return (thenCondition == null ? "" : "[" + thenCondition.toString() + "]")
+					+ thenBranch.toString();
 		}
 		
 		if ((thenCondition == null && elseCondition == null)
