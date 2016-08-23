@@ -51,11 +51,12 @@ public class ASMAnalysis {
 				ClassReader r = new ClassReader(streams.get(i));
 				ClassNode n = new ClassNode();
 				r.accept(n, 0);
-				for (MethodNode m: n.methods) {
-					context.createMethodNode(r.getClassName(), n.name + "." + m.name + m.desc, m);
-				}
 				for (FieldNode m: n.fields) {
 					context.signalField(r.getClassName(), m.name);
+				}
+				context.reorderFields(r.getClassName());
+				for (MethodNode m: n.methods) {
+					context.createMethodNode(r.getClassName(), n.name + "." + m.name + m.desc, m);
 				}
 				
 			} catch (IOException e) {

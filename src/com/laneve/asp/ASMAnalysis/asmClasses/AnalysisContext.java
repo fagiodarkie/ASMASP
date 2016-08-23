@@ -244,17 +244,35 @@ public class AnalysisContext {
 	public void createMethodNode(String className, String name, MethodNode method) {
 		methodNodes.put(methodCounter, method);
 		methodBehaviour.put(methodCounter, new HashMap<String, IBehaviour>());
-		String params = method.desc.substring(1, method.desc.indexOf(')'));
-		String defaultString = ( params.contains(";") ? Names.alpha.substring(0, params.split(";").length) :
-			params.length() > 0 ? "a" : "");
-		methodBehaviour.get(methodCounter).put(defaultString, new Atom(Atom.RETURN));
+		//String params = method.desc.substring(1, method.desc.indexOf(')'));
+		String pString = "";
+//		System.out.println("method " + className + "." + name + " has parameters:");
+		for (int i = 0; i < method.localVariables.size(); ++i) {
+			String d = method.localVariables.get(i).desc.replace(';', ' ').trim();
+			if (d.startsWith("L"))
+				d = d.substring(1);
+//			System.out.println(d);
+			pString += Names.alpha.charAt(i);
+			if (objectFields.containsKey(d) && objectFields.get(d).size() > 0) {
+				List<String> pars = objectFields.get(d);
+				pString += "[";
+				for (String p : pars)
+					pString += p + ",";
+				pString = pString.substring(0, pString.length() - 1) + "]";
+			}
+			if (i != method.localVariables.size() - 1)
+				pString += ",";
+//			System.out.println(pString);
+		}
+		
+		methodBehaviour.get(methodCounter).put(pString, new Atom(Atom.RETURN));
 		paramString.put(methodCounter, new ArrayList<String>());
-		paramString.get(methodCounter).add(defaultString);
+		paramString.get(methodCounter).add(pString);
 		owner.put(methodCounter, className);
 		methodID.put(methodCounter, name);
 		depends.put(methodCounter, new ArrayList<Long>());
 		releasedParameters.put(methodCounter, new HashMap<String, String>());
-		releasedParameters.get(methodCounter).put(defaultString, "");
+		releasedParameters.get(methodCounter).put(pString, "");
 		analyzeMethods.put(methodCounter, true);
 		returnValue.put(methodCounter, new ConstExpression(Type.INT_TYPE, new Long(0)));
 		modifiedReturnExpression.put(methodCounter, false);
@@ -267,7 +285,7 @@ public class AnalysisContext {
 		String mName = methodNodes.get(index).name;
 		mName = mName.substring(mName.lastIndexOf('/') + 1, mName.length());
 		for (String s: paramString.get(index)) {
-			String actualName = mName;
+			/*String actualName = mName;
 			for (int i = 0; i < s.length(); ++i) {
 				if (i == 0 && (s.length() == 1 || s.equalsIgnoreCase("aa")))
 					actualName += "(a)";
@@ -278,11 +296,13 @@ public class AnalysisContext {
 			}
 			if (actualName.endsWith(", ")) {
 				actualName = actualName.substring(0, actualName.lastIndexOf(", ")) + ")";
-			}
+			}*/
+			String actualName = mName + "(" + s + ")";
 			if (actualName.equalsIgnoreCase(mName))
 				actualName += "()";
 			System.out.println("Method " + actualName + " has behaviour " + methodBehaviour.get(index).get(s));
 			
+			// TODO
 			if (releasedParameters.get(index).get(s).length() >0) {
 				String rels = "" + releasedParameters.get(index).get(s).charAt(0);
 				for (int i = 1; i < releasedParameters.get(index).get(s).length(); ++i)
@@ -438,6 +458,11 @@ public class AnalysisContext {
 			x.add(name);
 			objectFields.put(className, x);
 		}
+	}
+
+	public void reorderFields(String className) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	
