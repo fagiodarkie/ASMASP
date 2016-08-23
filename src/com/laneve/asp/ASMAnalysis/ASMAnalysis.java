@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 
@@ -52,6 +53,9 @@ public class ASMAnalysis {
 				r.accept(n, 0);
 				for (MethodNode m: n.methods) {
 					context.createMethodNode(r.getClassName(), n.name + "." + m.name + m.desc, m);
+				}
+				for (FieldNode m: n.fields) {
+					context.signalField(r.getClassName(), m.name);
 				}
 				
 			} catch (IOException e) {

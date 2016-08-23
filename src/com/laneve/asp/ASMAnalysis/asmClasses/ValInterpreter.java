@@ -208,7 +208,6 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.PUTSTATIC:
         	return new AnValue(Type.VOID_TYPE);
         case Opcodes.GETFIELD:
-        	context.signalField(value.getClassName(), ((FieldInsnNode)insn).name);
         	return value.getField(((FieldInsnNode)insn).name);
         case Opcodes.NEWARRAY:
         	return new AnValue(Type.VOID_TYPE);
@@ -309,7 +308,6 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	return null;
         case Opcodes.PUTFIELD:
         	String n = ((FieldInsnNode)insn).name;
-        	context.signalField(value1.getClassName(), n);
         	value1.setField(n, value2);
         	currentObject = value1;
         	// TODO
