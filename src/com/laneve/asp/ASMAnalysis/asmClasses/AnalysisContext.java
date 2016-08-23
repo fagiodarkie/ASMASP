@@ -38,6 +38,7 @@ public class AnalysisContext {
 	protected Map<Long, Map<String, IBehaviour>> methodBehaviour;
 	protected String resourceClass, allocationCall, deallocationCall;
 	protected Map<Character, Integer> threadVariableStatus;
+	protected Map<String, List<String>> objectFields;
 	
 	
 	public AnalysisContext() {
@@ -55,6 +56,7 @@ public class AnalysisContext {
 		threadCounter = methodCounter = 0;
 		methodNodes = new HashMap<Long, MethodNode>();
 		methodBehaviour = new HashMap<Long, Map<String, IBehaviour>>();
+		objectFields = new HashMap<String, List<String>>();
 		
 		resourceClass = "java/lang/Thread";
 		allocationCall = resourceClass + ".run()V";
@@ -418,6 +420,24 @@ public class AnalysisContext {
 	
 	public void newThreadVariable(char tName) {
 		threadVariableStatus.put(tName, ThreadResource.DELTA);
+	}
+
+
+
+	public void newObjectVariable() {
+		
+	}
+	
+	public void signalField(String className, String name) {
+		if (objectFields.containsKey(className)) {
+			List<String> l = objectFields.get(className);
+			if (!l.contains(name))
+				l.add(name);
+		} else {
+			List<String> x = new ArrayList<String>();
+			x.add(name);
+			objectFields.put(className, x);
+		}
 	}
 
 	

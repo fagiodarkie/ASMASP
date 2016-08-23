@@ -1,5 +1,9 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
+import java.io.ObjectOutputStream.PutField;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.InvokeDynamicInsnNode;
@@ -118,6 +122,12 @@ public class BehaviourFrame extends Frame<AnValue> {
 			in.resetCurrentMethod();
 					
 			break;
+		case Opcodes.PUTFIELD:
+			super.execute(insn, interpreter);
+			AnValue newObject = in.getCurrentObject();
+			updateByID(newObject);
+            in.resetCurrentMethod();
+			break;
 		default:
 			if (insn.getOpcode() < 200) super.execute(insn, in);
 			else throw new RuntimeException("Illegal opcode " + insn.getOpcode());
@@ -140,6 +150,25 @@ public class BehaviourFrame extends Frame<AnValue> {
 		invokedMethod = o.invokedMethod;
 		frameBehaviour = o.frameBehaviour.clone();
 		return true;
+	}
+	
+	protected void updateByID(AnValue newValue) {
+        for (int i = 0; i < getLocals(); ++i) {
+        	if (getLocal(i).getID() == newValue.getID())
+        		setLocal(i, newValue);
+        }
+        
+        List<AnValue> tempStack = new ArrayList<AnValue>(); 
+        for (int i = 0; i < getStackSize(); ++i) {
+        	AnValue t = getStack(i);
+        	if (t.getID() == newValue.getID())
+        		tempStack.add(newValue);
+        	else tempStack.add(0, t);
+        }
+    	// for a stack A, B, C, tempStack holds C, B, A. pushing restores correct order.
+        clearStack();
+        for (AnValue a : tempStack)
+        	push(a);
 	}
 	
 	public String toString() {

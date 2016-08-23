@@ -7,6 +7,7 @@ import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.InvokeDynamicInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
@@ -53,6 +54,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	protected String currentMethodName;
 	protected int current, next, jumpTo;
 	protected IBehaviour createdBehaviour;
+	private AnValue currentObject;
 	
 	protected ValInterpreter(int api) {
 		super(api);
@@ -74,6 +76,10 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
 	protected void setContext(AnalysisContext analysisContext) {
 		context = analysisContext;
+	}
+	
+	public AnValue getCurrentObject() {
+		return currentObject;
 	}
 	
 	@Override
@@ -200,8 +206,10 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.TABLESWITCH:
         case Opcodes.LOOKUPSWITCH:
         case Opcodes.PUTSTATIC:
-        case Opcodes.GETFIELD:
         	return new AnValue(Type.VOID_TYPE);
+        case Opcodes.GETFIELD:
+        	context.signalField(value.getClassName(), ((FieldInsnNode)insn).name);
+        	return value.getField(((FieldInsnNode)insn).name);
         case Opcodes.NEWARRAY:
         	return new AnValue(Type.VOID_TYPE);
         case Opcodes.ANEWARRAY:
@@ -289,11 +297,6 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	else if (v1 < v2)
         		return new ConstExpression(Type.INT_TYPE, new Long(-1));
         	else return new ConstExpression(Type.INT_TYPE, new Long(0));
-        case Opcodes.FCMPL:
-        case Opcodes.FCMPG:
-    	case Opcodes.DCMPL:
-    	case Opcodes.DCMPG:
-    		// what do we do with floating point algebras?
         case Opcodes.IF_ICMPEQ:
         case Opcodes.IF_ICMPNE:
         case Opcodes.IF_ICMPLT:
@@ -303,7 +306,20 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.IF_ACMPEQ:
         case Opcodes.IF_ACMPNE:
         	processJumpInstruction(insn.getOpcode(), current, next, jumpTo, (IExpression)value1, (IExpression)value2);
+        	return null;
         case Opcodes.PUTFIELD:
+        	String n = ((FieldInsnNode)insn).name;
+        	context.signalField(value1.getClassName(), n);
+        	value1.setField(n, value2);
+        	currentObject = value1;
+        	// TODO
+        	return null;
+        case Opcodes.FCMPL:
+        case Opcodes.FCMPG:
+    	case Opcodes.DCMPL:
+    	case Opcodes.DCMPG:
+    		// what do we do with floating point algebras?
+        	
         
         default:
     		throw new Error("Internal error.");
@@ -524,6 +540,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		currentMethodName = null;
 		createdBehaviour = null;
 		current = next = jumpTo = -1;
+		currentObject = null;
 	}
 
 	public AnValue newValue(Type ctype, boolean b) {

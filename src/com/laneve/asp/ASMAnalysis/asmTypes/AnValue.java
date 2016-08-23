@@ -1,14 +1,23 @@
 package com.laneve.asp.ASMAnalysis.asmTypes;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.analysis.Value;
 
 public class AnValue implements Value {
 	
+	protected static long maxID = 0;
+	
+	protected static long generateID() {
+		return maxID++;
+	}
+	
 	public static String LONG_NAME = "LONG", SHORT_NAME = "SHORT",
-			INT_NAME = "INT", FLOAT_NAME = "FLOAT", DOUBLE_NAME = "DOUBLE",
-			BOOL_NAME = "BOOLEAN", CHAR_NAME = "CHAR", STRING_NAME = "STRING",
+			INT_NAME = "INT", FLOAT_NAME = "FLOAT", DOUBLE_NAME = "DOUBLE",	
+		BOOL_NAME = "BOOLEAN", CHAR_NAME = "CHAR", STRING_NAME = "STRING",
 			REF_NAME = "REFERENCE", THREAD_NAME = "THREAD";
 	
 	public static String getClassName(Type t) {
@@ -101,6 +110,8 @@ public class AnValue implements Value {
 		}
 	}
 	
+	
+	
 	public boolean equalValue(AnValue other) {
 		return other.type == type && other.className.equalsIgnoreCase(className);
 	}
@@ -108,23 +119,45 @@ public class AnValue implements Value {
 	protected Type type;
 	protected String className;
 	protected String name;
+	protected long ID;
+	protected Map<String, AnValue> field;
+	
 	
 	
 	public AnValue(Type t) {
 		type = t;
 		className = getClassName(t);
 		name = "?";
+		field = new HashMap<String, AnValue>();
+		ID = generateID();
 	}
 	
 	public AnValue(AnValue a) {
 		type = a.type;
 		className = a.className;
 		name = a.name;
+		field = new HashMap<String, AnValue>();
+		ID = a.ID;
 	}
 			
 	public AnValue(Type ctype, String string) {
 		this(ctype);
 		name = string;
+	}
+	
+	public void setField(String name, AnValue val) throws Error {
+		if (val.getFieldSize() < 0)
+			field.put(name, val);
+		else
+			throw new Error("Unable to type annidated field objects");
+	}
+	
+	public AnValue getField(String name) {
+		return field.get(name);
+	}
+	
+	public int getFieldSize() {
+		return field.size();
 	}
 
 	public String getClassName() {
@@ -143,6 +176,10 @@ public class AnValue implements Value {
 		className = name;
 	}
 
+	public long getID() {
+		return ID;
+	}
+	
 	@Override
 	public int getSize() {
 		return type.getSize();
