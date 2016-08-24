@@ -10,11 +10,18 @@ public class VarExpression extends IExpression {
 	
 	protected IExpression intExp;
 	protected int index;
+	protected String field;
 	
 	public VarExpression(Type t, int position) {
 		super(t);
 		intExp = null;
 		index = position;
+		field = null;
+	}
+	
+	public VarExpression(Type t, int position, String f) {
+		this(t, position);
+		field = f;
 	}
 	
 	@Override
@@ -23,7 +30,11 @@ public class VarExpression extends IExpression {
 			intExp = null;
 		}
 		try {
-			intExp = ((IExpression) parameters.get(index));
+			if (field == null)
+				intExp = ((IExpression) parameters.get(index));
+			else {
+				intExp = ((IExpression) parameters.get(index).getField(field));
+			}
 		} catch (Exception e) {
 			// error
 		}

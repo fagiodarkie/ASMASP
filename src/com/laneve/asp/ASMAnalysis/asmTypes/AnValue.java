@@ -163,7 +163,11 @@ public class AnValue implements Value {
 	}
 	
 	public AnValue getField(String name) {
-		return field.get(name);
+		if (!name.contains("\\."))
+			return field.get(name);
+		int dot = name.indexOf("\\.");
+		String o1 = name.substring(0, dot - 1), f = name.substring(dot + 1);
+		return field.get(o1).getField(f);
 	}
 	
 	public int getFieldSize() {
