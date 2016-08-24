@@ -422,7 +422,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	public AnValue naryOperation(AbstractInsnNode insn,
 			List<? extends AnValue> values) throws AnalyzerException {
 		Type t = null;
-		boolean hasClassParameter = false;
+//		boolean hasClassParameter = false;
 		switch(insn.getOpcode()) {
         case Opcodes.INVOKEVIRTUAL:
         case Opcodes.INVOKESPECIAL:
@@ -440,10 +440,10 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     		List<AnValue> c = new ArrayList<AnValue>();
     		for (AnValue a: values)
     			c.add(a.clone());
-    		if (insn.getOpcode() == Opcodes.INVOKEDYNAMIC || insn.getOpcode() != Opcodes.INVOKESTATIC) {
+    		/*if (insn.getOpcode() == Opcodes.INVOKEDYNAMIC || insn.getOpcode() != Opcodes.INVOKESTATIC) {
     			c.remove(0);
         		hasClassParameter = true;
-    		}
+    		}*/
     		
 
         	if (context.isAtomicBehaviour(currentMethodName)) {
@@ -474,8 +474,9 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         			}
         		}
         		
-        		if (hasClassParameter)
+        		/* if (hasClassParameter)
         			context.signalDynamicMethod(currentMethodName);
+    			*/
         		
         		context.signalParametersPattern(currentMethodName, paramsPattern);
         		createdBehaviour = context.getBehaviour(currentMethodName, c);
@@ -496,7 +497,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	// and we istantiate it with the actual values with which the method is called.
         	// IExpression res = exp.evaluate(values);
         	IExpression res = exp;
-        	res.setParameters(hasClassParameter ? c : values);
+        	res.setParameters(c);//hasClassParameter ? c : values);
         	res.setType(t);
         	
         	return res;
@@ -546,17 +547,18 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		return r;
 	}
 
-	public AnValue newValue(Type ctype, int i, char c) {
+	public AnValue newValue(Type ctype, int i, String c) {
 		AnValue r = newValue(ctype);
 		if (r instanceof ThreadValue) {
-			r = new ThreadValue(r, i, context, true, c);
-			context.newThreadVariable(c);
+			r = new ThreadValue(r, i, context, true, c.charAt(0));
+			context.newThreadVariable(c.charAt(0));
 		}
 		else if (r.getType() == Type.INT_TYPE || r.getType() == Type.LONG_TYPE)
 			r = new VarExpression(r.getType(), i);
+		
+		// TODO fields
 		return r;
 	}
-
 
 	public void setJumpLabels(int insn, int sInsn, int jump) {
 		current = insn;

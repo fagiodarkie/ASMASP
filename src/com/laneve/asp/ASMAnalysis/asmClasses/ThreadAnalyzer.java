@@ -113,13 +113,17 @@ public class ThreadAnalyzer implements Opcodes {
         handler.setParameterPattern(parameters);
         Type[] args = Type.getArgumentTypes(m.desc);
         int local = 0;
+        List<String> singleParameters = Names.getSingleParameters(parameters);
+        
         if ((m.access & ACC_STATIC) == 0) {
-            Type ctype = Type.getObjectType(owner);
+    		Type ctype = Type.getObjectType(owner);
+    		// TODO manage class parameters.
             current.setLocal(local++, interpreter.newValue(ctype, true));
             context.signalDynamicMethod(methodName);
         }
         for (int i = 0; i < args.length; ++i) {
-            current.setLocal(local++, interpreter.newValue(args[i], i, parameters.charAt(i)));
+        	// TODO here too
+            current.setLocal(local++, interpreter.newValue(args[i], i, singleParameters.get(i)));
             if (args[i].getSize() == 2) {
                 current.setLocal(local++, interpreter.newValue(null));
             }
