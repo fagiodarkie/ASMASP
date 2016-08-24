@@ -10,8 +10,8 @@ import org.objectweb.asm.tree.analysis.Value;
 public class AnValue implements Value {
 	
 	protected static long maxID = 0;
-	
-	protected static long generateID() {
+	protected static int maxDepth = 1;
+ 	protected static long generateID() {
 		return maxID++;
 	}
 	
@@ -146,10 +146,20 @@ public class AnValue implements Value {
 	}
 	
 	public void setField(String name, AnValue val) throws Error {
-		if (val.getFieldSize() < 0)
+		if (val.getDepth() < maxDepth)
 			field.put(name, val);
 		else
 			throw new Error("Unable to type annidated field objects");
+	}
+	
+	public int getDepth() {
+		if (field.size() == 0) return 0;
+		int d = 0;
+		for (AnValue a: field.values()) {
+			if (a.getDepth() > d)
+				d = a.getDepth();
+		}
+		return d + 1;
 	}
 	
 	public AnValue getField(String name) {

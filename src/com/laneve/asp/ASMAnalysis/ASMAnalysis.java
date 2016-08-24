@@ -54,7 +54,7 @@ public class ASMAnalysis {
 				for (FieldNode m: n.fields) {
 					context.signalField(r.getClassName(), m.name);
 				}
-				context.reorderFields(r.getClassName());
+
 				for (MethodNode m: n.methods) {
 					context.createMethodNode(r.getClassName(), n.name + "." + m.name + m.desc, m);
 				}

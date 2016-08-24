@@ -129,7 +129,6 @@ public class AnalysisContext {
 	}
 	
 	
-	
 	public void setAllocationVariables(String className, String alloc, String dealloc) {
 		resourceClass = className;
 		allocationCall = alloc;
@@ -421,7 +420,6 @@ public class AnalysisContext {
 		return dynamicMethod.get(getKeyOfMethod(methodName));
 	}
 
-
 	public void signalParametersPattern(String currentMethodName,
 			String paramsPattern) {
 		long k = getKeyOfMethod(currentMethodName);
@@ -442,8 +440,6 @@ public class AnalysisContext {
 		threadVariableStatus.put(tName, ThreadResource.DELTA);
 	}
 
-
-
 	public void newObjectVariable() {
 		
 	}
@@ -460,10 +456,8 @@ public class AnalysisContext {
 		}
 	}
 
-	public void reorderFields(String className) {
-		// TODO Auto-generated method stub
-		
+	public boolean typableClass(String className) {
+		return objectFields.containsKey(className);
 	}
-
 	
 }
