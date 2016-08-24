@@ -39,6 +39,7 @@ public class AnalysisContext {
 	protected String resourceClass, allocationCall, deallocationCall;
 	protected Map<Character, Integer> threadVariableStatus;
 	protected Map<String, List<String>> objectFields;
+	protected Map<String, Type> fieldType;
 	
 	
 	public AnalysisContext() {
@@ -57,6 +58,7 @@ public class AnalysisContext {
 		methodNodes = new HashMap<Long, MethodNode>();
 		methodBehaviour = new HashMap<Long, Map<String, IBehaviour>>();
 		objectFields = new HashMap<String, List<String>>();
+		fieldType = new HashMap<String, Type>();
 		
 		resourceClass = "java/lang/Thread";
 		allocationCall = resourceClass + ".run()V";
@@ -444,7 +446,7 @@ public class AnalysisContext {
 		
 	}
 	
-	public void signalField(String className, String name) {
+	public void signalField(String className, String name, Type type) {
 		if (objectFields.containsKey(className)) {
 			List<String> l = objectFields.get(className);
 			if (!l.contains(name))
@@ -454,6 +456,7 @@ public class AnalysisContext {
 			x.add(name);
 			objectFields.put(className, x);
 		}
+		fieldType.put(className + "." + name, type);
 	}
 
 	public boolean typableClass(String className) {

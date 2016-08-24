@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -52,7 +53,7 @@ public class ASMAnalysis {
 				ClassNode n = new ClassNode();
 				r.accept(n, 0);
 				for (FieldNode m: n.fields) {
-					context.signalField(r.getClassName(), m.name);
+					context.signalField(r.getClassName(), m.name, Type.getType(m.desc));
 				}
 
 				for (MethodNode m: n.methods) {
