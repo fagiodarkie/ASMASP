@@ -21,7 +21,10 @@ public class VarExpression extends IExpression {
 	
 	public VarExpression(Type t, int position, String f) {
 		this(t, position);
-		field = f;
+		if (f.contains("\\."))
+			field = f;
+		else
+			name = f;
 	}
 	
 	@Override

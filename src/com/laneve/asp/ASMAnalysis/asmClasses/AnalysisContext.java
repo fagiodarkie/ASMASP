@@ -286,8 +286,7 @@ public class AnalysisContext {
 
 	protected void printMethodInformations(long index) {
 
-		String mName = methodNodes.get(index).name;
-		mName = mName.substring(mName.lastIndexOf('/') + 1, mName.length());
+		String mName = owner.get(index).substring(owner.get(index).lastIndexOf('/') + 1) + "." + methodNodes.get(index).name;
 		for (String s: paramString.get(index)) {
 			/*String actualName = mName;
 			for (int i = 0; i < s.length(); ++i) {
@@ -302,13 +301,11 @@ public class AnalysisContext {
 				actualName = actualName.substring(0, actualName.lastIndexOf(", ")) + ")";
 			}*/
 			String actualName = mName + "(" + s + ")";
-			if (actualName.equalsIgnoreCase(mName))
-				actualName += "()";
 			System.out.println("Method " + actualName + " has behaviour " + methodBehaviour.get(index).get(s));
 			
 			// TODO
-			if (releasedParameters.get(index).get(s).size() >0) {
-				String rels = "" + releasedParameters.get(index).get(s).get(0);
+			if (releasedParameters.get(index).get(s).size() > 0) {
+				String rels = releasedParameters.get(index).get(s).get(0);
 				for (int i = 1; i < releasedParameters.get(index).get(s).size(); ++i)
 					rels += ", " + releasedParameters.get(index).get(s).get(i);
 				System.out.println("Method " + actualName + " releases Threads " + rels);
@@ -452,7 +449,11 @@ public class AnalysisContext {
 			return generateThread(oName);
 		}
 
-		AnValue a = new AnValue(t, oName);
+		
+		String name = oName;
+		if (name.contains("["))
+			name = name.substring(name.indexOf("["), name.length() - 1);
+		AnValue a = new AnValue(t, name);
 		if (!typableClass(t.getClassName()))
 			return a;
 		a.setVariable(true);
@@ -461,7 +462,7 @@ public class AnalysisContext {
 		List<String> fields = objectFields.get(oType);
 		for (String f : fields) {
 			Type fType = fieldType.get(oType + "." + f);
-			a.setField(f, newObjectVariable(fType, p, oType + "." + f));
+			a.setField(f, newObjectVariable(fType, p, f));
 		}
 		
 		return a;

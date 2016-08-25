@@ -40,7 +40,12 @@ public class ThreadValue extends AbstractThread {
 	
 	@Override
 	public String toString() {
-		return (variable ? "" + getVariableName() : "t" + ID);
+		return (variable ? getVariableName() : "t" + ID);
+	}
+	
+	public String printValue() {
+		int status = context.getStatusOfThread(ID);
+		return "" + status;
 	}
 
 	public boolean isVariable() {
