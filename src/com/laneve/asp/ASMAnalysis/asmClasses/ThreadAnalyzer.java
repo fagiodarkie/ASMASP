@@ -118,12 +118,12 @@ public class ThreadAnalyzer implements Opcodes {
         if ((m.access & ACC_STATIC) == 0) {
     		Type ctype = Type.getObjectType(owner);
     		// TODO manage class parameters.
-            current.setLocal(local++, interpreter.newValue(ctype, true));
+            current.setLocal(local++, context.newObjectVariable(ctype, 0, "a"));
             context.signalDynamicMethod(methodName);
         }
         for (int i = 0; i < args.length; ++i) {
         	// TODO here too
-            current.setLocal(local++, interpreter.newValue(args[i], i, singleParameters.get(i)));
+            current.setLocal(local++, interpreter.newValue(args[i], i, Names.alpha.substring(i + 1, i + 2)));
             if (args[i].getSize() == 2) {
                 current.setLocal(local++, interpreter.newValue(null));
             }

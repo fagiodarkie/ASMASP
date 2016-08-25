@@ -452,25 +452,25 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         		
         		String paramsPattern = "";
         		List<ThreadValue> threads = new ArrayList<ThreadValue>();
-        		String threadNames = "";
+        		List<String> threadNames = new ArrayList<String>();
         		for (int i = 0; i < c.size(); ++i) {
         			if (c.get(i) instanceof ThreadValue) {
         				ThreadValue x = (ThreadValue)c.get(i);
         				boolean found = false;
         				for (int j = 0; j < threads.size(); ++j) {
         					if (threads.get(j).equalThread(x)) { 
-        						paramsPattern += threadNames.charAt(j);
+        						paramsPattern += "," + threadNames.get(j);
         						found = true;
         						break;
         					}
         				}
         				if (!found) {
         					threads.add(x.clone());
-        					threadNames += Names.alpha.charAt(i);
-        					paramsPattern += Names.alpha.charAt(i);
+        					threadNames.add(((ThreadValue)c.get(i)).getVariableName());
+        					paramsPattern += "," + c.get(i).getName();
         				}
         			} else {
-        				paramsPattern += Names.alpha.charAt(i);
+        				paramsPattern += c.get(i).getName();
         			}
         		}
         		
@@ -542,22 +542,19 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		currentObject = null;
 	}
 
-	public AnValue newValue(Type ctype, boolean b) {
-		AnValue r = new AnValue(ctype, "this");
-		return r;
-	}
-
 	public AnValue newValue(Type ctype, int i, String c) {
-		AnValue r = newValue(ctype);
+		
+		return context.newObjectVariable(ctype, i, c);
+		/*AnValue r = newValue(ctype);
 		if (r instanceof ThreadValue) {
-			r = new ThreadValue(r, i, context, true, c.charAt(0));
-			context.newThreadVariable(c.charAt(0));
+			r = new ThreadValue(r, i, context, true, c);
+			context.newThreadVariable(c);
 		}
 		else if (r.getType() == Type.INT_TYPE || r.getType() == Type.LONG_TYPE)
 			r = new VarExpression(r.getType(), i);
 		
 		// TODO fields
-		return r;
+		return r;*/
 	}
 
 	public void setJumpLabels(int insn, int sInsn, int jump) {

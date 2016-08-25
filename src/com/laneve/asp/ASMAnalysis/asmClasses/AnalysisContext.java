@@ -9,12 +9,14 @@ import java.util.Map;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
+import org.omg.CosNaming.IstringHelper;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.FunctionCallExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.VarExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.Atom;
 import com.laneve.asp.ASMAnalysis.bTypes.ConcatBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ConditionalJump;
@@ -30,14 +32,14 @@ public class AnalysisContext {
 	protected Map<Long, IExpression> returnValue;
 	protected Map<Long, String> methodID, owner;
 	protected Map<Long, List<Long>> depends;
-	protected Map<Long, Map<String, String>> releasedParameters;
+	protected Map<Long, Map<String, List<String>>> releasedParameters;
 	protected Map<Long, List<String>> paramString;
 	protected Map<Long, List<BehaviourFrame>> methodFrames;
-	protected long threadCounter, methodCounter;
+	protected long threadCounter, methodCounter, objectCounter;
 	protected Map<Long, MethodNode> methodNodes;
 	protected Map<Long, Map<String, IBehaviour>> methodBehaviour;
 	protected String resourceClass, allocationCall, deallocationCall;
-	protected Map<Character, Integer> threadVariableStatus;
+	protected Map<String, Integer> threadVariableStatus;
 	protected Map<String, List<String>> objectFields;
 	protected Map<String, Type> fieldType;
 	
@@ -51,7 +53,7 @@ public class AnalysisContext {
 		methodID = new HashMap<Long, String>();
 		owner = new HashMap<Long, String>();
 		depends = new HashMap<Long, List<Long>>();
-		releasedParameters = new HashMap<Long, Map<String, String>>();
+		releasedParameters = new HashMap<Long, Map<String, List<String>>>();
 		paramString = new HashMap<Long, List<String>>();
 		methodFrames = new HashMap<Long, List<BehaviourFrame>>();
 		threadCounter = methodCounter = 0;
@@ -60,6 +62,7 @@ public class AnalysisContext {
 		objectFields = new HashMap<String, List<String>>();
 		fieldType = new HashMap<String, Type>();
 		
+		objectCounter = 0;
 		resourceClass = "java/lang/Thread";
 		allocationCall = resourceClass + ".run()V";
 		deallocationCall = resourceClass + ".join()V";
@@ -140,7 +143,7 @@ public class AnalysisContext {
 	public ThreadValue generateThread(int index) {
 		ThreadValue t = new ThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
 				index >= 0 ? index : threadCounter,
-				this, index >= 0, ' ');
+				this, index >= 0, " ");
 		if (index < 0) {
 			threadsStatus.put(threadCounter, ThreadResource.ALLOCATED);
 			threadCounter++;
@@ -272,8 +275,8 @@ public class AnalysisContext {
 		owner.put(methodCounter, className);
 		methodID.put(methodCounter, name);
 		depends.put(methodCounter, new ArrayList<Long>());
-		releasedParameters.put(methodCounter, new HashMap<String, String>());
-		releasedParameters.get(methodCounter).put(pString, "");
+		releasedParameters.put(methodCounter, new HashMap<String, List<String>>());
+		releasedParameters.get(methodCounter).put(pString, new ArrayList<String>());
 		analyzeMethods.put(methodCounter, true);
 		returnValue.put(methodCounter, new ConstExpression(Type.INT_TYPE, new Long(0)));
 		modifiedReturnExpression.put(methodCounter, false);
@@ -304,10 +307,10 @@ public class AnalysisContext {
 			System.out.println("Method " + actualName + " has behaviour " + methodBehaviour.get(index).get(s));
 			
 			// TODO
-			if (releasedParameters.get(index).get(s).length() >0) {
-				String rels = "" + releasedParameters.get(index).get(s).charAt(0);
-				for (int i = 1; i < releasedParameters.get(index).get(s).length(); ++i)
-					rels += ", " + releasedParameters.get(index).get(s).charAt(i);
+			if (releasedParameters.get(index).get(s).size() >0) {
+				String rels = "" + releasedParameters.get(index).get(s).get(0);
+				for (int i = 1; i < releasedParameters.get(index).get(s).size(); ++i)
+					rels += ", " + releasedParameters.get(index).get(s).get(i);
 				System.out.println("Method " + actualName + " releases Threads " + rels);
 			}
 		}
@@ -407,11 +410,11 @@ public class AnalysisContext {
 		return resourceClass.equalsIgnoreCase(string);
 	}
 
-	public void signalRelease(String methodName, String parameterSetup, char parameter) {
+	public void signalRelease(String methodName, String parameterSetup, String parameter) {
 		long k = getKeyOfMethod(methodName);
-		String actualPars = releasedParameters.get(k).get(parameterSetup);
-		if (!actualPars.contains("" + parameter))
-			releasedParameters.get(k).put(parameterSetup, actualPars + parameter);
+		List<String> actualPars = releasedParameters.get(k).get(parameterSetup);
+		if (!actualPars.contains(parameter))
+			releasedParameters.get(k).get(parameterSetup).add(parameter);
 	}
 
 	public void signalDynamicMethod(String currentMethodName) {
@@ -427,7 +430,7 @@ public class AnalysisContext {
 		long k = getKeyOfMethod(currentMethodName);
 		if (!paramString.get(k).contains(paramsPattern)) {
 			paramString.get(k).add(paramsPattern);
-			releasedParameters.get(k).put(paramsPattern, "");
+			releasedParameters.get(k).put(paramsPattern, new ArrayList<String>());
 			methodBehaviour.get(k).put(paramsPattern, new Atom(Atom.RETURN));
 			analyzeMethods.put(k, true);
 		}
@@ -435,17 +438,43 @@ public class AnalysisContext {
 	}
 
 	public void resetVariables() {
-		threadVariableStatus = new HashMap<Character, Integer>();
+		threadVariableStatus = new HashMap<String, Integer>();
 	}
 	
-	public void newThreadVariable(char tName) {
+	public void newThreadVariable(String tName) {
 		threadVariableStatus.put(tName, ThreadResource.DELTA);
 	}
 
-	public void newObjectVariable() {
+	public AnValue newObjectVariable(Type t, int p, String oName) {
+		if (t == Type.INT_TYPE || t == Type.LONG_TYPE) {
+			return new VarExpression(t, p, oName);
+		} else if (isResource(t.getClassName())) {
+			return generateThread(oName);
+		}
+
+		AnValue a = new AnValue(t, oName);
+		if (!typableClass(t.getClassName()))
+			return a;
+		a.setVariable(true);
+
+		String oType = t.getClassName();
+		List<String> fields = objectFields.get(oType);
+		for (String f : fields) {
+			Type fType = fieldType.get(oType + "." + f);
+			a.setField(f, newObjectVariable(fType, p, oType + "." + f));
+		}
 		
+		return a;
 	}
 	
+	protected ThreadValue generateThread(String oName) {
+		ThreadValue t = new ThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
+				threadCounter, this, true, oName);
+		threadsStatus.put(threadCounter, ThreadResource.DELTA);
+		threadCounter++;
+		return t;
+	}
+
 	public void signalField(String className, String name, Type type) {
 		if (objectFields.containsKey(className)) {
 			List<String> l = objectFields.get(className);

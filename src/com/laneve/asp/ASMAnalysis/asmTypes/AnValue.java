@@ -2,6 +2,7 @@ package com.laneve.asp.ASMAnalysis.asmTypes;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -118,6 +119,7 @@ public class AnValue implements Value {
 	
 	protected Type type;
 	protected String className;
+	protected boolean isVariable;
 	protected String name;
 	protected long ID;
 	protected Map<String, AnValue> field;
@@ -130,6 +132,7 @@ public class AnValue implements Value {
 		name = "?";
 		field = new HashMap<String, AnValue>();
 		ID = generateID();
+		isVariable = false;
 	}
 	
 	public AnValue(AnValue a) {
@@ -137,7 +140,13 @@ public class AnValue implements Value {
 		className = a.className;
 		name = a.name;
 		field = new HashMap<String, AnValue>();
+		
+		for (Entry<String, AnValue> x : a.field.entrySet()) {
+			field.put(x.getKey(), x.getValue().clone());
+		}
+		
 		ID = a.ID;
+		isVariable = a.isVariable;
 	}
 			
 	public AnValue(Type ctype, String string) {
@@ -145,11 +154,13 @@ public class AnValue implements Value {
 		name = string;
 	}
 	
-	public void setField(String name, AnValue val) throws Error {
-		if (val.getDepth() < maxDepth)
-			field.put(name, val);
+	public void setField(String n, AnValue val) throws Error {
+		if (val.getDepth() < maxDepth) {
+			val.iAmYourFather(name);
+			field.put(n, val);
+		}
 		else
-			throw new Error("Unable to type annidated field objects");
+			throw new Error("Object " + name + " unable to annidate field objects of depth > " + maxDepth);
 	}
 	
 	public int getDepth() {
@@ -162,12 +173,31 @@ public class AnValue implements Value {
 		return d + 1;
 	}
 	
-	public AnValue getField(String name) {
-		if (!name.contains("\\."))
-			return field.get(name);
-		int dot = name.indexOf("\\.");
-		String o1 = name.substring(0, dot - 1), f = name.substring(dot + 1);
+	public boolean isVariable() {
+		return isVariable;
+	}
+	
+	public void setVariable(boolean b) {
+		isVariable = b;
+	}
+		
+	public AnValue getField(String n) {
+		if (!n.contains("\\."))
+			return field.get(n);
+		int dot = n.indexOf("\\.");
+		String o1 = n.substring(0, dot - 1), f = n.substring(dot + 1);
 		return field.get(o1).getField(f);
+	}
+	
+	public void iAmYourFather(String fatherName) {
+		if (!name.contains("\\."))
+			name = fatherName  + "." + name;
+		else {
+			String[] chunks = name.split("\\.");
+			name = fatherName + "." + chunks[chunks.length - 1];
+		}
+		for (AnValue a: field.values())
+			a.iAmYourFather(name);
 	}
 	
 	public int getFieldSize() {
@@ -186,8 +216,8 @@ public class AnValue implements Value {
 		return name;
 	}
 	
-	public void setClassName(String name) {
-		className = name;
+	public void setClassName(String n) {
+		className = n;
 	}
 
 	public long getID() {
@@ -200,7 +230,7 @@ public class AnValue implements Value {
 	}
 
 	public String toString() {
-		String[] r = className.split("/");
+		String[] r = name.split("\\.");
 		return r[r.length - 1];
 	}
 	

@@ -10,16 +10,16 @@ public class ThreadValue extends AbstractThread {
 	protected boolean variable;
 	public static final String fullyQualifiedName = "java.lang.Thread";
 	
-	public ThreadValue(AnValue a, long ID, AnalysisContext c, boolean variable, char c2) {
+	public ThreadValue(AnValue a, long ID, AnalysisContext c, boolean variable, String c2) {
 		super(a);
 		this.ID = ID;
 		this.variable = variable;
 		context = c;
-		name = "" + c2;
+		name = c2;
 	}
 	
 	public ThreadValue clone() {
-		return new ThreadValue(new AnValue(type), ID, context, variable, name.charAt(0));
+		return new ThreadValue(new AnValue(type), ID, context, variable, name);
 	}
 
 	@Override
@@ -31,11 +31,11 @@ public class ThreadValue extends AbstractThread {
 		return ID;
 	}
 
-	public char getVariableName() {
+	public String getVariableName() {
 		if (!variable) {
 			// ?
 		}
-		return name.charAt(0);
+		return name;
 	}
 	
 	@Override
