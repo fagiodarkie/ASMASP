@@ -4,27 +4,21 @@ import java.util.List;
 import org.objectweb.asm.Type;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
-import com.laneve.asp.ASMAnalysis.utils.Names;
 
 public class VarExpression extends IExpression {
 	
 	protected IExpression intExp;
 	protected int index;
-	protected String field;
 	
 	public VarExpression(Type t, int position) {
 		super(t);
 		intExp = null;
 		index = position;
-		field = null;
 	}
 	
 	public VarExpression(Type t, int position, String f) {
 		this(t, position);
-		if (f.contains("\\."))
-			field = f;
-		else
-			name = f;
+		name = f;
 	}
 	
 	@Override
@@ -36,7 +30,7 @@ public class VarExpression extends IExpression {
 			if (field == null)
 				intExp = ((IExpression) parameters.get(index));
 			else {
-				intExp = ((IExpression) parameters.get(index).getField(field));
+				intExp = ((IExpression) parameters.get(index).getField(name.substring(name.indexOf("\\.") + 1)));
 			}
 		} catch (Exception e) {
 			// error
@@ -63,7 +57,7 @@ public class VarExpression extends IExpression {
 	}
 
 	public String toString() {
-		return "" + Names.alpha.charAt(index);
+		return name;
 	}
 
 	@Override

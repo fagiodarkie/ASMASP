@@ -23,7 +23,6 @@ import org.objectweb.asm.tree.analysis.Frame;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
-import com.laneve.asp.ASMAnalysis.utils.Names;
 
 public class ThreadAnalyzer implements Opcodes {
 
@@ -113,7 +112,7 @@ public class ThreadAnalyzer implements Opcodes {
         current.setParameterPattern(parameters);
         handler.setParameterPattern(parameters);
         Type[] args = Type.getArgumentTypes(m.desc);
-        int local = 0;
+        int local = 0, object = 0;
         List<String> singleParameters = Arrays.asList(parameters.split(","));
         
         Map<String, AnValue> parameterValues = new HashMap<String, AnValue>();
@@ -122,12 +121,13 @@ public class ThreadAnalyzer implements Opcodes {
     		Type ctype = Type.getObjectType(owner);
     		// TODO manage class parameters.
             current.setLocal(local++, context.parseObjectVariable(ctype, 0, singleParameters.get(0), parameterValues));
+            object = 1;
             //singleParameters.remove(0);
             context.signalDynamicMethod(methodName);
         }
         for (int i = 0; i < args.length; ++i) {
         	// TODO here too
-            current.setLocal(local++, context.parseObjectVariable(args[i], i, singleParameters.get(i), parameterValues));
+            current.setLocal(local++, context.parseObjectVariable(args[i], i + object, singleParameters.get(i + object), parameterValues));
             if (args[i].getSize() == 2) {
                 current.setLocal(local++, interpreter.newValue(null));
             }
@@ -142,6 +142,12 @@ public class ThreadAnalyzer implements Opcodes {
         // control flow analysis
         while (top > 0) {
             int insn = queue[--top];
+            
+            if ((insn == 6 && parameters.contains(",")) || m.name.equalsIgnoreCase("fact")) {
+            	int a = 1;
+            	a++;
+            }
+            
             BehaviourFrame f = frames[insn];
             OwnedSubroutine subroutine = subroutines[insn];
             queued[insn] = false;

@@ -121,7 +121,7 @@ public class AnValue implements Value {
 	
 	protected Type type;
 	protected String className;
-	protected boolean isVariable;
+	protected boolean isVariable, updated;
 	protected String name;
 	protected long ID;
 	protected Map<String, AnValue> field;
@@ -135,6 +135,7 @@ public class AnValue implements Value {
 		field = new HashMap<String, AnValue>();
 		ID = generateID();
 		isVariable = false;
+		updated = false;
 	}
 	
 	public AnValue(AnValue a) {
@@ -160,10 +161,16 @@ public class AnValue implements Value {
 		return field.keySet();
 	}
 	
+	public void setName(String n) {
+		name = n;
+	}
+	
 	public void setField(String n, AnValue val) throws Error {
 		if (val.getDepth() < maxDepth) {
 			val.iAmYourFather(name);
+			val.updated = true;
 			field.put(n, val);
+			updated = true;
 		}
 		else
 			throw new Error("Object " + name + " unable to annidate field objects of depth > " + maxDepth);
@@ -198,11 +205,10 @@ public class AnValue implements Value {
 	}
 	
 	public void iAmYourFather(String fatherName) {
-		if (!name.contains("\\."))
+		if (!name.contains("."))
 			name = fatherName  + "." + name;
 		else {
-			String[] chunks = name.split("\\.");
-			name = fatherName + "." + chunks[chunks.length - 1];
+			name = fatherName + "." + name.substring(name.lastIndexOf('.') + 1);
 		}
 		for (AnValue a: field.values())
 			a.iAmYourFather(name);
@@ -248,6 +254,11 @@ public class AnValue implements Value {
 
 	public Collection<AnValue> getFields() {
 		return field.values();
+	}
+
+
+	public boolean updated() {
+		return updated;
 	}
 	
 }

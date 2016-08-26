@@ -4,7 +4,7 @@ public class Tests {
 
 	public int fieldOne;
 	
-/*	public int foo(int a) {
+	public int foo(int a) {
 		return a * bar(a);
 	}
 	
@@ -36,27 +36,31 @@ public class Tests {
 		
 		return x;
 	}
-	*/
 
+	public Tests() {
+		fieldOne = 0;
+	}
+	
 	public int bar() throws InterruptedException {
 		
+		fieldOne = 3;
 		Thread t5 = new Thread();
 		
 		t5.run();
 		t5.join();
 		
-		return 2;
+		return 3;
 	}
 	
 	public static void main() throws InterruptedException {
 		
 		Tests x = new Tests();
 	
-//		x.fact(5);
+		x.fact(5);
 		
 		int a = 3;
 		
-		if (a == 0)
+		if (2 - a == 0)
 			a += x.bar();
 		
 /*		int b = a * 2 + x.foo(x.bar(a));

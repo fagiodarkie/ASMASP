@@ -1,7 +1,9 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
@@ -17,7 +19,6 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
-import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.DivExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
@@ -32,7 +33,6 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SHRExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SubExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SumExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.USHRExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.VarExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.EqExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.FalseExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.GeExpression;
@@ -41,7 +41,6 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.IBoolExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.LeExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.LtExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.NeExpression;
-import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.NotExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.TrueExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.ConditionalJump;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
@@ -55,6 +54,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	protected int current, next, jumpTo;
 	protected IBehaviour createdBehaviour;
 	private AnValue currentObject;
+	private String methodParametersPattern;
+	private Map<Long, AnValue> updated;
 	
 	protected ValInterpreter(int api) {
 		super(api);
@@ -310,7 +311,6 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	String n = ((FieldInsnNode)insn).name;
         	value1.setField(n, value2);
         	currentObject = value1;
-        	// TODO
         	return null;
         case Opcodes.FCMPL:
         case Opcodes.FCMPG:
@@ -445,9 +445,9 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         		createdBehaviour = context.createAtom(values.get(0), currentMethodName);
         	} else if (context.hasBehaviour(currentMethodName)) {
         		
-        		String paramsPattern = Names.computeParameterList(c);
+        		methodParametersPattern = Names.computeParameterList(c);
         		
-        		context.signalParametersPattern(currentMethodName, paramsPattern);
+        		context.signalParametersPattern(currentMethodName, methodParametersPattern);
         		createdBehaviour = context.getBehaviour(currentMethodName, c);
         	}
         	
@@ -469,12 +469,23 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	res.setParameters(c);//hasClassParameter ? c : values);
         	res.setType(t);
         	
+        	updated = new HashMap<Long, AnValue>();
+        	for (int i = 0; i < values.size(); ++i) {
+        		// TODO
+        		// TODO
+        		// TODO
+        	}
+        	
         	return res;
         	
         case Opcodes.MULTIANEWARRAY:
     	default:
     		throw new Error("Internal error.");
     	}
+	}
+	
+	public String getMethodParametersPattern() {
+		return methodParametersPattern;
 	}
 
 	@Override

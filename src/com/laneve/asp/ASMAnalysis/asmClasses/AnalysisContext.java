@@ -10,7 +10,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
-import org.omg.CosNaming.IstringHelper;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
@@ -36,13 +35,14 @@ public class AnalysisContext {
 	protected Map<Long, Map<String, List<String>>> releasedParameters;
 	protected Map<Long, List<String>> paramString;
 	protected Map<Long, List<BehaviourFrame>> methodFrames;
-	protected long threadCounter, methodCounter, objectCounter;
 	protected Map<Long, MethodNode> methodNodes;
 	protected Map<Long, Map<String, IBehaviour>> methodBehaviour;
-	protected String resourceClass, allocationCall, deallocationCall;
 	protected Map<String, Integer> threadVariableStatus;
 	protected Map<String, List<String>> objectFields;
 	protected Map<String, Type> fieldType;
+	protected Map<Long, Map<String, Map<String, AnValue>>> updates;
+	protected long threadCounter, methodCounter, objectCounter;
+	protected String resourceClass, allocationCall, deallocationCall, currentSignature;
 	
 	
 	public AnalysisContext() {
@@ -62,6 +62,7 @@ public class AnalysisContext {
 		methodBehaviour = new HashMap<Long, Map<String, IBehaviour>>();
 		objectFields = new HashMap<String, List<String>>();
 		fieldType = new HashMap<String, Type>();
+		updates = new HashMap<Long, Map<String, Map<String,AnValue>>>();
 		
 		objectCounter = 0;
 		resourceClass = "java/lang/Thread";
@@ -103,7 +104,10 @@ public class AnalysisContext {
 			// else, analyze it and put all its dependancies to be analyzed too.
 			// also all methods which depends on it, if behaviour changes.
 			// as side effect, the return value is automatically updated.
+			analyzeMethods.put(currentMethodID, false);
 			for (String s: paramString.get(currentMethodID)) {
+				
+				currentSignature = s;
 				BehaviourFrame[] frames = analyzer.analyze(owner.get(currentMethodID), methodNodes.get(currentMethodID), s);
 	
 				for (Long j: depends.get(currentMethodID)) {
@@ -140,8 +144,6 @@ public class AnalysisContext {
 					}
 				}				
 			}
-			// finally, notify that we checked the method.
-			analyzeMethods.put(currentMethodID, false);
 		}
 		
 		for (long i = 0; i < methodCounter; ++i) {
@@ -264,9 +266,7 @@ public class AnalysisContext {
 
 	public void createMethodNode(String className, String name, MethodNode method) {
 		methodNodes.put(methodCounter, method);
-		methodBehaviour.put(methodCounter, new HashMap<String, IBehaviour>());
-		//String params = method.desc.substring(1, method.desc.indexOf(')'));
-		
+		methodBehaviour.put(methodCounter, new HashMap<String, IBehaviour>());		
 		paramString.put(methodCounter, new ArrayList<String>());
 		owner.put(methodCounter, className);
 		methodID.put(methodCounter, name);
@@ -276,6 +276,7 @@ public class AnalysisContext {
 		returnValue.put(methodCounter, new ConstExpression(Type.INT_TYPE, new Long(0)));
 		modifiedReturnExpression.put(methodCounter, false);
 		dynamicMethod.put(methodCounter, false);
+		updates.put(methodCounter, new HashMap<String, Map<String, AnValue>>());
 		methodCounter++;
 	}
 	
@@ -452,11 +453,19 @@ public class AnalysisContext {
 		return a;
 	}
 	
-	public AnValue newObject(Type t) {
+	public AnValue newObject(Type t) {		
 		return newObject(t, "o" + objectCounter++);
 	}
 	
 	protected AnValue newObject(Type t, String name) {
+
+		if (t == Type.INT_TYPE || t == Type.LONG_TYPE) {
+			ConstExpression x = new ConstExpression(t, new Long(0));
+			x.setName(name);
+			return x;
+		} else if (isResource(t.getClassName()))
+			return generateThread(name);
+		
 		AnValue a = new AnValue(t, name);
 		
 		String nclassName = Names.normalizeClassName(t.getClassName());
@@ -494,8 +503,6 @@ public class AnalysisContext {
 		return objectFields.containsKey(className) || objectFields.containsKey(className.replace('.', '/'));
 	}
 
-
-
 	public AnValue parseObjectVariable(Type ctype, int pos, String parameter, Map<String, AnValue> parameterValues) {
 		String name = (!parameter.contains("[") ? parameter : parameter.substring(0, parameter.indexOf("[")));
 		if (parameterValues.containsKey(name))
@@ -505,17 +512,55 @@ public class AnalysisContext {
 		if (!name.equalsIgnoreCase(parameter)) {
 			List<String> fields = Names.getSingleParameters(parameter.substring(parameter.indexOf("[") + 1, parameter.lastIndexOf("]")));
 		
-			if (typableClass(ctype.getClassName())) {
-				List<String> fieldNames = objectFields.get(ctype.getClassName());
+			String clName = Names.normalizeClassName(ctype.getClassName());
+			if (typableClass(clName)) {
+				List<String> fieldNames = objectFields.get(clName);
 				if (fieldNames != null)
 					for (int i = 0; i < fieldNames.size(); ++i) {
 						baseObject.setField(fieldNames.get(i),
-								parseObjectVariable(fieldType.get(fieldNames.get(i)), pos, fields.get(i), parameterValues));
+								parseObjectVariable(fieldType.get(clName + "." + fieldNames.get(i)), pos, fields.get(i), parameterValues));
 					}
 			}
 		}
 		parameterValues.put(name, baseObject);
 		return baseObject;
+	}
+
+
+
+	public Map<String, AnValue> getUpdatesToLocalEnvironment(String method, String signature) {
+		
+		// TODO
+		return null;
+	}
+	
+	public void signalFinalState(String methodName, List<AnValue> localList) {
+
+		long k = getKeyOfMethod(methodName);
+		
+		
+		// FIXME 5={a[a.fieldOne]={a.?=0}}
+		// get the actual number of parameters..
+		int paramSize = Names.getSingleParameters(currentSignature).size();
+		Map<String, AnValue> m = new HashMap<String, AnValue>();
+		
+		for (int i = 0; i < paramSize; ++i)
+			computeUpdates(localList.get(i), m);
+		
+		//..and save them in the apposite section.
+		updates.get(k).put(currentSignature, m);
+		
+	}
+
+
+	private void computeUpdates(AnValue a, Map<String, AnValue> m) {
+		if (a instanceof IExpression && a.updated())
+			m.put(a.getName(), a);
+		else if (a instanceof ThreadValue && a.updated())
+			m.put(a.getName(), generateThread(a.getName()));
+		else if (a.getFieldSize() > 0)
+			for (AnValue x : a.getFields())
+				computeUpdates(x, m);
 	}
 	
 }

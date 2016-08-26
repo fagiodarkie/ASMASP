@@ -1,6 +1,5 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
-import java.io.ObjectOutputStream.PutField;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,6 +92,11 @@ public class BehaviourFrame extends Frame<AnValue> {
 		case Opcodes.RETURN:
 			in.setCurrentMethod(methodName);
 			super.execute(insn, in);
+			
+			List<AnValue> localList = new ArrayList<AnValue>();
+			for (int i = 0; i < getLocals(); ++i)
+				localList.add(getLocal(i));
+			context.signalFinalState(methodName, localList);
 			in.resetCurrentMethod();
 			break;
 		case Opcodes.INVOKEVIRTUAL:
@@ -119,6 +123,9 @@ public class BehaviourFrame extends Frame<AnValue> {
 						context.signalRelease(methodName, methodParametersPattern, t.getThreadValue().getVariableName());
 				}
 			}
+			
+			
+			
 			in.resetCurrentMethod();
 					
 			break;
@@ -154,7 +161,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 	
 	protected void updateByID(AnValue newValue) {
         for (int i = 0; i < getLocals(); ++i) {
-        	if (getLocal(i).getID() == newValue.getID())
+        	if (getLocal(i) != null && getLocal(i).getID() == newValue.getID())
         		setLocal(i, newValue);
         }
         
