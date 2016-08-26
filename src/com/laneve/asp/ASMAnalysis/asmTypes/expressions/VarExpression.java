@@ -48,9 +48,9 @@ public class VarExpression extends IExpression {
 	@Override
 	public IExpression clone() {
 		if (intExp == null)
-			return new VarExpression(type, index);
+			return new VarExpression(type, index, name);
 		
-		VarExpression v = new VarExpression(type, index);
+		VarExpression v = new VarExpression(type, index, name);
 		v.intExp = intExp.clone();
 		return v;
 		
@@ -68,7 +68,8 @@ public class VarExpression extends IExpression {
 	@Override
 	public boolean equalValue(AnValue iExpression) {
 		if (!(iExpression instanceof VarExpression)) return false;
-		return intExp == ((VarExpression)iExpression).intExp;
+		VarExpression i = ((VarExpression)iExpression);
+		return intExp == i.intExp || name.equalsIgnoreCase(i.name);
 	}
 
 }

@@ -151,7 +151,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	@Override
 	public AnValue copyOperation(AbstractInsnNode insn, AnValue value)
 			throws AnalyzerException {
-		return value.clone();
+		AnValue x = value.clone();
+		return x;
 	}
 
 	@Override

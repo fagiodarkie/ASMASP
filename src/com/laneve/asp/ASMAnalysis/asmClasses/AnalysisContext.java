@@ -101,6 +101,7 @@ public class AnalysisContext {
 			if (!analyzeMethods.get(currentMethodID))
 				continue;
 
+			System.out.println("Analyzing " + methodID.get(currentMethodID));
 			// else, analyze it and put all its dependancies to be analyzed too.
 			// also all methods which depends on it, if behaviour changes.
 			// as side effect, the return value is automatically updated.
@@ -108,6 +109,7 @@ public class AnalysisContext {
 			for (String s: paramString.get(currentMethodID)) {
 				
 				currentSignature = s;
+				System.out.println("Analyzing variant " + s);
 				BehaviourFrame[] frames = analyzer.analyze(owner.get(currentMethodID), methodNodes.get(currentMethodID), s);
 	
 				for (Long j: depends.get(currentMethodID)) {
@@ -225,7 +227,7 @@ public class AnalysisContext {
 		if (!returnValue.get(key).equalValue((IExpression)value)) {
 			returnValue.put(key, (IExpression) value);
 			modifiedReturnExpression.put(key, true);
-			//System.out.println("Method " + method + " was modified: new value is " + value.toString());
+			System.out.println("Method " + method + " was modified: new return value is " + value.toString());
 		}
 		
 		

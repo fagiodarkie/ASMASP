@@ -116,7 +116,14 @@ public class AnValue implements Value {
 	
 	
 	public boolean equalValue(AnValue other) {
-		return other.type == type && other.className.equalsIgnoreCase(className);
+		if (!other.className.equalsIgnoreCase(className))
+			return false;
+		
+		for (String f: field.keySet())
+			if (!other.getField(f).equalValue(getField(f)))
+				return false;
+		
+		return true;
 	}
 	
 	protected Type type;

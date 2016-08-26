@@ -35,7 +35,7 @@ protected Long constExp;
 	@Override
 	public boolean equalValue(AnValue iExpression) {
 		if (!(iExpression instanceof ConstExpression)) return false;
-		return constExp == ((ConstExpression)iExpression).constExp;
+		return constExp.intValue() == ((ConstExpression)iExpression).constExp.intValue();
 	}
 
 }

@@ -26,7 +26,9 @@ public class SubExpression extends IExpression {
 	@Override
 	public boolean equalValue(AnValue iExpression) {
 		if (!(iExpression instanceof SubExpression)) return false;
-		return right.equalValue(((IExpression)iExpression).right) && left.equalValue(((IExpression)iExpression).left);
+		if (!right.equalValue(((IExpression)iExpression).right)) return false;
+		if (!left.equalValue(((IExpression)iExpression).left)) return false;
+		return true;
 	}
 
 }
