@@ -25,7 +25,7 @@ public class Names {
 			if (p.length() > 0) {
 				for (ParamAsString par: params)
 					p += par.toString() + ",";
-				p = p.substring(0, p.length() - 2) + "]";
+				p = p.substring(0, p.length() - 1) + "]";
 			}
 			
 			return name + p;
@@ -72,7 +72,7 @@ public class Names {
 		}
 		
 		
-		return res.substring(0, res.length() - 1);
+		return res.substring(0, res.length() - (res.endsWith(",") ? 1 : 0));
 	}
 
 	public static String get(int i) {
@@ -86,5 +86,14 @@ public class Names {
 		
 		for (String fieldName: a.getFieldNames())
 			fillMap(names, a.getField(fieldName), name + "." + fieldName);
+	}
+
+
+	public static String normalizeClassName(String className) {
+		if (className.endsWith(";"))
+			className = className.substring(0, className.length() - 1);
+		if(className.startsWith("L"))
+			className = className.substring(1);
+		return className.replace('.', '/');
 	}
 }

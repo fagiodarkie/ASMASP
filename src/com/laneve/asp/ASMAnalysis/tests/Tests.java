@@ -2,7 +2,7 @@ package com.laneve.asp.ASMAnalysis.tests;
 
 public class Tests {
 
-	public int fieldOne = 2;
+	public int fieldOne;
 	
 /*	public int foo(int a) {
 		return a * bar(a);

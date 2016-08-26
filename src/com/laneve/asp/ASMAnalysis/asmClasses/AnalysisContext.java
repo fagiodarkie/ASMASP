@@ -283,18 +283,6 @@ public class AnalysisContext {
 
 		String mName = owner.get(index).substring(owner.get(index).lastIndexOf('/') + 1) + "." + methodNodes.get(index).name;
 		for (String s: paramString.get(index)) {
-			/*String actualName = mName;
-			for (int i = 0; i < s.length(); ++i) {
-				if (i == 0 && (s.length() == 1 || s.equalsIgnoreCase("aa")))
-					actualName += "(a)";
-				else if (i == 0)
-					actualName += "(a, ";
-				else if (s.charAt(i) == Names.alpha.charAt(i))
-					actualName += s.charAt(i) + ", ";
-			}
-			if (actualName.endsWith(", ")) {
-				actualName = actualName.substring(0, actualName.lastIndexOf(", ")) + ")";
-			}*/
 			String actualName = mName + "(" + s + ")";
 			System.out.println("Method " + actualName + " has behaviour " + methodBehaviour.get(index).get(s));
 			
@@ -455,16 +443,29 @@ public class AnalysisContext {
 
 		String oType = t.getClassName();
 		List<String> fields = objectFields.get(oType);
-		for (String f : fields) {
-			Type fType = fieldType.get(oType + "." + f);
-			a.setField(f, newObjectVariable(fType, p, f));
-		}
+		if (fields != null)
+			for (String f : fields) {
+				Type fType = fieldType.get(oType + "." + f);
+				a.setField(f, newObjectVariable(fType, p, f));
+			}
 		
 		return a;
 	}
 	
 	public AnValue newObject(Type t) {
-		AnValue a = new AnValue(t, "o" + objectCounter++);
+		return newObject(t, "o" + objectCounter++);
+	}
+	
+	protected AnValue newObject(Type t, String name) {
+		AnValue a = new AnValue(t, name);
+		
+		String nclassName = Names.normalizeClassName(t.getClassName());
+		if (typableClass(nclassName))			
+			for (String field : objectFields.get(nclassName)) {
+ 				String fieldName = nclassName + "." + field;
+				a.setField(field, newObject(fieldType.get(fieldName), name + "." + field));
+			}
+		
 		return a;
 	}
 	
@@ -490,7 +491,7 @@ public class AnalysisContext {
 	}
 
 	public boolean typableClass(String className) {
-		return objectFields.containsKey(className);
+		return objectFields.containsKey(className) || objectFields.containsKey(className.replace('.', '/'));
 	}
 
 
@@ -506,10 +507,11 @@ public class AnalysisContext {
 		
 			if (typableClass(ctype.getClassName())) {
 				List<String> fieldNames = objectFields.get(ctype.getClassName());
-				for (int i = 0; i < fieldNames.size(); ++i) {
-					baseObject.setField(fieldNames.get(i),
-							parseObjectVariable(fieldType.get(fieldNames.get(i)), pos, fields.get(i), parameterValues));
-				}
+				if (fieldNames != null)
+					for (int i = 0; i < fieldNames.size(); ++i) {
+						baseObject.setField(fieldNames.get(i),
+								parseObjectVariable(fieldType.get(fieldNames.get(i)), pos, fields.get(i), parameterValues));
+					}
 			}
 		}
 		parameterValues.put(name, baseObject);
