@@ -1,6 +1,7 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,18 +114,20 @@ public class ThreadAnalyzer implements Opcodes {
         handler.setParameterPattern(parameters);
         Type[] args = Type.getArgumentTypes(m.desc);
         int local = 0;
-        List<String> singleParameters = Names.getSingleParameters(parameters);
+        List<String> singleParameters = Arrays.asList(parameters.split(","));
+        
+        Map<String, AnValue> parameterValues = new HashMap<String, AnValue>();
         
         if ((m.access & ACC_STATIC) == 0) {
     		Type ctype = Type.getObjectType(owner);
     		// TODO manage class parameters.
-            current.setLocal(local++, context.newObjectVariable(ctype, 0, singleParameters.get(0)));
+            current.setLocal(local++, context.parseObjectVariable(ctype, 0, singleParameters.get(0), parameterValues));
             //singleParameters.remove(0);
             context.signalDynamicMethod(methodName);
         }
         for (int i = 0; i < args.length; ++i) {
         	// TODO here too
-            current.setLocal(local++, interpreter.newValue(args[i], i, singleParameters.get(i)));
+            current.setLocal(local++, context.parseObjectVariable(args[i], i, singleParameters.get(i), parameterValues));
             if (args[i].getSize() == 2) {
                 current.setLocal(local++, interpreter.newValue(null));
             }

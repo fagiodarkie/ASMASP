@@ -71,7 +71,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 			return null;
 		if (AnValue.isThread(type))
 			return context.generateThread(0);
-		return new AnValue(type);
+		return context.newObject(type);
 	}
 
 	protected void setContext(AnalysisContext analysisContext) {
@@ -440,43 +440,12 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     		List<AnValue> c = new ArrayList<AnValue>();
     		for (AnValue a: values)
     			c.add(a.clone());
-    		/*if (insn.getOpcode() == Opcodes.INVOKEDYNAMIC || insn.getOpcode() != Opcodes.INVOKESTATIC) {
-    			c.remove(0);
-        		hasClassParameter = true;
-    		}*/
-    		
 
         	if (context.isAtomicBehaviour(currentMethodName)) {
         		createdBehaviour = context.createAtom(values.get(0), currentMethodName);
         	} else if (context.hasBehaviour(currentMethodName)) {
         		
-        		String paramsPattern = "";
-        		List<ThreadValue> threads = new ArrayList<ThreadValue>();
-        		List<String> threadNames = new ArrayList<String>();
-        		for (int i = 0; i < c.size(); ++i) {
-        			if (c.get(i) instanceof ThreadValue) {
-        				ThreadValue x = (ThreadValue)c.get(i);
-        				boolean found = false;
-        				for (int j = 0; j < threads.size(); ++j) {
-        					if (threads.get(j).equalThread(x)) { 
-        						paramsPattern += "," + threadNames.get(j);
-        						found = true;
-        						break;
-        					}
-        				}
-        				if (!found) {
-        					threads.add(x.clone());
-        					threadNames.add(((ThreadValue)c.get(i)).getVariableName());
-        					paramsPattern += "," + c.get(i).getName();
-        				}
-        			} else {
-        				paramsPattern += c.get(i).getName();
-        			}
-        		}
-        		
-        		/* if (hasClassParameter)
-        			context.signalDynamicMethod(currentMethodName);
-    			*/
+        		String paramsPattern = Names.computeParameterList(c);
         		
         		context.signalParametersPattern(currentMethodName, paramsPattern);
         		createdBehaviour = context.getBehaviour(currentMethodName, c);

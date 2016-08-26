@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
@@ -71,6 +72,22 @@ public class AnalysisContext {
 	
 	public void analyze(String entryPoint) throws AnalyzerException {
 		long k = getKeyOfMethod(entryPoint);
+		
+		List<AnValue> startingParameters = new ArrayList<AnValue>();
+		MethodNode m = methodNodes.get(k);
+		int par = 0;
+		if ((m.access & Opcodes.ACC_STATIC) == 0) {
+			startingParameters.add(newObjectVariable(Type.getObjectType(owner.get(k)), par, Names.get(par)));
+			par ++;
+		}
+        Type[] args = Type.getArgumentTypes(m.desc);
+        for (int i = 0; i < args.length; ++i) {
+        	startingParameters.add(newObjectVariable(args[i], par, Names.get(par)));
+			par ++;
+        }
+        
+        signalParametersPattern(entryPoint, Names.computeParameterList(startingParameters));
+		
 		List<Long> analysisList = new ArrayList<Long>();
 		ThreadAnalyzer analyzer = new ThreadAnalyzer(new ValInterpreter(this), this);
 		
@@ -249,41 +266,19 @@ public class AnalysisContext {
 		methodNodes.put(methodCounter, method);
 		methodBehaviour.put(methodCounter, new HashMap<String, IBehaviour>());
 		//String params = method.desc.substring(1, method.desc.indexOf(')'));
-		String pString = "";
-//		System.out.println("method " + className + "." + name + " has parameters:");
-		for (int i = 0; i < method.localVariables.size(); ++i) {
-			String d = method.localVariables.get(i).desc.replace(';', ' ').trim();
-			if (d.startsWith("L"))
-				d = d.substring(1);
-//			System.out.println(d);
-			pString += Names.alpha.charAt(i);
-			if (objectFields.containsKey(d) && objectFields.get(d).size() > 0) {
-				List<String> pars = objectFields.get(d);
-				pString += "[";
-				for (String p : pars)
-					pString += p + ",";
-				pString = pString.substring(0, pString.length() - 1) + "]";
-			}
-			if (i != method.localVariables.size() - 1)
-				pString += ",";
-//			System.out.println(pString);
-		}
 		
-		methodBehaviour.get(methodCounter).put(pString, new Atom(Atom.RETURN));
 		paramString.put(methodCounter, new ArrayList<String>());
-		paramString.get(methodCounter).add(pString);
 		owner.put(methodCounter, className);
 		methodID.put(methodCounter, name);
 		depends.put(methodCounter, new ArrayList<Long>());
 		releasedParameters.put(methodCounter, new HashMap<String, List<String>>());
-		releasedParameters.get(methodCounter).put(pString, new ArrayList<String>());
 		analyzeMethods.put(methodCounter, true);
 		returnValue.put(methodCounter, new ConstExpression(Type.INT_TYPE, new Long(0)));
 		modifiedReturnExpression.put(methodCounter, false);
 		dynamicMethod.put(methodCounter, false);
 		methodCounter++;
 	}
-
+	
 	protected void printMethodInformations(long index) {
 
 		String mName = owner.get(index).substring(owner.get(index).lastIndexOf('/') + 1) + "." + methodNodes.get(index).name;
@@ -454,9 +449,9 @@ public class AnalysisContext {
 		if (name.contains("["))
 			name = name.substring(name.indexOf("["), name.length() - 1);
 		AnValue a = new AnValue(t, name);
+		a.setVariable(true);
 		if (!typableClass(t.getClassName()))
 			return a;
-		a.setVariable(true);
 
 		String oType = t.getClassName();
 		List<String> fields = objectFields.get(oType);
@@ -465,6 +460,11 @@ public class AnalysisContext {
 			a.setField(f, newObjectVariable(fType, p, f));
 		}
 		
+		return a;
+	}
+	
+	public AnValue newObject(Type t) {
+		AnValue a = new AnValue(t, "o" + objectCounter++);
 		return a;
 	}
 	
@@ -491,6 +491,29 @@ public class AnalysisContext {
 
 	public boolean typableClass(String className) {
 		return objectFields.containsKey(className);
+	}
+
+
+
+	public AnValue parseObjectVariable(Type ctype, int pos, String parameter, Map<String, AnValue> parameterValues) {
+		String name = (!parameter.contains("[") ? parameter : parameter.substring(0, parameter.indexOf("[")));
+		if (parameterValues.containsKey(name))
+			return parameterValues.get(name);
+
+		AnValue baseObject = newObjectVariable(ctype, pos, name);
+		if (!name.equalsIgnoreCase(parameter)) {
+			List<String> fields = Names.getSingleParameters(parameter.substring(parameter.indexOf("[") + 1, parameter.lastIndexOf("]")));
+		
+			if (typableClass(ctype.getClassName())) {
+				List<String> fieldNames = objectFields.get(ctype.getClassName());
+				for (int i = 0; i < fieldNames.size(); ++i) {
+					baseObject.setField(fieldNames.get(i),
+							parseObjectVariable(fieldType.get(fieldNames.get(i)), pos, fields.get(i), parameterValues));
+				}
+			}
+		}
+		parameterValues.put(name, baseObject);
+		return baseObject;
 	}
 	
 }

@@ -2,9 +2,9 @@ package com.laneve.asp.ASMAnalysis.tests;
 
 public class Tests {
 
-	public int fieldOne, fieldTwo = 2;
+	public int fieldOne = 2;
 	
-	public int foo(int a) {
+/*	public int foo(int a) {
 		return a * bar(a);
 	}
 	
@@ -36,7 +36,8 @@ public class Tests {
 		
 		return x;
 	}
-	
+	*/
+
 	public int bar() throws InterruptedException {
 		
 		Thread t5 = new Thread();
@@ -53,7 +54,7 @@ public class Tests {
 	
 //		x.fact(5);
 		
-		int a = x.foo(3);
+		int a = 3;
 		
 		if (a == 0)
 			a += x.bar();

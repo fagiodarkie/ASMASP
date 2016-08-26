@@ -1,8 +1,10 @@
 package com.laneve.asp.ASMAnalysis.asmTypes;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -154,6 +156,10 @@ public class AnValue implements Value {
 		name = string;
 	}
 	
+	public Set<String> getFieldNames() {
+		return field.keySet();
+	}
+	
 	public void setField(String n, AnValue val) throws Error {
 		if (val.getDepth() < maxDepth) {
 			val.iAmYourFather(name);
@@ -179,6 +185,8 @@ public class AnValue implements Value {
 	
 	public void setVariable(boolean b) {
 		isVariable = b;
+		for (AnValue a : field.values())
+			a.setVariable(b);
 	}
 		
 	public AnValue getField(String n) {
@@ -236,6 +244,10 @@ public class AnValue implements Value {
 	
 	public Type getType() {
 		return type;
+	}
+
+	public Collection<AnValue> getFields() {
+		return field.values();
 	}
 	
 }
