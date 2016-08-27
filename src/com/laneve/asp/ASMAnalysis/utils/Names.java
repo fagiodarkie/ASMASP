@@ -43,7 +43,7 @@ public class Names {
 		for (int i = 0; i < parameters.length(); ++i) {
 			
 			if (openSquares == 0 && parameters.charAt(i) == ',') {
-				l.add(parameters.substring(beginIndex, i - 1));
+				l.add(parameters.substring(beginIndex, i));
 				beginIndex = i + 1;
 			} else if (parameters.charAt(i) == '[')
 				openSquares ++;

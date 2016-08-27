@@ -113,6 +113,7 @@ public class AnalysisContext {
 				System.out.println("Analyzing variant " + s);
 				BehaviourFrame[] frames = analyzer.analyze(owner.get(currentMethodID), methodNodes.get(currentMethodID), s);
 	
+				System.out.println("Analysis ended.");
 				for (Long j: depends.get(currentMethodID)) {
 					// we put on all its dependancies
 					analysisList.add(j);

@@ -23,6 +23,7 @@ import org.objectweb.asm.tree.analysis.Frame;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
+import com.laneve.asp.ASMAnalysis.utils.Names;
 
 public class ThreadAnalyzer implements Opcodes {
 
@@ -113,7 +114,7 @@ public class ThreadAnalyzer implements Opcodes {
         handler.setParameterPattern(parameters);
         Type[] args = Type.getArgumentTypes(m.desc);
         int local = 0, object = 0;
-        List<String> singleParameters = Arrays.asList(parameters.split(","));
+        List<String> singleParameters = Names.getSingleParameters(parameters);//Arrays.asList(parameters.split(","));
         
         Map<String, AnValue> parameterValues = new HashMap<String, AnValue>();
         

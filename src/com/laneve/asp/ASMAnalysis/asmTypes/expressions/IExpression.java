@@ -49,6 +49,7 @@ public abstract class IExpression extends AnValue{
 		IExpression a = cloneExpression();
 		// a.ID = ID;
 		a.name = name;
+		a.updated = updated;
 		return a;
 	}
 	

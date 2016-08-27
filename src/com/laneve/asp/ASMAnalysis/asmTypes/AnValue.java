@@ -1,7 +1,9 @@
 package com.laneve.asp.ASMAnalysis.asmTypes;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -167,8 +169,10 @@ public class AnValue implements Value {
 		fieldName = string;
 	}
 	
-	public Set<String> getFieldNames() {
-		return field.keySet();
+	public List<String> getFieldNames() {
+		List<String> a = new ArrayList<String>(field.keySet());
+		java.util.Collections.sort(a);
+		return a;
 	}
 	
 	public void setFieldName(String n) {
@@ -277,15 +281,17 @@ public class AnValue implements Value {
 			f.setUpdated(b);
 	}
 	
-	public Collection<AnValue> getFields() {
-		return field.values();
+	public List<AnValue> getFields() {
+		// updated to ArrayList to provide unique field ordering.
+		List<AnValue> v = new ArrayList<AnValue>();
+		for (String s: getFieldNames())
+			v.add(getField(s));
+		return v;
 	}
-
 
 	public boolean updated() {
 		return updated;
 	}
-
 
 	public void updateByID(long id, AnValue newValue) {
 		for (Entry<String, AnValue> e : field.entrySet())
