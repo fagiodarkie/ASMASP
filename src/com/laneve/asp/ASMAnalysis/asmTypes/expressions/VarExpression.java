@@ -27,10 +27,10 @@ public class VarExpression extends IExpression {
 			intExp = null;
 		}
 		try {
-			if (field == null)
+			if (!fieldName.contains("\\."))
 				intExp = ((IExpression) parameters.get(index));
 			else {
-				intExp = ((IExpression) parameters.get(index).getField(name.substring(name.indexOf("\\.") + 1)));
+				intExp = ((IExpression) parameters.get(index).getField(fieldName.substring(name.indexOf("\\.") + 1)));
 			}
 		} catch (Exception e) {
 			// error

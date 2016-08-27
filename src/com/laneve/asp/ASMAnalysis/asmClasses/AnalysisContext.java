@@ -565,30 +565,17 @@ public class AnalysisContext {
 		
 		// finally, if the parameter is just a thread which status must be updated signal its new status.
 		// TODO - thread variables should be updated in order to let the context save their final status.
-		
-		/* if (parameters.get(i) instanceof ThreadValue && up.containsKey(Names.get(i))) {
-			// simple thread
-			if (up.get(Names.get(i)) instanceof VarThreadValue) {
-				VarThreadValue t = (VarThreadValue)(up.get(Names.get(i)));
-				if (parameters.get((int) t.getIndex()) instanceof ThreadValue) {
-					resultingUpdates.put(parameters.get(i).getID(), parameters.get((int) t.getIndex()));
-				}
-				
-				/*  we have to copy the other thread:
-				 * - get the thread from parameters via t.index and t.name;
-				 * - "copy" it;
-				 * - update its value. 
-				* /
-			} else {
-				// new
-			}
-		}*/
-		
 		Map<String, AnValue> tempMap = new HashMap<String, AnValue>();
 		for (String updatedField : up.keySet())
 			if (updatedField.startsWith(Names.get(i))) {
 				String fieldName = updatedField.substring(updatedField.indexOf('.') + 1);
-				tempMap.put(fieldName, up.get(updatedField));
+				AnValue val = up.get(updatedField);
+				if (val instanceof ConstExpression)
+					tempMap.put(fieldName, val);
+				else if (val instanceof IExpression) {
+					IExpression x = ((IExpression) val).evaluate(parameters);
+					tempMap.put(fieldName, x);
+				}
 			}
 		if (tempMap.size() > 0)
 			resultingUpdates.put(parameters.get(i).getID(), tempMap);
@@ -636,6 +623,7 @@ public class AnalysisContext {
 		updates.get(k).put(currentSignature, m);
 		
 	}
+
 
 	private void computeUpdates(AnValue a, Map<String, AnValue> m, String fatherName) {
 		if (a instanceof IExpression && a.updated() && fatherName != null)
