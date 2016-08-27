@@ -41,6 +41,10 @@ public class Tests {
 		fieldOne = 3;
 	}
 	
+	public Tests(int i) {
+		fieldOne = i;
+	}
+
 	public int bar() throws InterruptedException {
 		
 		fieldOne = 3;
@@ -54,13 +58,13 @@ public class Tests {
 	
 	public static void main() throws InterruptedException {
 		
-		Tests x = new Tests();
+		Tests x = new Tests(), y = new Tests(2);
 	
 		x.fact(5);
 		
 		int a = 3;
 		
-		if (x.fieldOne - a == 0)
+		if (x.fieldOne - y.fieldOne == 0)
 			a += x.bar();
 		
 /*		int b = a * 2 + x.foo(x.bar(a));

@@ -129,7 +129,7 @@ public class AnValue implements Value {
 	protected Type type;
 	protected String className;
 	protected boolean isVariable, updated;
-	protected String name;
+	protected String name, fieldName;
 	protected long ID;
 	protected Map<String, AnValue> field;
 	
@@ -149,6 +149,7 @@ public class AnValue implements Value {
 		type = a.type;
 		className = a.className;
 		name = a.name;
+		fieldName = a.fieldName;
 		field = new HashMap<String, AnValue>();
 		
 		for (Entry<String, AnValue> x : a.field.entrySet()) {
@@ -163,23 +164,30 @@ public class AnValue implements Value {
 	public AnValue(Type ctype, String string) {
 		this(ctype);
 		name = string;
+		fieldName = string;
 	}
 	
 	public Set<String> getFieldNames() {
 		return field.keySet();
 	}
 	
-	public void setName(String n) {
-		name = n;
+	public void setFieldName(String n) {
+		fieldName = n;
+		for (AnValue a: field.values())
+			a.iAmYourFather(fieldName);
+	}
+	
+	public String getFieldName() {
+		return fieldName;
 	}
 	
 	public void setField(String n, AnValue val) throws Error {
 		if (val.getDepth() < maxDepth) {
-			if (getField(n) != null)
-				val.ID = getField(n).ID;
-			val.iAmYourFather(name);
+//			if (getField(n) != null)
+//				val.ID = getField(n).ID;
+			val.setFieldName(n);
+			val.iAmYourFather(fieldName);
 			val.updated = true;
-			val.setName(n);
 			field.put(n, val);
 			updated = true;
 		}
@@ -216,13 +224,13 @@ public class AnValue implements Value {
 	}
 	
 	public void iAmYourFather(String fatherName) {
-		if (!name.contains("."))
-			name = fatherName  + "." + name;
+		if (!fieldName.contains("."))
+			fieldName = fatherName  + "." + fieldName;
 		else {
-			name = fatherName + "." + name.substring(name.lastIndexOf('.') + 1);
+			fieldName = fatherName + "." + fieldName.substring(fieldName.lastIndexOf('.') + 1);
 		}
 		for (AnValue a: field.values())
-			a.iAmYourFather(name);
+			a.iAmYourFather(fieldName);
 	}
 	
 	public int getFieldSize() {

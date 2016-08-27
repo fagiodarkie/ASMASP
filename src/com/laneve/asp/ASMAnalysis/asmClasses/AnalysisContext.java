@@ -472,7 +472,7 @@ public class AnalysisContext {
 
 		if (t == Type.INT_TYPE || t == Type.LONG_TYPE) {
 			ConstExpression x = new ConstExpression(t, new Long(0));
-			x.setName(name);
+			//x.setName(name);
 			return x;
 		} else if (isResource(t.getClassName()))
 			return generateThread(name);
@@ -606,19 +606,45 @@ public class AnalysisContext {
 			computeUpdates(localList.get(i), m, null);
 		
 		//..and save them in the apposite section.
+		Map<String, Map<String, AnValue>> old = updates.get(k);
+		
+		// cases when something was updated: 
+		// 1) No updates so far;
+		if (old == null)
+			modified(methodName);
+		// 2) No updates for current signature;
+		else if (old.get(currentSignature) == null)
+			modified(methodName);
+		// 3) different updates for current signature:
+		else {
+			boolean mod = false;
+			Map<String, AnValue> oldInner = old.get(currentSignature); 
+			for (Entry<String, AnValue> e : m.entrySet()) {
+				// 3.1) different keyset (newer is larger);
+				if (!oldInner.containsKey(e.getKey())) {
+					mod = true;
+					break;
+				// 3.2) different values for keyset (newer is more accurate).
+				} else if (!oldInner.get(e.getKey()).equalValue(e.getValue())) {
+					mod = true;
+					break;
+				}
+			}
+			if (mod)
+				modified(methodName);
+		}
 		updates.get(k).put(currentSignature, m);
 		
 	}
 
 	private void computeUpdates(AnValue a, Map<String, AnValue> m, String fatherName) {
-		String prefix = (fatherName == null ? "" : fatherName + ".");
-		if (a instanceof IExpression && a.updated())
-			m.put(prefix + a.getName(), a);
+		if (a instanceof IExpression && a.updated() && fatherName != null)
+			m.put(a.getFieldName(), a);
 		else if (a instanceof ThreadValue && a.updated())
-			m.put(prefix + a.getName(), generateThread(a.getName()));
+			m.put(a.getFieldName(), generateThread(a.getName()));
 		else if (a.getFieldSize() > 0)
 			for (AnValue x : a.getFields())
-				computeUpdates(x, m, prefix + a.getName());
+				computeUpdates(x, m, (a.getFieldName() == null ? a.getName() : a.getFieldName()));
 	}
 	
 }
