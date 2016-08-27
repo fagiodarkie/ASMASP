@@ -20,7 +20,7 @@ public class DivExpression extends IExpression {
 	}
 
 	@Override
-	public IExpression clone() {
+	public IExpression cloneExpression() {
 		return new DivExpression(type, left.clone(), right.clone());
 	}
 

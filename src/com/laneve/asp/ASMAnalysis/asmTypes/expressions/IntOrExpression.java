@@ -17,7 +17,7 @@ public class IntOrExpression extends IExpression {
 	}
 
 	@Override
-	public IExpression clone() {
+	public IExpression cloneExpression() {
 		return new IntOrExpression(type, left.clone(), right.clone());
 	}
 

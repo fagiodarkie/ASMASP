@@ -46,7 +46,7 @@ public class VarExpression extends IExpression {
 	}
 
 	@Override
-	public IExpression clone() {
+	public IExpression cloneExpression() {
 		if (intExp == null)
 			return new VarExpression(type, index, name);
 		

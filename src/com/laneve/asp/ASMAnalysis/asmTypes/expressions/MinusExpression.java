@@ -15,7 +15,7 @@ public class MinusExpression extends IExpression {
 	}
 
 	@Override
-	public IExpression clone() {
+	public IExpression cloneExpression() {
 		return new MinusExpression(type, left.clone());
 	}
 

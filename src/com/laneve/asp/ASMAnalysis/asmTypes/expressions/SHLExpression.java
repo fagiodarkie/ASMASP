@@ -17,7 +17,7 @@ public class SHLExpression extends IExpression {
 	}
 
 	@Override
-	public IExpression clone() {
+	public IExpression cloneExpression() {
 		return new SHLExpression(type, left.clone(), right.clone());
 	}
 

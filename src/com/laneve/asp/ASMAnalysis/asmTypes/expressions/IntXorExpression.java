@@ -21,7 +21,7 @@ public class IntXorExpression extends IExpression {
 	}
 
 	@Override
-	public IExpression clone() {
+	public IExpression cloneExpression() {
 		return new IntXorExpression(type, left.clone(), right.clone());
 	}
 

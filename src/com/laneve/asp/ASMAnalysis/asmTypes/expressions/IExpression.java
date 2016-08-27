@@ -45,7 +45,15 @@ public abstract class IExpression extends AnValue{
 	}
 	
 	@Override
-	public abstract IExpression clone();
+	public IExpression clone() {
+		IExpression a = cloneExpression();
+		a.ID = ID;
+		a.name = name;
+		return a;
+	}
+	
+	
+	public abstract IExpression cloneExpression();
 	
 	public void setParameters(List<? extends AnValue> values) {
 		if (left != null)

@@ -17,7 +17,7 @@ public class IntAndExpression extends IExpression {
 	}
 
 	@Override
-	public IExpression clone() {
+	public IExpression cloneExpression() {
 		return new IntAndExpression(type, left.clone(), right.clone());
 	}
 

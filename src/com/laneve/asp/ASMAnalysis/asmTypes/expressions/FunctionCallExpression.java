@@ -52,7 +52,7 @@ public class FunctionCallExpression extends IExpression {
 	}
 
 	@Override
-	public IExpression clone() {
+	public IExpression cloneExpression() {
 		List<AnValue> l = new ArrayList<AnValue>();
 		for (AnValue a: values)
 			l.add(a.clone());

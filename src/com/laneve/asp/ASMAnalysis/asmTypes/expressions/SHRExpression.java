@@ -17,7 +17,7 @@ public class SHRExpression extends IExpression {
 	}
 
 	@Override
-	public IExpression clone() {
+	public IExpression cloneExpression() {
 		return new SHRExpression(type, left.clone(), right.clone());
 	}
 

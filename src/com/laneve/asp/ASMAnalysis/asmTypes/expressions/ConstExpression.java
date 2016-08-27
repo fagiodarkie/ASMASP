@@ -19,7 +19,7 @@ protected Long constExp;
 	}
 
 	@Override
-	public IExpression clone() {
+	public IExpression cloneExpression() {
 		return new ConstExpression(type, constExp);
 	}
 

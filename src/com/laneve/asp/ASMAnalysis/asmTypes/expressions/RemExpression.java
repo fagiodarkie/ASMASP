@@ -15,7 +15,7 @@ public class RemExpression extends IExpression {
 	}
 
 	@Override
-	public IExpression clone() {
+	public IExpression cloneExpression() {
 		return new RemExpression(type, left.clone(), right.clone());
 	}
 

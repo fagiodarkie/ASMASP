@@ -15,7 +15,7 @@ public class SubExpression extends IExpression {
 	}
 
 	@Override
-	public IExpression clone() {
+	public IExpression cloneExpression() {
 		return new SubExpression(type, left.clone(), right.clone());
 	}
 
