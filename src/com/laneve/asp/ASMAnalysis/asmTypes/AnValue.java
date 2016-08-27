@@ -157,6 +157,7 @@ public class AnValue implements Value {
 		
 		ID = a.ID;
 		isVariable = a.isVariable;
+		updated = a.updated;
 	}
 			
 	public AnValue(Type ctype, String string) {
@@ -176,6 +177,7 @@ public class AnValue implements Value {
 		if (val.getDepth() < maxDepth) {
 			val.iAmYourFather(name);
 			val.updated = true;
+			val.setName(n);
 			field.put(n, val);
 			updated = true;
 		}
@@ -259,6 +261,12 @@ public class AnValue implements Value {
 		return type;
 	}
 
+	public void setUpdated(boolean b) {
+		updated = b;
+		for (AnValue f: field.values())
+			f.setUpdated(b);
+	}
+	
 	public Collection<AnValue> getFields() {
 		return field.values();
 	}

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -296,6 +297,12 @@ public class AnalysisContext {
 					rels += ", " + releasedParameters.get(index).get(s).get(i);
 				System.out.println("Method " + actualName + " releases Threads " + rels);
 			}
+			if (updates.get(index).get(s).size() > 0) {
+				String update = "";
+				for (Entry<String, AnValue> e: updates.get(index).get(s).entrySet())
+					update += e.getKey() + ": " + e.getValue() + "; ";
+				System.out.println("Method " + actualName + " updates fields " + update);
+			}
 		}
 		System.out.println("Method " + mName + " has return value " + returnValue.get(index));
 	}
@@ -452,6 +459,7 @@ public class AnalysisContext {
 				a.setField(f, newObjectVariable(fType, p, f));
 			}
 		
+		a.setUpdated(false);
 		return a;
 	}
 	
@@ -476,7 +484,7 @@ public class AnalysisContext {
  				String fieldName = nclassName + "." + field;
 				a.setField(field, newObject(fieldType.get(fieldName), name + "." + field));
 			}
-		
+		a.setUpdated(false);
 		return a;
 	}
 	
@@ -524,6 +532,7 @@ public class AnalysisContext {
 					}
 			}
 		}
+		baseObject.setUpdated(false);
 		parameterValues.put(name, baseObject);
 		return baseObject;
 	}
@@ -547,7 +556,7 @@ public class AnalysisContext {
 		Map<String, AnValue> m = new HashMap<String, AnValue>();
 		
 		for (int i = 0; i < paramSize; ++i)
-			computeUpdates(localList.get(i), m);
+			computeUpdates(localList.get(i), m, null);
 		
 		//..and save them in the apposite section.
 		updates.get(k).put(currentSignature, m);
@@ -555,14 +564,15 @@ public class AnalysisContext {
 	}
 
 
-	private void computeUpdates(AnValue a, Map<String, AnValue> m) {
+	private void computeUpdates(AnValue a, Map<String, AnValue> m, String fatherName) {
+		String prefix = (fatherName == null ? "" : fatherName + ".");
 		if (a instanceof IExpression && a.updated())
-			m.put(a.getName(), a);
+			m.put(prefix + a.getName(), a);
 		else if (a instanceof ThreadValue && a.updated())
-			m.put(a.getName(), generateThread(a.getName()));
+			m.put(prefix + a.getName(), generateThread(a.getName()));
 		else if (a.getFieldSize() > 0)
 			for (AnValue x : a.getFields())
-				computeUpdates(x, m);
+				computeUpdates(x, m, prefix + a.getName());
 	}
 	
 }
