@@ -1,7 +1,6 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -451,6 +450,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         		context.signalParametersPattern(currentMethodName, methodParametersPattern);
         		createdBehaviour = context.getBehaviour(currentMethodName, c);
         	}
+
+        	updated = context.computeUpdatesToLocalEnvironment(currentMethodName, methodParametersPattern, c);
         	
         	if (t == Type.VOID_TYPE)
         		return null;
@@ -470,12 +471,6 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	res.setParameters(c);//hasClassParameter ? c : values);
         	res.setType(t);
         	
-        	updated = new HashMap<Long, AnValue>();
-        	for (int i = 0; i < values.size(); ++i) {
-        		// TODO
-        		// TODO
-        		// TODO
-        	}
         	
         	return res;
         	
@@ -521,6 +516,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		createdBehaviour = null;
 		current = next = jumpTo = -1;
 		currentObject = null;
+		updated = null;
 	}
 
 	public AnValue newValue(Type ctype, int i, String c) {
@@ -542,6 +538,11 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		current = insn;
 		next = sInsn;
 		jumpTo = jump;
+	}
+
+
+	public Map<Long, AnValue> getUpdates() {
+		return updated;
 	}
 
 }

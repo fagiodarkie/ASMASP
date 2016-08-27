@@ -143,11 +143,11 @@ public class ThreadAnalyzer implements Opcodes {
         while (top > 0) {
             int insn = queue[--top];
             
-            if ((insn == 6 && parameters.contains(",")) || m.name.equalsIgnoreCase("fact")) {
+/*            if ((insn == 6 && parameters.contains(",")) || m.name.equalsIgnoreCase("fact")) {
             	int a = 1;
             	a++;
             }
-            
+*/            
             BehaviourFrame f = frames[insn];
             OwnedSubroutine subroutine = subroutines[insn];
             queued[insn] = false;

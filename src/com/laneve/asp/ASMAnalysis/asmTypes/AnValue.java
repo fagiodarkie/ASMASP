@@ -175,6 +175,8 @@ public class AnValue implements Value {
 	
 	public void setField(String n, AnValue val) throws Error {
 		if (val.getDepth() < maxDepth) {
+			if (getField(n) != null)
+				val.ID = getField(n).ID;
 			val.iAmYourFather(name);
 			val.updated = true;
 			val.setName(n);
@@ -275,5 +277,14 @@ public class AnValue implements Value {
 	public boolean updated() {
 		return updated;
 	}
+
+
+	public void updateByID(long id, AnValue newValue) {
+		for (Entry<String, AnValue> e : field.entrySet())
+			if (e.getValue().getID() == id)
+				field.put(e.getKey(), newValue);
+			else e.getValue().updateByID(id, newValue);
+	}
+
 	
 }

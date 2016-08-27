@@ -2,6 +2,7 @@ package com.laneve.asp.ASMAnalysis.asmClasses;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -124,7 +125,9 @@ public class BehaviourFrame extends Frame<AnValue> {
 				}
 			}
 			
-			
+			for (Entry<Long, AnValue> entry : in.getUpdates().entrySet()) {
+				updateByID(entry.getKey(), entry.getValue());
+			}
 			
 			in.resetCurrentMethod();
 					
@@ -160,17 +163,25 @@ public class BehaviourFrame extends Frame<AnValue> {
 	}
 	
 	protected void updateByID(AnValue newValue) {
+		updateByID(newValue.getID(), newValue);
+	}
+	
+	protected void updateByID(long ID, AnValue newValue) {
+		
         for (int i = 0; i < getLocals(); ++i) {
-        	if (getLocal(i) != null && getLocal(i).getID() == newValue.getID())
+        	if (getLocal(i) != null && getLocal(i).getID() == ID)
         		setLocal(i, newValue);
         }
         
         List<AnValue> tempStack = new ArrayList<AnValue>(); 
         for (int i = 0; i < getStackSize(); ++i) {
         	AnValue t = getStack(i);
-        	if (t.getID() == newValue.getID())
+        	if (t.getID() == ID)
         		tempStack.add(newValue);
-        	else tempStack.add(0, t);
+        	else {
+        		t.updateByID(ID, newValue);
+        		tempStack.add(0, t);
+        	}
         }
     	// for a stack A, B, C, tempStack holds C, B, A. pushing restores correct order.
         clearStack();

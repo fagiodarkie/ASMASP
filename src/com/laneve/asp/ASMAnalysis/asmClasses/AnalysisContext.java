@@ -423,6 +423,7 @@ public class AnalysisContext {
 			releasedParameters.get(k).put(paramsPattern, new ArrayList<String>());
 			methodBehaviour.get(k).put(paramsPattern, new Atom(Atom.RETURN));
 			analyzeMethods.put(k, true);
+			updates.get(k).put(paramsPattern, new HashMap<String, AnValue>());
 		}
 		
 	}
@@ -539,18 +540,49 @@ public class AnalysisContext {
 
 
 
-	public Map<String, AnValue> getUpdatesToLocalEnvironment(String method, String signature) {
-		
-		// TODO
-		return null;
+	public Map<Long, AnValue> computeUpdatesToLocalEnvironment(String method, String signature, List<AnValue> parameters) {
+		Map<Long, AnValue> updatesByID = new HashMap<Long, AnValue>();
+		if (!methodID.containsValue(method))
+			return updatesByID;
+		Map<String, AnValue> up = updates.get(getKeyOfMethod(method)).get(signature);
+		for (int i = 0; i < parameters.size(); ++i)
+			applyUpdates(parameters, i, up, updatesByID);
+		return updatesByID;
 	}
 	
+	private void applyUpdates(List<AnValue> parameters, int i, Map<String, AnValue> up, Map<Long, AnValue> resultingUpdates) {
+		if (up.containsKey(Names.get(i)) && resultingUpdates.containsKey(up.get(Names.get(i)).getID()))
+			return;
+		
+		/* if (parameters.get(i) instanceof ThreadValue && up.containsKey(Names.get(i))) {
+			// simple thread
+			if (up.get(Names.get(i)) instanceof VarThreadValue) {
+				VarThreadValue t = (VarThreadValue)(up.get(Names.get(i)));
+				if (parameters.get((int) t.getIndex()) instanceof ThreadValue) {
+					resultingUpdates.put(parameters.get(i).getID(), parameters.get((int) t.getIndex()));
+				}
+				
+				/*  we have to copy the other thread:
+				 * - get the thread from parameters via t.index and t.name;
+				 * - "copy" it;
+				 * - update its value. 
+				* /
+			} else {
+				// new
+			}
+		}*/
+		
+		for (String updatedField : up.keySet())
+			if (updatedField.startsWith(Names.get(i))) {
+				String fieldName = updatedField.substring(updatedField.indexOf('.') + 1);
+				resultingUpdates.put(parameters.get(i).getField(fieldName).getID(), up.get(updatedField));
+			}
+	}
+
 	public void signalFinalState(String methodName, List<AnValue> localList) {
 
 		long k = getKeyOfMethod(methodName);
 		
-		
-		// FIXME 5={a[a.fieldOne]={a.?=0}}
 		// get the actual number of parameters..
 		int paramSize = Names.getSingleParameters(currentSignature).size();
 		Map<String, AnValue> m = new HashMap<String, AnValue>();
@@ -562,7 +594,6 @@ public class AnalysisContext {
 		updates.get(k).put(currentSignature, m);
 		
 	}
-
 
 	private void computeUpdates(AnValue a, Map<String, AnValue> m, String fatherName) {
 		String prefix = (fatherName == null ? "" : fatherName + ".");

@@ -38,7 +38,7 @@ public class Tests {
 	}
 
 	public Tests() {
-		fieldOne = 0;
+		fieldOne = 3;
 	}
 	
 	public int bar() throws InterruptedException {
@@ -60,7 +60,7 @@ public class Tests {
 		
 		int a = 3;
 		
-		if (2 - a == 0)
+		if (x.fieldOne - a == 0)
 			a += x.bar();
 		
 /*		int b = a * 2 + x.foo(x.bar(a));

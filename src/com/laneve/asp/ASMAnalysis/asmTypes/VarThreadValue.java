@@ -29,5 +29,10 @@ public class VarThreadValue extends AbstractThread {
 	}
 
 	
+	public long getIndex() {
+		return index;
+	}
+
+	
 
 }
