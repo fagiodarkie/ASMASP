@@ -2,7 +2,7 @@ package com.laneve.asp.ASMAnalysis.tests;
 
 public class Tests {
 
-	public int fieldOne;
+	public int fieldOne, fieldTwo;
 	
 	public int foo(int a) {
 		return a * bar(a);
@@ -38,15 +38,23 @@ public class Tests {
 	}
 
 	public Tests() {
-		fieldOne = 3;
+		this(1);
 	}
 	
 	public Tests(int i) {
 		fieldOne = i;
+		fieldTwo = i + 1;
 	}
 
 	public Tests(Tests x) {
-		fieldOne = x.fieldOne;
+		fieldOne = x.fieldOne + 1;
+		fieldTwo = x.fieldTwo - 1;
+	}
+	
+	public static void swap(Tests a, Tests b) {
+		int temp = a.fieldOne;
+		a.fieldOne = b.fieldOne;
+		b.fieldOne = temp;
 	}
 	
 	public int bar() throws InterruptedException {
@@ -62,11 +70,13 @@ public class Tests {
 	
 	public static void main() throws InterruptedException {
 		
-		Tests x = new Tests(), y = new Tests(2), z = new Tests(y);
+		int a = 2;
+		Tests x = new Tests(), y = new Tests(a), z = new Tests(y);
 	
 		x.fact(5);
 		
-		int a = 3;
+		swap(y, z);
+		
 		
 		if (x.fieldOne - z.fieldOne == 0)
 			a += x.bar();
