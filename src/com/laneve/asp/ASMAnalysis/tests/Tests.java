@@ -47,8 +47,8 @@ public class Tests {
 	}
 
 	public Tests(Tests x) {
-		fieldOne = x.fieldOne + 1;
-		fieldTwo = x.fieldTwo - 1;
+		fieldOne = x.fieldOne;
+		fieldTwo = x.fieldTwo;
 	}
 	
 	public static void swap(Tests a, Tests b) {
@@ -75,7 +75,7 @@ public class Tests {
 	
 		x.fact(5);
 		
-		swap(y, z);
+//		swap(y, z);
 		
 		
 		if (x.fieldOne - z.fieldOne == 0)

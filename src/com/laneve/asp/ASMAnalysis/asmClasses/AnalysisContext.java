@@ -118,6 +118,11 @@ public class AnalysisContext {
 					// we put on all its dependancies
 					analysisList.add(j);
 				}
+				for (long j = 0; j < currentMethodID; ++j) {
+					// ... and all methods depending on it.
+					if (depends.get(j).contains(currentMethodID))
+							analysisList.add(j);
+				}
 				
 				// if the return value was updated, also examine all methods depending on this.
 				if (modifiedReturnExpression.get(currentMethodID)) {
