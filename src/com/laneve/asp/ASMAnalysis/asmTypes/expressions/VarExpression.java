@@ -4,6 +4,7 @@ import java.util.List;
 import org.objectweb.asm.Type;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.utils.Names;
 
 public class VarExpression extends IExpression {
 	
@@ -27,10 +28,13 @@ public class VarExpression extends IExpression {
 			intExp = null;
 		}
 		try {
-			if (!fieldName.contains("\\."))
+			String m = name;
+			if (m.split("\\.").length == 1)
 				intExp = ((IExpression) parameters.get(index));
 			else {
-				intExp = ((IExpression) parameters.get(index).getField(fieldName.substring(name.indexOf("\\.") + 1)));
+				String f = m.substring(m.indexOf('.') + 1);
+				int paramPosition = Names.alpha.indexOf(m.substring(0, m.indexOf('.')));
+				intExp = ((IExpression) parameters.get(paramPosition).getField(f));
 			}
 		} catch (Exception e) {
 			// error
