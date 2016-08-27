@@ -540,8 +540,8 @@ public class AnalysisContext {
 
 
 
-	public Map<Long, AnValue> computeUpdatesToLocalEnvironment(String method, String signature, List<AnValue> parameters) {
-		Map<Long, AnValue> updatesByID = new HashMap<Long, AnValue>();
+	public Map<Long, Map<String, AnValue>> computeUpdatesToLocalEnvironment(String method, String signature, List<AnValue> parameters) {
+		Map<Long, Map<String, AnValue>> updatesByID = new HashMap<Long, Map<String, AnValue>>();
 		if (!methodID.containsValue(method))
 			return updatesByID;
 		Map<String, AnValue> up = updates.get(getKeyOfMethod(method)).get(signature);
@@ -550,9 +550,21 @@ public class AnalysisContext {
 		return updatesByID;
 	}
 	
-	private void applyUpdates(List<AnValue> parameters, int i, Map<String, AnValue> up, Map<Long, AnValue> resultingUpdates) {
-		if (up.containsKey(Names.get(i)) && resultingUpdates.containsKey(up.get(Names.get(i)).getID()))
+	private void applyUpdates(List<AnValue> parameters, int i, Map<String, AnValue> up, Map<Long, Map<String, AnValue>> resultingUpdates) {
+		// this must not be analyzed if the same object has already been updated;
+		if (resultingUpdates.containsKey(parameters.get(i).getID()))
 			return;
+		
+		// and if no field of this object must be modified we return.
+		boolean isThere = false;
+		for (String x: up.keySet())
+			if (x.startsWith(Names.get(i)))
+				isThere = true;
+		if (!isThere)
+			return;
+		
+		// finally, if the parameter is just a thread which status must be updated signal its new status.
+		// TODO - thread variables should be updated in order to let the context save their final status.
 		
 		/* if (parameters.get(i) instanceof ThreadValue && up.containsKey(Names.get(i))) {
 			// simple thread
@@ -572,11 +584,14 @@ public class AnalysisContext {
 			}
 		}*/
 		
+		Map<String, AnValue> tempMap = new HashMap<String, AnValue>();
 		for (String updatedField : up.keySet())
 			if (updatedField.startsWith(Names.get(i))) {
 				String fieldName = updatedField.substring(updatedField.indexOf('.') + 1);
-				resultingUpdates.put(parameters.get(i).getField(fieldName).getID(), up.get(updatedField));
+				tempMap.put(fieldName, up.get(updatedField));
 			}
+		if (tempMap.size() > 0)
+			resultingUpdates.put(parameters.get(i).getID(), tempMap);
 	}
 
 	public void signalFinalState(String methodName, List<AnValue> localList) {

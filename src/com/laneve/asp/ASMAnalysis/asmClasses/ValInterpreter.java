@@ -54,7 +54,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	protected IBehaviour createdBehaviour;
 	private AnValue currentObject;
 	private String methodParametersPattern;
-	private Map<Long, AnValue> updated;
+	private Map<Long, Map<String, AnValue>> updated;
 	
 	protected ValInterpreter(int api) {
 		super(api);
@@ -541,7 +541,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	}
 
 
-	public Map<Long, AnValue> getUpdates() {
+	public Map<Long, Map<String, AnValue>> getUpdates() {
 		return updated;
 	}
 

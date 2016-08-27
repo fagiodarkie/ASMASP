@@ -2,6 +2,7 @@ package com.laneve.asp.ASMAnalysis.asmClasses;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.objectweb.asm.Opcodes;
@@ -125,7 +126,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 				}
 			}
 			
-			for (Entry<Long, AnValue> entry : in.getUpdates().entrySet()) {
+			for (Entry<Long, Map<String, AnValue>> entry : in.getUpdates().entrySet()) {
 				updateByID(entry.getKey(), entry.getValue());
 			}
 			
@@ -166,6 +167,21 @@ public class BehaviourFrame extends Frame<AnValue> {
 		updateByID(newValue.getID(), newValue);
 	}
 	
+	protected void updateByID(long ID, Map<String, AnValue> map) {
+		
+        for (int i = 0; i < getLocals(); ++i) {
+        	if (getLocal(i) != null && getLocal(i).getID() == ID)
+        		for (Entry<String, AnValue> e : map.entrySet())
+        			getLocal(i).setField(e.getKey(), e.getValue());
+        }
+        
+        for (int i = 0; i < getStackSize(); ++i) {
+        	if (getStack(i).getID() == ID)
+        		for (Entry<String, AnValue> e : map.entrySet())
+        			getStack(i).setField(e.getKey(), e.getValue());
+        }
+	}
+	
 	protected void updateByID(long ID, AnValue newValue) {
 		
         for (int i = 0; i < getLocals(); ++i) {
@@ -197,6 +213,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 		}
 		return "";
 	}
+
 
 
 	public BehaviourFrame init(BehaviourFrame src) {
