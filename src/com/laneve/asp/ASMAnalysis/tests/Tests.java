@@ -57,7 +57,9 @@ public class Tests {
 	public Tests(Tests x, Tests y) {
 		fieldOne = x.fieldOne + y.fieldOne;
 		fieldTwo = x.fieldTwo + y.fieldTwo;
-		t1 = new Thread();
+		x.t1 = y.t1;
+		t1 = x.t1;
+		t1.run();
 	}
 	
 	public static void swap(Tests a, Tests b) {
@@ -73,8 +75,9 @@ public class Tests {
 		
 		t5.run();
 		t5.join();
+		t1.join();
 		
-		return 3;
+		return fieldOne;
 	}
 	
 	public static void main() throws InterruptedException {
@@ -83,7 +86,7 @@ public class Tests {
 
 		int a = 2;
 		
-		Tests x = new Tests(), y = new Tests(a),
+		Tests x = new Tests(), y = new Tests(x, x),
 			z = new Tests(x, y);
 		x.fact(5);
 		

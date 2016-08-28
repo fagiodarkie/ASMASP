@@ -6,19 +6,18 @@ public class ThreadValue extends AbstractThread {
 
 	protected long threadID;
 	protected AnalysisContext context;
-	protected boolean variable;
 	public static final String fullyQualifiedName = "java.lang.Thread";
 	
 	public ThreadValue(AnValue a, long ID, AnalysisContext c, boolean variable, String c2) {
 		super(a);
 		this.threadID = ID;
-		this.variable = variable;
+		this.isVariable = variable;
 		context = c;
 		name = c2;
 	}
 	
 	public ThreadValue clone() {
-		return new ThreadValue(this, threadID, context, variable, name);
+		return new ThreadValue(this, threadID, context, isVariable, name);
 	}
 
 	@Override
@@ -31,7 +30,7 @@ public class ThreadValue extends AbstractThread {
 	}
 
 	public String getVariableName() {
-		if (!variable) {
+		if (!isVariable) {
 			// ?
 		}
 		return name;
@@ -39,7 +38,7 @@ public class ThreadValue extends AbstractThread {
 	
 	@Override
 	public String toString() {
-		return (variable ? getVariableName() : "t" + threadID);
+		return (isVariable ? getVariableName() : "t" + threadID);
 	}
 	
 	public String printValue() {
@@ -47,13 +46,8 @@ public class ThreadValue extends AbstractThread {
 		return "" + status;
 	}
 
-	public boolean isVariable() {
-		return variable;
-	}
-
-
 	public boolean equalThread(ThreadValue x) {
-		return x.variable == variable && x.ID == ID && name.equalsIgnoreCase(x.name);
+		return equalValue(x) && x.ID == ID && name.equalsIgnoreCase(x.name);
 	}
 	
 

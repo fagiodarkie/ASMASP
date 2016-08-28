@@ -121,7 +121,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 				
 				if (frameBehaviour instanceof ThreadResource) {
 					ThreadResource t = (ThreadResource)frameBehaviour;
-					if (t.getThreadValue().isVariable())
+					if (t.getThreadValue().isVariable() && t.isRelease())
 						context.signalRelease(methodName, methodParametersPattern, t.getThreadValue().getVariableName());
 				}
 			}

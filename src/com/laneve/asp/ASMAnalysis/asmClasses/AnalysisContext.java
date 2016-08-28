@@ -193,8 +193,10 @@ public class AnalysisContext {
 
 	public ThreadResource deallocateThread(ThreadValue t) {
 		if (t.isVariable()) {
-			if (threadVariableStatus.get(t.getVariableName()) != ThreadResource.RELEASE) {
-				threadVariableStatus.put(t.getVariableName(), ThreadResource.RELEASE);
+			String vn = t.getVariableName();
+			// FIXME all thread variables should be initialized in threadVariableStatus (in ParseParameters)
+			if (threadVariableStatus.get(vn) == null || threadVariableStatus.get(vn) != ThreadResource.RELEASE) {
+				threadVariableStatus.put(vn, ThreadResource.RELEASE);
 				return new ThreadResource(t, ThreadResource.RELEASE);
 			} else {
 				return new ThreadResource(t, ThreadResource.ALREADY_RELEASED);
@@ -297,7 +299,6 @@ public class AnalysisContext {
 			String actualName = mName + "(" + s + ")";
 			System.out.println("Method " + actualName + " has behaviour " + methodBehaviour.get(index).get(s));
 			
-			// TODO
 			if (releasedParameters.get(index).get(s).size() > 0) {
 				String rels = releasedParameters.get(index).get(s).get(0);
 				for (int i = 1; i < releasedParameters.get(index).get(s).size(); ++i)

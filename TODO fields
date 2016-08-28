@@ -5,14 +5,10 @@ Limitazioni attuali:
 - tutti i campi devono essere inizializzati nel costruttore;
 
 Casi non testati / estensioni:
-- metodi che manipolano i thread campo di un parametro;
 - profondità di campi superiore a 1;
 
 
 Test da fare:
-- metodi che assegnano ai campi di un oggetto campi di un altro oggetto variabile. in particolare, detti a, b oggetti, i... interi, t... threads:
-	- b.t1 = c.t1; a.t1 = b.t1 (result should be a.t1 = c.t1)
-	- b.t1.join(); a.t1 = b.t1;
 - metodi che assegnano oggetti ai campi.
 	- a.c = b.c; a.c.t1.join();
 
@@ -26,7 +22,9 @@ Test fatti:
 	- [fatto] a.i1 = b.i1
 	- [fatto] a.i1 = b.i2 + 3
 	- [fatto] a.t1 = b.t1
-
+	- [fatto] b.t1 = c.t1; a.t1 = b.t1 (result should be a.t1 = c.t1)
+	- [fatto] b.t1.join(); a.t1 = b.t1;
+- [fatto] metodi che ritornano campi
 
 
 [fatto] 2) gli AnValues hanno una mappa String->AnValue che ne gestisce i campi, che vengono anche riferiti come interi tramite ordinamento;
