@@ -443,6 +443,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
     		if (context.typableMethod(currentMethodName)) {
     			methodParametersPattern = Names.computeParameterList(c);    		
+    			System.out.println(methodParametersPattern);
     			context.signalParametersPattern(currentMethodName, methodParametersPattern);
     		}
 

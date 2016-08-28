@@ -18,7 +18,7 @@ public class ThreadValue extends AbstractThread {
 	}
 	
 	public ThreadValue clone() {
-		return new ThreadValue(new AnValue(type), threadID, context, variable, name);
+		return new ThreadValue(this, threadID, context, variable, name);
 	}
 
 	@Override

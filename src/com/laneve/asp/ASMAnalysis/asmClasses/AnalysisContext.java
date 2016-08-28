@@ -600,8 +600,8 @@ public class AnalysisContext {
 					tempMap.put(fieldName, x);
 					threadsStatus.put(x.getThreadID(), getStatusOfThread(((VarThreadValue) val).getThreadID()));
 				} else if (val instanceof ThreadValue) {
-					// ThreadValue t = generateThread("t" + threadCounter, getStatusOfThread(((ThreadValue)val).getThreadID()));
-					tempMap.put(fieldName, val);
+					ThreadValue t = generateThread("t" + threadCounter, getStatusOfThread(((ThreadValue)val).getThreadID()));
+					tempMap.put(fieldName, t);
 				}
 			}
 		if (tempMap.size() > 0)
@@ -612,6 +612,7 @@ public class AnalysisContext {
 
 		long k = getKeyOfMethod(methodName);
 		
+//		System.out.println(currentSignature);
 		// get the actual number of parameters..
 		int paramSize = Names.getSingleParameters(currentSignature).size();
 		Map<String, AnValue> m = new HashMap<String, AnValue>();
