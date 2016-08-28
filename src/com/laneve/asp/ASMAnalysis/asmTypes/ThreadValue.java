@@ -4,30 +4,30 @@ import com.laneve.asp.ASMAnalysis.asmClasses.AnalysisContext;
 
 public class ThreadValue extends AbstractThread {
 
-	protected long ID;
+	protected long threadID;
 	protected AnalysisContext context;
 	protected boolean variable;
 	public static final String fullyQualifiedName = "java.lang.Thread";
 	
 	public ThreadValue(AnValue a, long ID, AnalysisContext c, boolean variable, String c2) {
 		super(a);
-		this.ID = ID;
+		this.threadID = ID;
 		this.variable = variable;
 		context = c;
 		name = c2;
 	}
 	
 	public ThreadValue clone() {
-		return new ThreadValue(new AnValue(type), ID, context, variable, name);
+		return new ThreadValue(new AnValue(type), threadID, context, variable, name);
 	}
 
 	@Override
 	public boolean equalValue(AnValue other) {
-		return context.getStatusOfThread(ID) == context.getStatusOfThread(((ThreadValue)other).ID);
+		return context.getStatusOfThread(threadID) == context.getStatusOfThread(((ThreadValue)other).threadID);
 	}
 	
-	public long getID() {
-		return ID;
+	public long getThreadID() {
+		return threadID;
 	}
 
 	public String getVariableName() {
@@ -39,7 +39,7 @@ public class ThreadValue extends AbstractThread {
 	
 	@Override
 	public String toString() {
-		return (variable ? getVariableName() : "t" + ID);
+		return (variable ? getVariableName() : "t" + threadID);
 	}
 	
 	public String printValue() {

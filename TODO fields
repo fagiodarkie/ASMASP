@@ -5,8 +5,6 @@ Limitazioni attuali:
 - tutti i campi devono essere inizializzati nel costruttore;
 
 Casi non testati / estensioni:
-- oggetti con multipli campi;
-- metodi invocati con lo stesso oggetto; 
 - oggetti con campi thread;
 - metodi che assegnano nuovi thread ai campi di un oggetto;
 - metodi che assegnano il thread campo di un parametro al campo di un altro parametro;

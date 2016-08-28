@@ -436,7 +436,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         		currentMethodName = values.get(0).getClassName() + currentMethodName;
         	}
 
-        	// FIXME here we manage the argument list!
+        	// here we manage the argument list!
     		List<AnValue> c = new ArrayList<AnValue>();
     		for (AnValue a: values)
     			c.add(a.clone());

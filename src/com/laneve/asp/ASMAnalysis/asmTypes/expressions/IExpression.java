@@ -47,7 +47,7 @@ public abstract class IExpression extends AnValue{
 	@Override
 	public IExpression clone() {
 		IExpression a = cloneExpression();
-		// a.ID = ID;
+		a.ID = ID;
 		a.name = name;
 		a.fieldName = fieldName;
 		a.isVariable = isVariable;

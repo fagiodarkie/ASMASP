@@ -171,7 +171,7 @@ public class AnalysisContext {
 	public ThreadValue generateThread(int index) {
 		ThreadValue t = new ThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
 				index >= 0 ? index : threadCounter,
-				this, index >= 0, " ");
+				this, index >= 0, "t" + threadCounter);
 		if (index < 0) {
 			threadsStatus.put(threadCounter, ThreadResource.ALLOCATED);
 			threadCounter++;
@@ -182,8 +182,8 @@ public class AnalysisContext {
 	public ThreadResource allocateThread(ThreadValue t) {
 		if (t.isVariable()) {
 			return new ThreadResource(t, ThreadResource.ACQUIRE);
-		} else if (threadsStatus.get(t.getID()) == ThreadResource.ALLOCATED) {
-			threadsStatus.put(t.getID(), ThreadResource.ACQUIRE);
+		} else if (threadsStatus.get(t.getThreadID()) == ThreadResource.ALLOCATED) {
+			threadsStatus.put(t.getThreadID(), ThreadResource.ACQUIRE);
 			return new ThreadResource(t, ThreadResource.ACQUIRE);			
 		} else {
 			return new ThreadResource(t, ThreadResource.ALREADY_ACQUIRED);
@@ -198,8 +198,8 @@ public class AnalysisContext {
 			} else {
 				return new ThreadResource(t, ThreadResource.ALREADY_RELEASED);
 			}
-		} else if (threadsStatus.get(t.getID()) == ThreadResource.ACQUIRE) {
-			threadsStatus.put(t.getID(), ThreadResource.RELEASE);
+		} else if (threadsStatus.get(t.getThreadID()) == ThreadResource.ACQUIRE) {
+			threadsStatus.put(t.getThreadID(), ThreadResource.RELEASE);
 			return new ThreadResource(t, ThreadResource.RELEASE);
 		} else return new ThreadResource(t, ThreadResource.ALREADY_RELEASED);
 	}
@@ -446,7 +446,7 @@ public class AnalysisContext {
 		if (t == Type.INT_TYPE || t == Type.LONG_TYPE) {
 			return new VarExpression(t, p, oName);
 		} else if (isResource(t.getClassName())) {
-			return generateThread(oName);
+			return generateThread(oName, ThreadResource.DELTA);
 		}
 
 		
@@ -481,7 +481,7 @@ public class AnalysisContext {
 			//x.setName(name);
 			return x;
 		} else if (isResource(t.getClassName()))
-			return generateThread(name);
+			return generateThread(name, ThreadResource.DELTA);
 		
 		AnValue a = new AnValue(t, name);
 		
@@ -495,12 +495,12 @@ public class AnalysisContext {
 		return a;
 	}
 	
-	protected ThreadValue generateThread(String oName) {
-		ThreadValue t = new ThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
+	protected ThreadValue generateThread(String oName, int t) {
+		ThreadValue thr = new ThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
 				threadCounter, this, true, oName);
-		threadsStatus.put(threadCounter, ThreadResource.DELTA);
+		threadsStatus.put(threadCounter, t);
 		threadCounter++;
-		return t;
+		return thr;
 	}
 
 	public void signalField(String className, String name, Type type) {
@@ -630,15 +630,16 @@ public class AnalysisContext {
 		
 	}
 
-
 	private void computeUpdates(AnValue a, Map<String, AnValue> m, String fatherName) {
 		if (a instanceof IExpression && a.updated() && fatherName != null)
 			m.put(a.getFieldName(), a);
 		else if (a instanceof ThreadValue && a.updated())
-			m.put(a.getFieldName(), generateThread(a.getName()));
-		else if (a.getFieldSize() > 0)
+			m.put(a.getFieldName(), a);
+		else if (a.getFieldSize() > 0) {
+			String n = (a.getFieldName() == null ? a.getName() : a.getFieldName());
 			for (AnValue x : a.getFields())
-				computeUpdates(x, m, (a.getFieldName() == null ? a.getName() : a.getFieldName()));
+				computeUpdates(x, m, n);
+		}
 	}
 	
 }

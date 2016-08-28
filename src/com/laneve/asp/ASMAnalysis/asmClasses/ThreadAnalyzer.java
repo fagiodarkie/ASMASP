@@ -120,14 +120,12 @@ public class ThreadAnalyzer implements Opcodes {
         
         if ((m.access & ACC_STATIC) == 0) {
     		Type ctype = Type.getObjectType(owner);
-    		// TODO manage class parameters.
             current.setLocal(local++, context.parseObjectVariable(ctype, 0, singleParameters.get(0), parameterValues));
             object = 1;
             //singleParameters.remove(0);
             context.signalDynamicMethod(methodName);
         }
         for (int i = 0; i < args.length; ++i) {
-        	// TODO here too
             current.setLocal(local++, context.parseObjectVariable(args[i], i + object, singleParameters.get(i + object), parameterValues));
             if (args[i].getSize() == 2) {
                 current.setLocal(local++, interpreter.newValue(null));
@@ -144,15 +142,14 @@ public class ThreadAnalyzer implements Opcodes {
         while (top > 0) {
             int insn = queue[--top];
             
-/*            if ((insn == 6 && parameters.contains(",")) || m.name.equalsIgnoreCase("fact")) {
-            	int a = 1;
-            	a++;
-            }
-*/            
             BehaviourFrame f = frames[insn];
             OwnedSubroutine subroutine = subroutines[insn];
             queued[insn] = false;
 
+            if (insn == 18 && methodName.contains("bar")) {
+            	insn += 0;
+            }
+            
             AbstractInsnNode insnNode = null;
             try {
                 insnNode = m.instructions.get(insn);
@@ -162,7 +159,7 @@ public class ThreadAnalyzer implements Opcodes {
                 if (insnType == AbstractInsnNode.LABEL
                         || insnType == AbstractInsnNode.LINE
                         || insnType == AbstractInsnNode.FRAME) {
-                	// TODO here was merge
+                	// here was merge
                     mergeCopy(insn + 1, f, subroutine);
                     newControlFlowEdge(insn, insn + 1);
                 } else {
