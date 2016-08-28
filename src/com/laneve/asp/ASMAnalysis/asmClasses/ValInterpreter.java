@@ -441,13 +441,14 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     		for (AnValue a: values)
     			c.add(a.clone());
 
-        	if (context.isAtomicBehaviour(currentMethodName)) {
+    		if (context.typableMethod(currentMethodName)) {
+    			methodParametersPattern = Names.computeParameterList(c);    		
+    			context.signalParametersPattern(currentMethodName, methodParametersPattern);
+    		}
+
+    		if (context.isAtomicBehaviour(currentMethodName)) {
         		createdBehaviour = context.createAtom(values.get(0), currentMethodName);
         	} else if (context.hasBehaviour(currentMethodName)) {
-        		
-        		methodParametersPattern = Names.computeParameterList(c);
-        		
-        		context.signalParametersPattern(currentMethodName, methodParametersPattern);
         		createdBehaviour = context.getBehaviour(currentMethodName, c);
         	}
 

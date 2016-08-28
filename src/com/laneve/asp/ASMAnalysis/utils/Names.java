@@ -88,11 +88,10 @@ public class Names {
 			fillMap(names, a.getField(fieldName), name + "." + fieldName);
 	}
 
-
 	public static String normalizeClassName(String className) {
 		if (className.endsWith(";"))
 			className = className.substring(0, className.length() - 1);
-		if(className.startsWith("L"))
+		if(className.startsWith("L") || className.startsWith("I"))
 			className = className.substring(1);
 		return className.replace('.', '/');
 	}

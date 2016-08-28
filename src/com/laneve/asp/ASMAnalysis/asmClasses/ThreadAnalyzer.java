@@ -146,7 +146,7 @@ public class ThreadAnalyzer implements Opcodes {
             OwnedSubroutine subroutine = subroutines[insn];
             queued[insn] = false;
 
-            if (insn == 18 && methodName.contains("bar")) {
+            if (insn == 10 && methodName.contains("main")) {
             	insn += 0;
             }
             

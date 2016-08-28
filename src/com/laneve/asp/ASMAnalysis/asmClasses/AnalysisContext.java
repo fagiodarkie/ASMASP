@@ -14,6 +14,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.VarThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.FunctionCallExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
@@ -315,7 +316,8 @@ public class AnalysisContext {
 
 	protected IBehaviour computeBehaviour(BehaviourFrame[] frames) {
 		
-		return computeBehaviour(null, frames, 0, frames.length - 1);
+		IBehaviour b = computeBehaviour(null, frames, 0, frames.length - 1);
+		return b == null ? new Atom(Atom.RETURN) : b;
 		
 	}
 	
@@ -401,11 +403,13 @@ public class AnalysisContext {
 	}
 
 	public boolean isResource(String string) {
-		if (string.startsWith("L"))
-			return resourceClass.equalsIgnoreCase(string.substring(1));
-		return resourceClass.equalsIgnoreCase(string);
+		return resourceClass.equalsIgnoreCase(Names.normalizeClassName(string));
 	}
 
+	public boolean typableMethod(String currentMethodName) {
+		return methodID.containsValue(currentMethodName);
+	}
+	
 	public void signalRelease(String methodName, String parameterSetup, String parameter) {
 		long k = getKeyOfMethod(methodName);
 		List<String> actualPars = releasedParameters.get(k).get(parameterSetup);
@@ -446,7 +450,7 @@ public class AnalysisContext {
 		if (t == Type.INT_TYPE || t == Type.LONG_TYPE) {
 			return new VarExpression(t, p, oName);
 		} else if (isResource(t.getClassName())) {
-			return generateThread(oName, ThreadResource.DELTA);
+			return generateVarThread(oName, p, ThreadResource.DELTA);
 		}
 
 		
@@ -495,10 +499,18 @@ public class AnalysisContext {
 		return a;
 	}
 	
-	protected ThreadValue generateThread(String oName, int t) {
+	protected ThreadValue generateThread(String oName, int status) {
 		ThreadValue thr = new ThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
-				threadCounter, this, true, oName);
-		threadsStatus.put(threadCounter, t);
+				threadCounter, this, false, oName);
+		threadsStatus.put(threadCounter, status);
+		threadCounter++;
+		return thr;
+	}
+
+	protected ThreadValue generateVarThread(String oName, int pos, int status) {
+		VarThreadValue thr = new VarThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
+				threadCounter, this, oName, pos);
+		threadsStatus.put(threadCounter, status);
 		threadCounter++;
 		return thr;
 	}
@@ -564,8 +576,10 @@ public class AnalysisContext {
 		// and if no field of this object must be modified we return.
 		boolean isThere = false;
 		for (String x: up.keySet())
-			if (x.startsWith(Names.get(i)))
+			if (x.startsWith(Names.get(i))) {
 				isThere = true;
+				break;
+			}
 		if (!isThere)
 			return;
 		
@@ -581,6 +595,13 @@ public class AnalysisContext {
 				else if (val instanceof IExpression) {
 					IExpression x = ((IExpression) val).evaluate(parameters);
 					tempMap.put(fieldName, x);
+				} else if (val instanceof VarThreadValue) {
+					ThreadValue x = ((VarThreadValue)val).compute(parameters);
+					tempMap.put(fieldName, x);
+					threadsStatus.put(x.getThreadID(), getStatusOfThread(((VarThreadValue) val).getThreadID()));
+				} else if (val instanceof ThreadValue) {
+					// ThreadValue t = generateThread("t" + threadCounter, getStatusOfThread(((ThreadValue)val).getThreadID()));
+					tempMap.put(fieldName, val);
 				}
 			}
 		if (tempMap.size() > 0)
@@ -641,5 +662,6 @@ public class AnalysisContext {
 				computeUpdates(x, m, n);
 		}
 	}
-	
+
+
 }
