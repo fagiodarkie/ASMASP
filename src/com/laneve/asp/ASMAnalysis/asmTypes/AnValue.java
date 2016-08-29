@@ -187,8 +187,8 @@ public class AnValue implements Value {
 	
 	public void setField(String n, AnValue val) throws Error {
 		if (val.getDepth() < maxDepth) {
-//			if (getField(n) != null)
-//				val.ID = getField(n).ID;
+			if (getField(n) != null && val.getID() == getField(n).getID())
+				return;
 			val.setFieldName(n);
 			val.iAmYourFather(fieldName);
 			val.updated = true;
