@@ -137,10 +137,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	throw new Error("Static fields are not analyzed.");
         case NEW:
         	String d = ((TypeInsnNode) insn).desc;
-            if (context.isResource(d)) {
-            	return context.newObject(Type.getType(d));
-            }
-        	return newValue(Type.getObjectType(((TypeInsnNode) insn).desc));
+        	return newValue(Type.getObjectType(d));
         default:
             throw new Error("Internal error.");
         }
