@@ -21,6 +21,8 @@ public class VarThreadValue extends ThreadValue {
 
 	@Override
 	public boolean equalValue(AnValue other) {
+		if (!(other instanceof VarThreadValue))
+			return false;
 		return index == ((VarThreadValue)other).index;
 	}
 

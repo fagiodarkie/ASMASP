@@ -4,9 +4,8 @@ import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 
 public class ThreadResource implements IBehaviour {
 
-	public static final int ACQUIRE = 0, RELEASE = 1, ALREADY_ACQUIRED = 2,
-			ALREADY_RELEASED = 3, MAYBE_RELEASED = 4, ALLOCATED = 5, DELTA = 6;
-
+	public static final int ALLOCATED = 0, ACQUIRE = 1, ALREADY_ACQUIRED = 2, RELEASE = 3, ALREADY_RELEASED = 4, DELTA = 5; 
+	
 	protected ThreadValue thread;
 	protected int status;
 	
@@ -23,7 +22,6 @@ public class ThreadResource implements IBehaviour {
 		switch (status) {
 		case ACQUIRE: return thread.toString() + ".acquire";
 		case RELEASE: return thread.toString() + ".release";
-		case MAYBE_RELEASED: return thread.toString() + ".released?";
 		default: return "";
 		}
 	}

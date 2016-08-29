@@ -171,27 +171,38 @@ public class AnalysisContext {
 	
 	public ThreadResource allocateThread(ThreadValue t) {
 		if (t.isVariable()) {
-			return new ThreadResource(t, ThreadResource.ACQUIRE);
+			String vn = t.getVariableName();
+
+			if (threadVariableStatus.get(vn) == null || threadVariableStatus.get(vn) != ThreadResource.ALREADY_ACQUIRED) {
+				threadVariableStatus.put(vn, ThreadResource.ALREADY_ACQUIRED);
+				threadsStatus.put(t.getThreadID(), ThreadResource.ALREADY_ACQUIRED);
+				t.setUpdated(true);
+				return new ThreadResource(t, ThreadResource.ACQUIRE);
+			} else {
+				return new ThreadResource(t, ThreadResource.ALREADY_ACQUIRED);
+			}
 		} else if (threadsStatus.get(t.getThreadID()) == ThreadResource.ALLOCATED) {
-			threadsStatus.put(t.getThreadID(), ThreadResource.ACQUIRE);
-			return new ThreadResource(t, ThreadResource.ACQUIRE);			
-		} else {
-			return new ThreadResource(t, ThreadResource.ALREADY_ACQUIRED);
-		}
+			threadsStatus.put(t.getThreadID(), ThreadResource.ALREADY_ACQUIRED);
+			t.setUpdated(true);
+			return new ThreadResource(t, ThreadResource.ACQUIRE);
+		} else return new ThreadResource(t, ThreadResource.ALREADY_ACQUIRED);
 	}
 
 	public ThreadResource deallocateThread(ThreadValue t) {
 		if (t.isVariable()) {
 			String vn = t.getVariableName();
 
-			if (threadVariableStatus.get(vn) == null || threadVariableStatus.get(vn) != ThreadResource.RELEASE) {
-				threadVariableStatus.put(vn, ThreadResource.RELEASE);
+			if (threadVariableStatus.get(vn) == null || threadVariableStatus.get(vn) == ThreadResource.ALREADY_ACQUIRED) {
+				threadVariableStatus.put(vn, ThreadResource.ALREADY_RELEASED);
+				threadsStatus.put(t.getThreadID(), ThreadResource.ALREADY_RELEASED);
+				t.setUpdated(true);
 				return new ThreadResource(t, ThreadResource.RELEASE);
 			} else {
 				return new ThreadResource(t, ThreadResource.ALREADY_RELEASED);
 			}
-		} else if (threadsStatus.get(t.getThreadID()) == ThreadResource.ACQUIRE) {
-			threadsStatus.put(t.getThreadID(), ThreadResource.RELEASE);
+		} else if (threadsStatus.get(t.getThreadID()) == ThreadResource.ALREADY_ACQUIRED) {
+			threadsStatus.put(t.getThreadID(), ThreadResource.ALREADY_RELEASED);
+			t.setUpdated(true);
 			return new ThreadResource(t, ThreadResource.RELEASE);
 		} else return new ThreadResource(t, ThreadResource.ALREADY_RELEASED);
 	}
@@ -585,7 +596,8 @@ public class AnalysisContext {
 				} else if (val instanceof VarThreadValue) {
 					ThreadValue x = ((VarThreadValue)val).compute(parameters);
 					tempMap.put(fieldName, x);
-					threadsStatus.put(x.getThreadID(), getStatusOfThread(((VarThreadValue) val).getThreadID()));
+					int status = getStatusOfThread(((VarThreadValue) val).getThreadID());
+					threadsStatus.put(x.getThreadID(), status);
 				} else if (val instanceof ThreadValue) {
 					ThreadValue t = generateThread("t" + threadCounter, getStatusOfThread(((ThreadValue)val).getThreadID()));
 					tempMap.put(fieldName, t);
@@ -605,7 +617,7 @@ public class AnalysisContext {
 		Map<String, AnValue> m = new HashMap<String, AnValue>();
 		
 		for (int i = 0; i < paramSize; ++i)
-			computeUpdates(localList.get(i), m, null);
+			computeUpdates(localList.get(i), m, Names.get(i));
 		
 		//..and save them in the apposite section.
 		Map<String, Map<String, AnValue>> old = updates.get(k);
@@ -642,9 +654,12 @@ public class AnalysisContext {
 	private void computeUpdates(AnValue a, Map<String, AnValue> m, String fatherName) {
 		if (a instanceof IExpression && a.updated() && fatherName != null)
 			m.put(a.getFieldName(), a);
-		else if (a instanceof ThreadValue && a.updated())
-			m.put(a.getFieldName(), a);
-		else if (a.getFieldSize() > 0) {
+		else if (a instanceof ThreadValue) {
+			if (a.getFieldName() != null)
+				m.put(a.getFieldName(), a);
+			else
+				m.put(fatherName, a);
+		} else if (a.getFieldSize() > 0) {
 			String n = (a.getFieldName() == null ? a.getName() : a.getFieldName());
 			for (AnValue x : a.getFields())
 				computeUpdates(x, m, n);

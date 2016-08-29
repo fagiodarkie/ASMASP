@@ -19,12 +19,12 @@ public class Tests {
 		t2.join();
 	}
 	
-	public Thread create() {
+/*	public Thread create() {
 		Thread t = new Thread();
 		t.run();
 		return t;
 	}
-	
+*/	
 	public int fact(int n) {
 		return n * fact(n - 1);
 	}
@@ -82,22 +82,23 @@ public class Tests {
 	
 	public static void main() throws InterruptedException {
 		
-		Tests w = new Tests(), h = new Tests(w);
+//		Tests w = new Tests(), h = new Tests(w);
 
 		int a = 2;
 		
-		Tests x = new Tests(), y = new Tests(x, x),
-			z = new Tests(x, y);
+		Tests x = new Tests();
+//		Tests y = new Tests(x, x),
+//			z = new Tests(x, y);
 		x.fact(5);
 		
-		swap(x, y);
-		swap(y, y);
+//		swap(x, y);
+//		swap(y, y);
 
 		
-		if (x.fieldOne - z.fieldOne == 0)
-			a += x.bar();
+		//if (x.fieldOne - z.fieldOne == 0)
+		//	a += x.bar();
 	
-		/*int b = a * 2 + x.foo(x.bar(a));
+		int b = a * 2 + x.foo(x.bar(a));
 		
 		Thread t = new Thread();
 		Thread t2 = new Thread();
@@ -105,9 +106,10 @@ public class Tests {
 		t2.run();
 		x.release(t, t2, 0);
 		
+		x.release(t, t2, 3);
 		t = new Thread();		
 		t.run();
-		x.release(t, t, b);*/
+//		x.release(t, t, b);
 		
 		
 	}

@@ -497,7 +497,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
 	@Override
 	public AnValue merge(AnValue v, AnValue w) {
-		// TODO
+		if (v == null)
+			return w;
 		return v;
 	}
 

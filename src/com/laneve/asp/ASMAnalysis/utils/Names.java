@@ -17,8 +17,11 @@ public class Names {
 		public ParamAsString(AnValue val, Map<Long, String> idNames) {
 			this.name = idNames.get(val.getID());
 			params = new ArrayList<ParamAsString>();
-			for (AnValue a : val.getFields()) 
+			for (AnValue a : val.getFields()) {
+				if (val instanceof ThreadValue)
+					a.clone();
 				params.add(new ParamAsString(a, idNames));
+			}
 		}
 		
 		public String toString() {
@@ -83,7 +86,13 @@ public class Names {
 	private static void fillMap(Map<Long, String> names, AnValue a, String name) {
 		if (names.containsKey(a.getID()))
 			return;
-		names.put(a.getID(), name + (a instanceof ThreadValue ? ":" + ((ThreadValue)a).getStatus() : "" ));
+		String extra = "";
+		if (a instanceof ThreadValue) {
+			int x = ((ThreadValue)a).getStatus();
+			extra = ":" + x;
+		}
+			
+		names.put(a.getID(), name + extra);
 		
 		for (String fieldName: a.getFieldNames())
 			fillMap(names, a.getField(fieldName), name + "." + fieldName);
