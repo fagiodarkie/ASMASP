@@ -169,17 +169,6 @@ public class AnalysisContext {
 		deallocationCall = dealloc;
 	}
 	
-	public ThreadValue generateThread(int index) {
-		ThreadValue t = new ThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
-				index >= 0 ? index : threadCounter,
-				this, index >= 0, "t" + threadCounter);
-		if (index < 0) {
-			threadsStatus.put(threadCounter, ThreadResource.ALLOCATED);
-			threadCounter++;
-		}
-		return t;
-	}
-	
 	public ThreadResource allocateThread(ThreadValue t) {
 		if (t.isVariable()) {
 			return new ThreadResource(t, ThreadResource.ACQUIRE);
@@ -194,7 +183,7 @@ public class AnalysisContext {
 	public ThreadResource deallocateThread(ThreadValue t) {
 		if (t.isVariable()) {
 			String vn = t.getVariableName();
-			// FIXME all thread variables should be initialized in threadVariableStatus (in ParseParameters)
+
 			if (threadVariableStatus.get(vn) == null || threadVariableStatus.get(vn) != ThreadResource.RELEASE) {
 				threadVariableStatus.put(vn, ThreadResource.RELEASE);
 				return new ThreadResource(t, ThreadResource.RELEASE);
@@ -443,15 +432,14 @@ public class AnalysisContext {
 		threadVariableStatus = new HashMap<String, Integer>();
 	}
 	
-	public void newThreadVariable(String tName) {
-		threadVariableStatus.put(tName, ThreadResource.DELTA);
-	}
-
 	public AnValue newObjectVariable(Type t, int p, String oName) {
 		if (t == Type.INT_TYPE || t == Type.LONG_TYPE) {
 			return new VarExpression(t, p, oName);
 		} else if (isResource(t.getClassName())) {
-			return generateVarThread(oName, p, ThreadResource.DELTA);
+			String[] x = oName.split(":");
+			String n = x[0];
+			int status = Integer.parseInt(x[1]);
+			return generateVarThread(n, p, status);
 		}
 
 		
@@ -486,7 +474,7 @@ public class AnalysisContext {
 			//x.setName(name);
 			return x;
 		} else if (isResource(t.getClassName()))
-			return generateThread(name, ThreadResource.DELTA);
+			return generateThread(name, ThreadResource.ALLOCATED);
 		
 		AnValue a = new AnValue(t, name);
 		
@@ -533,6 +521,7 @@ public class AnalysisContext {
 		return objectFields.containsKey(className) || objectFields.containsKey(className.replace('.', '/'));
 	}
 
+	
 	public AnValue parseObjectVariable(Type ctype, int pos, String parameter, Map<String, AnValue> parameterValues) {
 		String name = (!parameter.contains("[") ? parameter : parameter.substring(0, parameter.indexOf("[")));
 		if (parameterValues.containsKey(name))
@@ -556,8 +545,6 @@ public class AnalysisContext {
 		parameterValues.put(name, baseObject);
 		return baseObject;
 	}
-
-
 
 	public Map<Long, Map<String, AnValue>> computeUpdatesToLocalEnvironment(String method, String signature, List<AnValue> parameters) {
 		Map<Long, Map<String, AnValue>> updatesByID = new HashMap<Long, Map<String, AnValue>>();
@@ -585,7 +572,6 @@ public class AnalysisContext {
 			return;
 		
 		// finally, if the parameter is just a thread which status must be updated signal its new status.
-		// TODO - thread variables should be updated in order to let the context save their final status.
 		Map<String, AnValue> tempMap = new HashMap<String, AnValue>();
 		for (String updatedField : up.keySet())
 			if (updatedField.startsWith(Names.get(i))) {

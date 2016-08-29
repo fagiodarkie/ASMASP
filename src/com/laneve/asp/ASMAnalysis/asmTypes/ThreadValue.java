@@ -29,6 +29,10 @@ public class ThreadValue extends AbstractThread {
 		return threadID;
 	}
 
+	public int getStatus() {
+		return context.getStatusOfThread(threadID);
+	}
+	
 	public String getVariableName() {
 		if (!isVariable) {
 			// ?

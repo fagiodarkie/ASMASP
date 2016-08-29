@@ -69,8 +69,6 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	public AnValue newValue(Type type) {
 		if (type == null || type == Type.VOID_TYPE)
 			return null;
-		if (AnValue.isThread(type))
-			return context.generateThread(0);
 		return context.newObject(type);
 	}
 
@@ -138,8 +136,9 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	// TODO maybe rewrite instance of FieldInsnNode to map actual values of fields?
         	throw new Error("Static fields are not analyzed.");
         case NEW:
-            if (context.isResource(((TypeInsnNode) insn).desc)) {
-            	return context.generateThread(-1);
+        	String d = ((TypeInsnNode) insn).desc;
+            if (context.isResource(d)) {
+            	return context.newObject(Type.getType(d));
             }
         	return newValue(Type.getObjectType(((TypeInsnNode) insn).desc));
         default:
@@ -422,7 +421,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	public AnValue naryOperation(AbstractInsnNode insn,
 			List<? extends AnValue> values) throws AnalyzerException {
 		Type t = null;
-//		boolean hasClassParameter = false;
+
 		switch(insn.getOpcode()) {
         case Opcodes.INVOKEVIRTUAL:
         case Opcodes.INVOKESPECIAL:
@@ -443,7 +442,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
     		if (context.typableMethod(currentMethodName)) {
     			methodParametersPattern = Names.computeParameterList(c);    		
-    			System.out.println(methodParametersPattern);
+    			//System.out.println(methodParametersPattern);
     			context.signalParametersPattern(currentMethodName, methodParametersPattern);
     		}
 

@@ -2,7 +2,10 @@ Limitazioni attuali:
 - profondità di analisi dei campi: 1 (oggetto con campi semplici);
 - NO array;
 - NO floating-point;
+- NO return di diverse espressioni;
+- NO return di oggetti;
 - tutti i campi devono essere inizializzati nel costruttore;
+
 
 Casi non testati / estensioni:
 - profondità di campi superiore a 1;

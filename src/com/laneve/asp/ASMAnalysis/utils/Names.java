@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 
 public class Names {
 
@@ -82,7 +83,7 @@ public class Names {
 	private static void fillMap(Map<Long, String> names, AnValue a, String name) {
 		if (names.containsKey(a.getID()))
 			return;
-		names.put(a.getID(), name);
+		names.put(a.getID(), name + (a instanceof ThreadValue ? ":" + ((ThreadValue)a).getStatus() : "" ));
 		
 		for (String fieldName: a.getFieldNames())
 			fillMap(names, a.getField(fieldName), name + "." + fieldName);

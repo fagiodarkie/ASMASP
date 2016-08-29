@@ -8,7 +8,6 @@ import com.laneve.asp.ASMAnalysis.utils.Names;
 public class VarThreadValue extends ThreadValue {
 
 	protected int index;
-	protected AnalysisContext context;
 	public static final String fullyQualifiedName = "java.lang.Thread";
 	
 	public VarThreadValue(AnValue a, long ID, AnalysisContext c, String c2, int ind) {
