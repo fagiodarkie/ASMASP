@@ -585,7 +585,20 @@ public class AnalysisContext {
 		// finally, if the parameter is just a thread which status must be updated signal its new status.
 		Map<String, AnValue> tempMap = new HashMap<String, AnValue>();
 		for (String updatedField : up.keySet())
-			if (updatedField.startsWith(Names.get(i))) {
+			if (updatedField.equalsIgnoreCase(Names.get(i)) &&  parameters.get(i) instanceof ThreadValue) {
+				
+				ThreadValue x = ((ThreadValue)parameters.get(i));
+				if (x instanceof VarThreadValue) {
+					x = ((VarThreadValue)x).compute(parameters);
+					tempMap.put(updatedField, x);
+				}
+				else {
+					ThreadValue t = generateThread("t" + threadCounter, getStatusOfThread(x.getThreadID()));
+					tempMap.put(updatedField, t);
+				}
+				//int status = getStatusOfThread(x.getThreadID());
+				threadsStatus.put(x.getThreadID(), getStatusOfThread(((ThreadValue)up.get(Names.get(i))).getThreadID()));
+			} else if (updatedField.startsWith(Names.get(i))) {
 				String fieldName = updatedField.substring(updatedField.indexOf('.') + 1);
 				AnValue val = up.get(updatedField);
 				if (val instanceof ConstExpression)

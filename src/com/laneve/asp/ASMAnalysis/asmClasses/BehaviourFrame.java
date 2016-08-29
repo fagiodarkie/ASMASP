@@ -15,6 +15,7 @@ import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.bTypes.ConditionalJump;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
@@ -169,16 +170,26 @@ public class BehaviourFrame extends Frame<AnValue> {
 	
 	protected void updateByID(long ID, Map<String, AnValue> map) {
 		
+		boolean simpleThread = false;
+		
         for (int i = 0; i < getLocals(); ++i) {
-        	if (getLocal(i) != null && getLocal(i).getID() == ID)
-        		for (Entry<String, AnValue> e : map.entrySet())
-        			getLocal(i).setField(e.getKey(), e.getValue());
+        	if (getLocal(i) != null && getLocal(i).getID() == ID) {
+        		if (getLocal(i) instanceof ThreadValue) {
+        			simpleThread = true;
+        			for (AnValue v: map.values())
+        				updateByID(ID, v);
+        			break;
+        		} else
+	        		for (Entry<String, AnValue> e : map.entrySet())
+	        			getLocal(i).setField(e.getKey(), e.getValue());
+        	}
         }
         
-        for (int i = 0; i < getStackSize(); ++i) {
-        	if (getStack(i).getID() == ID)
-        		for (Entry<String, AnValue> e : map.entrySet())
-        			getStack(i).setField(e.getKey(), e.getValue());
+        if (!simpleThread)
+        	for (int i = 0; i < getStackSize(); ++i) {
+		    	if (getStack(i).getID() == ID)
+		    		for (Entry<String, AnValue> e : map.entrySet())
+		    			getStack(i).setField(e.getKey(), e.getValue());
         }
 	}
 	
