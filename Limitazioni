@@ -2,8 +2,9 @@ Limitazioni attuali:
 - profondità di analisi dei campi: 1 (oggetto con campi semplici);
 - NO array;
 - NO floating-point;
-- NO return di diverse espressioni;
+- NO return di diverse espressioni o assegnazione di diverse espressioni alla stessa cella di memoria;
 - NO return di oggetti;
+- NO campi con tipo inner classes (si generano loop infiniti di annidamento);
 - tutti i campi devono essere inizializzati nel costruttore;
 
 

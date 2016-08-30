@@ -1,9 +1,10 @@
 package com.laneve.asp.ASMAnalysis.tests;
 
 public class Tests {
-
+	
 	public int fieldOne, fieldTwo;
 	public Thread t1;
+	public Test2 t;
 	
 	public int foo(int a) {
 		return a * bar(a);
@@ -39,7 +40,7 @@ public class Tests {
 	}
 
 	public void rewrite (Tests b) {
-		b = new Tests();
+		b.fieldTwo = fieldOne;
 	}
 	
 	public Tests() {
@@ -49,6 +50,7 @@ public class Tests {
 	public Tests(int i) {
 		fieldOne = i;
 		fieldTwo = i + 1;
+		t = new Test2();
 		t1 = new Thread();
 	}
 

@@ -15,7 +15,7 @@ import org.objectweb.asm.tree.analysis.Value;
 public class AnValue implements Value {
 	
 	protected static long maxID = 0;
-	protected static int maxDepth = 1;
+	protected static int maxDepth = 2;
  	protected static long generateID() {
 		return maxID++;
 	}
