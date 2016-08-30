@@ -594,6 +594,8 @@ public class AnalysisContext {
 		// this must not be analyzed if the same object has already been updated;
 		if (resultingUpdates.containsKey(parameters.get(i).getID()))
 			return;
+		if (!(parameters.get(i).isVariable() || parameters.get(i) instanceof ThreadValue))
+			return;
 		
 		// and if no field of this object must be modified we return.
 		boolean isThere = false;

@@ -16,6 +16,7 @@ import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.ConditionalJump;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
@@ -170,14 +171,12 @@ public class BehaviourFrame extends Frame<AnValue> {
 	
 	protected void updateByID(long ID, Map<String, AnValue> map) {
 		
-		boolean simpleThread = false;
+		boolean simpleObject = false;
 		
         for (int i = 0; i < getLocals(); ++i) {
         	if (getLocal(i) != null && getLocal(i).getID() == ID) {
-        		if (getLocal(i) instanceof ThreadValue) {
-        			simpleThread = true;
-        			for (AnValue v: map.values())
-        				updateByID(ID, v);
+        		if (getLocal(i) instanceof ThreadValue || getLocal(i) instanceof IExpression) {
+        			simpleObject = true;
         			break;
         		} else
 	        		for (Entry<String, AnValue> e : map.entrySet())
@@ -185,7 +184,7 @@ public class BehaviourFrame extends Frame<AnValue> {
         	}
         }
         
-        if (!simpleThread)
+        if (!simpleObject)
         	for (int i = 0; i < getStackSize(); ++i) {
 		    	if (getStack(i).getID() == ID)
 		    		for (Entry<String, AnValue> e : map.entrySet())

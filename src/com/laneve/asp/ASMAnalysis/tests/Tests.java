@@ -38,6 +38,10 @@ public class Tests {
 		return x;
 	}
 
+	public void rewrite (Tests b) {
+		b = new Tests();
+	}
+	
 	public Tests() {
 		this(1);
 	}
@@ -87,10 +91,10 @@ public class Tests {
 		int a = 2;
 		
 		Tests x = new Tests();
-//		Tests y = new Tests(x, x),
-//			z = new Tests(x, y);
+		Tests y = new Tests(x, x),
+			z = new Tests(x, y);
 		x.fact(5);
-		
+		y.rewrite(z);
 //		swap(x, y);
 //		swap(y, y);
 
