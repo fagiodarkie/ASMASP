@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
@@ -53,10 +56,16 @@ public class ASMAnalysis {
 				ClassNode n = new ClassNode();
 				r.accept(n, 0);
 //				System.out.println("Found class " + n.name);
+				List<String> a = new ArrayList<String>();
+				Map<String, Type> fs = new HashMap<String, Type>();
 				for (FieldNode m: n.fields) {
-					context.signalField(r.getClassName(), m.name, Type.getType(m.desc));
+					a.add(m.name);
+					fs.put(m.name, Type.getType(m.desc));
 	//				System.out.println("With field: " + m.name + ":" + m.desc);
 				}
+				java.util.Collections.sort(a);
+				for (String fname: a)
+					context.signalField(r.getClassName(), fname, fs.get(fname));
 
 				for (MethodNode m: n.methods) {
 					context.createMethodNode(r.getClassName(), n.name + "." + m.name + m.desc, m);

@@ -507,7 +507,7 @@ public class AnalysisContext {
 		if (typableClass(nclassName))			
 			for (String field : objectFields.get(nclassName)) {
  				String fieldName = nclassName + "." + field;
-				a.setField(field, newObject(fieldType.get(fieldName), name + "." + field));
+				a.setField(field, newObject(fieldType.get(fieldName), nclassName + "." + field));
 			}
 		a.setUpdated(false);
 		return a;
@@ -548,17 +548,18 @@ public class AnalysisContext {
 
 	
 	public AnValue parseObjectVariable(Type ctype, int pos, String parameter, Map<String, AnValue> parameterValues) {
+		System.out.println(parameter);
 		String name = (!parameter.contains("[") ? parameter : parameter.substring(0, parameter.indexOf("[")));
 		if (parameterValues.containsKey(name))
 			return parameterValues.get(name);
 
-		if (ctype.getClassName().equals(resourceClass)) {
-			String n = name.split(":")[0];
-			int status = Integer.parseInt(name.split(":")[1]);
-			ThreadValue v = generateVarThread(n, pos, status);
-			parameterValues.put(name, v);
-			return v;
-		}
+//		if (ctype.getClassName().equals(resourceClass)) {
+//			String n = name.split(":")[0];
+//			int status = Integer.parseInt(name.split(":")[1]);
+//			ThreadValue v = generateVarThread(n, pos, status);
+//			parameterValues.put(name, v);
+//			return v;
+//		}
 		
 		AnValue baseObject = newObjectVariable(ctype, pos, name);
 		if (!name.equalsIgnoreCase(parameter)) {
@@ -569,8 +570,9 @@ public class AnalysisContext {
 				List<String> fieldNames = objectFields.get(clName);
 				if (fieldNames != null)
 					for (int i = 0; i < fieldNames.size(); ++i) {
+						Type f = fieldType.get(clName + "." + fieldNames.get(i));
 						baseObject.setField(fieldNames.get(i),
-								parseObjectVariable(fieldType.get(clName + "." + fieldNames.get(i)), pos, fields.get(i), parameterValues));
+								parseObjectVariable(f, pos, fields.get(i), parameterValues));
 					}
 			}
 		}
