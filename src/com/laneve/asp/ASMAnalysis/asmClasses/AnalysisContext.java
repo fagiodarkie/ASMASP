@@ -649,10 +649,7 @@ public class AnalysisContext {
 	public void signalFinalState(String methodName, List<AnValue> localList) {
 
 		long k = getKeyOfMethod(methodName);
-		
-		if (methodName.contains("release"))
-			k += 0;
-		
+				
 //		System.out.println(currentSignature);
 		// get the actual number of parameters..
 		int paramSize = Names.getSingleParameters(currentSignature).size();
