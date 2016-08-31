@@ -1,0 +1,20 @@
+Limitazioni attuali:
+- NO array;
+- NO floating-point;
+- NO return di diverse espressioni o assegnazione di diverse espressioni alla stessa cella di memoria negli if;
+- NO return di oggetti;
+- NO campi con tipo inner classes (si generano loop infiniti di annidamento);
+- tutti i campi devono essere inizializzati nel costruttore;
+
+
+Test fatti:
+- [fatto] metodi che assegnano nuovi thread a campi
+	- [fatto] possibilmente aggiungere supporto di contesto. Es: se init(a) = a.t1, creare un nuovo thread da contesto e 
+	segnalare lo stato di questo thread - se t1 è running il nuovo thread dev'essere nella stessa condizione.
+- [fatto] metodi che modificano i campi con espressioni (a.fieldOne += 3)
+- metodi che assegnano ai campi di un oggetto campi di un altro oggetto variabile. in particolare, detti a, b oggetti, i... interi, t... threads:
+	- [fatto] a.i1 = b.i1
+	- [fatto] a.i1 = b.i2 + 3
+	- [fatto] a.t1 = b.t1
+	- [fatto] b.t1 = c.t1; a.t1 = b.t1 (result should be a.t1 = c.t1)
+	- [fatto] b.t1.join(); a.t1 = b.t1;

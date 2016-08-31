@@ -312,7 +312,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.FCMPG:
     	case Opcodes.DCMPL:
     	case Opcodes.DCMPG:
-    		// what do we do with floating point algebras?
+    		throw new Error("Unable to type floating point algebra");
         	
         
         default:
