@@ -58,12 +58,14 @@ public class Tests {
 		fieldOne = x.fieldOne;
 		fieldTwo = x.fieldTwo;
 		t1 = x.t1;
+		t = x.t;
 	}
 	
 	public Tests(Tests x, Tests y) {
 		fieldOne = x.fieldOne + y.fieldOne;
 		fieldTwo = x.fieldTwo + y.fieldTwo;
 		x.t1 = y.t1;
+		t = x.t;
 		t1 = x.t1;
 		t1.run();
 	}

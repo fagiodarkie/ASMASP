@@ -416,7 +416,6 @@ public class AnalysisContext {
 	}
 
 	public boolean isResource(String string) {
-		System.out.println(string + " is equal to " + resourceClass + "?");
 		return resourceClass.equalsIgnoreCase(Names.normalizeClassName(string));
 	}
 
@@ -460,7 +459,6 @@ public class AnalysisContext {
 		if (t == Type.INT_TYPE || t == Type.LONG_TYPE) {
 			return new VarExpression(t, p, oName);
 		} else if (isResource(t.getClassName())) {
-			System.out.println(oName);
 			String[] x = oName.split(":");
 			String n = x[0];
 			int status = Integer.parseInt(x[1]);
@@ -548,7 +546,6 @@ public class AnalysisContext {
 
 	
 	public AnValue parseObjectVariable(Type ctype, int pos, String parameter, Map<String, AnValue> parameterValues) {
-		System.out.println(parameter);
 		String name = (!parameter.contains("[") ? parameter : parameter.substring(0, parameter.indexOf("[")));
 		if (parameterValues.containsKey(name))
 			return parameterValues.get(name);
