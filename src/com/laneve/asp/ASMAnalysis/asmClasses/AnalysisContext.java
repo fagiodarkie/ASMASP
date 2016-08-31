@@ -579,7 +579,7 @@ public class AnalysisContext {
 	}
 
 	public Map<Long, Map<String, AnValue>> computeUpdatesToLocalEnvironment(String method, String signature, List<AnValue> parameters) {
-		if (method.contains("release"))
+		if (method.contains("swap"))
 			signature.length();
 		
 		Map<Long, Map<String, AnValue>> updatesByID = new HashMap<Long, Map<String, AnValue>>();
@@ -595,7 +595,8 @@ public class AnalysisContext {
 		// this must not be analyzed if the same object has already been updated;
 		if (resultingUpdates.containsKey(parameters.get(i).getID()))
 			return;
-		if (!(parameters.get(i).isVariable() || parameters.get(i) instanceof ThreadValue))
+		//!(parameters.get(i).isVariable()) || 
+		if (((parameters.get(i) instanceof ThreadValue) && !(parameters.get(i) instanceof VarThreadValue)))
 			return;
 		
 		// and if no field of this object must be modified we return.
@@ -692,10 +693,10 @@ public class AnalysisContext {
 
 	private void computeUpdates(AnValue a, Map<String, AnValue> m, String fatherName) {
 		if (a instanceof IExpression && a.updated() && fatherName != null)
-			m.put(a.getFieldName(), a);
+			m.put(a.getFieldName(), a.clone());
 		else if (a instanceof ThreadValue) {
 			if (a.getFieldName() != null)
-				m.put(a.getFieldName(), a);
+				m.put(a.getFieldName(), a.clone());
 			else
 				m.put(fatherName, a);
 		} else if (a.getFieldSize() > 0) {
