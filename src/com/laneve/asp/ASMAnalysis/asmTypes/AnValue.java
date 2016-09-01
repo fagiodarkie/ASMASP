@@ -219,10 +219,9 @@ public class AnValue implements Value {
 	}
 		
 	public AnValue getField(String n) {
-		if (!n.contains("\\."))
+		if (n.split("\\.").length == 1)
 			return field.get(n);
-		int dot = n.indexOf("\\.");
-		String o1 = n.substring(0, dot - 1), f = n.substring(dot + 1);
+		String o1 = n.split("\\.")[0], f = n.substring(n.indexOf('.') + 1);
 		return field.get(o1).getField(f);
 	}
 	

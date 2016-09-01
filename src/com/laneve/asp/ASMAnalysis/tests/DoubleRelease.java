@@ -19,6 +19,7 @@ public class DoubleRelease {
 		doubleRelease(x, x);
 
 	}
+
 	public static void test() throws InterruptedException {
 		user1();
 	}
