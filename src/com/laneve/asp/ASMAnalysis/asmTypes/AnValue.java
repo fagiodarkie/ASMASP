@@ -192,7 +192,11 @@ public class AnValue implements Value {
 			val.setFieldName(n);
 			val.setUpdated(true);
 			val.iAmYourFather(fieldName);
-			field.put(n, val);
+			if (n.split("\\.").length == 1)
+				field.put(n, val);
+			else {
+				field.get(n.split("\\.")[0]).setField(n.substring(n.indexOf('.') + 1), val);
+			}
 		}
 		else
 			throw new Error("Object " + name + " unable to annidate field objects of depth > " + maxDepth);

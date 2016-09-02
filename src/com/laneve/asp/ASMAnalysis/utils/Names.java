@@ -15,6 +15,13 @@ public class Names {
 		public String name;
 		
 		public ParamAsString(AnValue val, Map<Long, String> idNames) {
+			
+			if (val.getClassName().contains("OuterClass")) {
+				int a;
+				a = 0;
+				a += 4;
+			}
+			
 			this.name = idNames.get(val.getID());
 			params = new ArrayList<ParamAsString>();
 			for (AnValue a : val.getFields()) {
@@ -69,14 +76,16 @@ public class Names {
 		String res = "";
 		
 		Map<Long, String> names = new HashMap<Long, String>();
-		for (AnValue a : params) {
+		for (AnValue a : params)
 			fillMap(names, a, get(params.indexOf(a)));
+		for (AnValue a : params) {
 			ParamAsString x = new ParamAsString(a, names);
 			res += x.toString() + ",";
 		}
 		
-		
-		return res.substring(0, res.length() - (res.endsWith(",") ? 1 : 0));
+		String r = res.substring(0, res.length() - (res.endsWith(",") ? 1 : 0));
+//		System.out.println(r);
+		return r;
 	}
 
 	public static String get(int i) {

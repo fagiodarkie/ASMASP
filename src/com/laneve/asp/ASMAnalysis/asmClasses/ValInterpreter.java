@@ -432,12 +432,19 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         		currentMethodName = values.get(0).getClassName() + currentMethodName;
         	}
 
+        	
+        	if (currentMethodName.contains("doubleRelease")) {
+        		currentMethodName += "";
+        	}
         	// here we manage the argument list!
     		List<AnValue> c = new ArrayList<AnValue>();
     		for (AnValue a: values)
     			c.add(a.clone());
 
     		if (context.typableMethod(currentMethodName)) {
+//    			System.out.println("Method calls " + currentMethodName + " with parameters:");
+//    			if (currentMethodName.contains("doubleRelease(Lcom/laneve/asp/ASMAnalysis/tests/OuterClass;)V"))
+//    				currentMethodName.length();
     			methodParametersPattern = Names.computeParameterList(c);    		
     			//System.out.println(methodParametersPattern);
     			context.signalParametersPattern(currentMethodName, methodParametersPattern);
