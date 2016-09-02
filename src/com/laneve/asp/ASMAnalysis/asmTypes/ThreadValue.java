@@ -1,10 +1,12 @@
 package com.laneve.asp.ASMAnalysis.asmTypes;
 
 import com.laneve.asp.ASMAnalysis.asmClasses.AnalysisContext;
+import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 public class ThreadValue extends AbstractThread {
 
 	protected long threadID;
+	protected int status;
 	protected AnalysisContext context;
 	public static final String fullyQualifiedName = "java.lang.Thread";
 	
@@ -30,7 +32,24 @@ public class ThreadValue extends AbstractThread {
 	}
 
 	public int getStatus() {
-		return context.getStatusOfThread(threadID);
+		//return context.getStatusOfThread(threadID);
+		return status;
+	}
+	
+	public void initThread() {
+		status = ThreadResource.ALLOCATED;
+	}
+	
+	public void runThread() {
+		status = ThreadResource.ALREADY_ACQUIRED;
+	}
+	
+	public void joinThread() {
+		status = ThreadResource.ALREADY_RELEASED;
+	}
+	
+	public void cloneStatus(ThreadValue t) {
+		status = t.status;
 	}
 	
 	public String getVariableName() {
@@ -42,7 +61,7 @@ public class ThreadValue extends AbstractThread {
 	
 	@Override
 	public String toString() {
-		return (isVariable ? getVariableName() : "t" + threadID);
+		return (isVariable ? getVariableName() : "t" + threadID) + ":" + getStatus();
 	}
 	
 	public String printValue() {

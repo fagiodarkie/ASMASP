@@ -6,17 +6,27 @@ import java.util.List;
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
+import com.laneve.asp.ASMAnalysis.utils.Names;
 
 
 public class MethodBehaviour implements IBehaviour {
 
 	private String methodName;
 	private List<? extends AnValue> vals;
+	private String pattern;
 
 	public MethodBehaviour(String currentMethodName,
 			List<? extends AnValue> values) {
 		methodName = currentMethodName;
 		vals = values;
+		pattern = "";
+	}
+
+	public MethodBehaviour(String currentMethodName, String methodParametersPattern, List<? extends AnValue> c) {
+		methodName = currentMethodName;
+		pattern = methodParametersPattern;
+		vals = c;
+		
 	}
 
 	@Override
@@ -25,6 +35,9 @@ public class MethodBehaviour implements IBehaviour {
 		if (!r)
 			return false;
 		MethodBehaviour o = (MethodBehaviour) updatedBehaviour;
+		if (vals == null && o.vals == null
+				&& pattern == o.pattern)
+			return true;
 		if (o.vals.size() != vals.size())
 			return false;
 		for (int i = 0; i < vals.size(); ++i) {
@@ -52,34 +65,41 @@ public class MethodBehaviour implements IBehaviour {
 	public String toString() {
 		String ret = methodName.split("\\(")[0];
 		ret = ret.substring(ret.lastIndexOf("/") + 1) + "(";
-		List<ThreadValue> t = new ArrayList<ThreadValue>();
-		for (AnValue a: vals) {
-			if (a instanceof IExpression) {
-				IExpression x = ((IExpression)a);
-				if (x.canEvaluate()) {
-					ret += x.evaluate() + ", ";
-				} else {
-					ret += x.toString();
-				}
-			}  else if (a instanceof ThreadValue) {
-				ThreadValue x = (ThreadValue)a;
-				boolean found = false;
-				for (int i = 0; i < t.size(); ++i) {
-					if (t.get(i).equalThread(x)) {
-						found = true;
-						break;
-					}
-				}
-				if (!found) {
-					ret += a.toString() + ", ";
-					t.add(x);
-				}
-			} else ret += a.toString() + ", ";
-		}
-		if (ret.endsWith(", "))
-			ret = ret.substring(0, ret.lastIndexOf(", "));
 		
-		return ret + ")";
+		if (vals == null)
+			return ret + pattern + ")";
+		else
+			return ret + Names.computeParameterList((List<AnValue>)vals) + ")";
+		
+		
+//		List<ThreadValue> t = new ArrayList<ThreadValue>();
+//		for (AnValue a: vals) {
+//			if (a instanceof IExpression) {
+//				IExpression x = ((IExpression)a);
+//				if (x.canEvaluate()) {
+//					ret += x.evaluate() + ", ";
+//				} else {
+//					ret += x.toString();
+//				}
+//			}  else if (a instanceof ThreadValue) {
+//				ThreadValue x = (ThreadValue)a;
+//				boolean found = false;
+//				for (int i = 0; i < t.size(); ++i) {
+//					if (t.get(i).equalThread(x)) {
+//						found = true;
+//						break;
+//					}
+//				}
+//				if (!found) {
+//					ret += a.toString() + ", ";
+//					t.add(x);
+//				}
+//			} else ret += a.toString() + ", ";
+//		}
+//		if (ret.endsWith(", "))
+//			ret = ret.substring(0, ret.lastIndexOf(", "));
+//		
+//		return ret + ")";
 	}
 	
 }

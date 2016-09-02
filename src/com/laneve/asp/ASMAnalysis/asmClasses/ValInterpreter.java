@@ -43,6 +43,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.NeExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.TrueExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.ConditionalJump;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
+import com.laneve.asp.ASMAnalysis.bTypes.MethodBehaviour;
 import com.laneve.asp.ASMAnalysis.utils.Names;
 
 
@@ -448,13 +449,11 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     			methodParametersPattern = Names.computeParameterList(c);    		
     			//System.out.println(methodParametersPattern);
     			context.signalParametersPattern(currentMethodName, methodParametersPattern);
+    			if (context.isAtomicBehaviour(currentMethodName))
+    				createdBehaviour = context.createAtom(values.get(0), currentMethodName);
+				else
+    				createdBehaviour = context.getBehaviour(currentMethodName, c);
     		}
-
-    		if (context.isAtomicBehaviour(currentMethodName)) {
-        		createdBehaviour = context.createAtom(values.get(0), currentMethodName);
-        	} else if (context.hasBehaviour(currentMethodName)) {
-        		createdBehaviour = context.getBehaviour(currentMethodName, c);
-        	}
 
         	updated = context.computeUpdatesToLocalEnvironment(currentMethodName, methodParametersPattern, c);
         	
