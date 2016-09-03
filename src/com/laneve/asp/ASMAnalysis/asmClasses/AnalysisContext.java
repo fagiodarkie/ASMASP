@@ -1,5 +1,6 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -30,41 +31,42 @@ import com.laneve.asp.ASMAnalysis.utils.Names;
 public class AnalysisContext {
 
 	protected Map<Long, Integer> threadsStatus;
-	protected Map<Long, Boolean> analyzeMethods, modifiedReturnExpression, dynamicMethod;
-	protected Map<Long, IExpression> returnValue;
-	protected Map<Long, String> methodID, owner;
-	protected Map<Long, List<Long>> depends;
-	protected Map<Long, Map<String, List<String>>> releasedParameters;
-	protected Map<Long, List<String>> paramString;
-	protected Map<Long, List<BehaviourFrame>> methodFrames;
-	protected Map<Long, MethodNode> methodNodes;
-	protected Map<Long, Map<String, IBehaviour>> methodBehaviour;
+	protected Map<String, Boolean> analyzeMethods, modifiedReturnExpression;
+	protected Map<String, IExpression> returnValue;
+	protected Map<String, String> methodID, owner;
+	protected Map<String, List<String>> depends;
+	protected Map<String, Map<String, List<String>>> releasedParameters;
+	protected Map<String, List<String>> paramString;
+	protected Map<String, List<BehaviourFrame>> methodFrames;
+	protected Map<String, MethodNode> methodNodes;
+	protected Map<String, Map<String, IBehaviour>> methodBehaviour;
 	protected Map<String, Integer> threadVariableStatus;
 	protected Map<String, List<String>> objectFields;
 	protected Map<String, Type> fieldType;
-	protected Map<Long, Map<String, Map<String, AnValue>>> updates;
+	protected Map<String, Map<String, Map<String, AnValue>>> updates;
+	protected Map<String, Map<String, Map<String, Integer>>> threadStatusUpdates;
 	protected long threadCounter, methodCounter, objectCounter;
 	protected String resourceClass, allocationCall, deallocationCall, currentSignature;
 	
 	
 	public AnalysisContext() {
 		threadsStatus = new HashMap<Long, Integer>();
-		analyzeMethods = new HashMap<Long, Boolean>();
-		dynamicMethod = new HashMap<Long, Boolean>();
-		modifiedReturnExpression = new HashMap<Long, Boolean>();
-		returnValue = new HashMap<Long, IExpression>();
-		methodID = new HashMap<Long, String>();
-		owner = new HashMap<Long, String>();
-		depends = new HashMap<Long, List<Long>>();
-		releasedParameters = new HashMap<Long, Map<String, List<String>>>();
-		paramString = new HashMap<Long, List<String>>();
-		methodFrames = new HashMap<Long, List<BehaviourFrame>>();
+		analyzeMethods = new HashMap<String, Boolean>();
+		modifiedReturnExpression = new HashMap<String, Boolean>();
+		returnValue = new HashMap<String, IExpression>();
+		methodID = new HashMap<String, String>();
+		owner = new HashMap<String, String>();
+		depends = new HashMap<String, List<String>>();
+		releasedParameters = new HashMap<String, Map<String, List<String>>>();
+		paramString = new HashMap<String, List<String>>();
+		methodFrames = new HashMap<String, List<BehaviourFrame>>();
 		threadCounter = methodCounter = 0;
-		methodNodes = new HashMap<Long, MethodNode>();
-		methodBehaviour = new HashMap<Long, Map<String, IBehaviour>>();
+		methodNodes = new HashMap<String, MethodNode>();
+		methodBehaviour = new HashMap<String, Map<String, IBehaviour>>();
 		objectFields = new HashMap<String, List<String>>();
 		fieldType = new HashMap<String, Type>();
-		updates = new HashMap<Long, Map<String, Map<String,AnValue>>>();
+		updates = new HashMap<String, Map<String, Map<String,AnValue>>>();
+		threadStatusUpdates = new HashMap<String, Map<String, Map<String, Integer>>>();
 		
 		objectCounter = 0;
 		resourceClass = "java/lang/Thread";
@@ -74,13 +76,12 @@ public class AnalysisContext {
 	
 	
 	public void analyze(String entryPoint) throws AnalyzerException {
-		long k = getKeyOfMethod(entryPoint);
 		
 		List<AnValue> startingParameters = new ArrayList<AnValue>();
-		MethodNode m = methodNodes.get(k);
+		MethodNode m = methodNodes.get(entryPoint);
 		int par = 0;
 		if ((m.access & Opcodes.ACC_STATIC) == 0) {
-			startingParameters.add(newObjectVariable(Type.getObjectType(owner.get(k)), par, Names.get(par)));
+			startingParameters.add(newObjectVariable(Type.getObjectType(owner.get(entryPoint)), par, Names.get(par)));
 			par ++;
 		}
         Type[] args = Type.getArgumentTypes(m.desc);
@@ -91,13 +92,13 @@ public class AnalysisContext {
         
         signalParametersPattern(entryPoint, Names.computeParameterList(startingParameters));
 		
-		List<Long> analysisList = new ArrayList<Long>();
+		List<String> analysisList = new ArrayList<String>();
 		ThreadAnalyzer analyzer = new ThreadAnalyzer(new ValInterpreter(this), this);
 		
-		analysisList.add(k);
+		analysisList.add(entryPoint);
 		// reanalyze methods until a fixed point is reached
 		for (int i = 0; i < analysisList.size(); ++i) {
-			Long currentMethodID = analysisList.get(i);
+			String currentMethodID = analysisList.get(i);
 			
 			// if the method is already at fixed point don't touch it
 			if (!analyzeMethods.get(currentMethodID))
@@ -115,11 +116,11 @@ public class AnalysisContext {
 				BehaviourFrame[] frames = analyzer.analyze(owner.get(currentMethodID), methodNodes.get(currentMethodID), s);
 	
 //				System.out.println("Analysis ended.");
-				for (Long j: depends.get(currentMethodID)) {
+				for (String j: depends.get(currentMethodID)) {
 					// we put on all its dependancies
 					analysisList.add(j);
 				}
-				for (long j = 0; j < currentMethodID; ++j) {
+				for (String j : methodBehaviour.keySet()) {
 					// ... and all methods depending on it.
 					if (depends.get(j).contains(currentMethodID))
 							analysisList.add(j);
@@ -128,7 +129,7 @@ public class AnalysisContext {
 				// if the return value was updated, also examine all methods depending on this.
 				if (modifiedReturnExpression.get(currentMethodID)) {
 					//System.out.println("Since the method return value was modified, we also reanalyze:");
-					for (long j = 0; j < methodCounter; ++j) {
+					for (String j : methodBehaviour.keySet()) {
 						if (depends.get(j).contains(currentMethodID)) {
 							analysisList.add(j);
 							analyzeMethods.put(j, true);
@@ -146,8 +147,8 @@ public class AnalysisContext {
 				
 				if (!old.equalBehaviour(updatedBehaviour)) {
 					methodBehaviour.get(currentMethodID).put(s, updatedBehaviour);
-					for (long j = 0; ((j < methodCounter) && (j != currentMethodID)); ++j) {
-						if (depends.get(j).contains(currentMethodID) && !analysisList.contains(j)) {
+					for (String j : methodBehaviour.keySet()) {
+						if (depends.get(j).contains(currentMethodID) && !analysisList.contains(j) && !j.equalsIgnoreCase(currentMethodID)) {
 							analysisList.add(j);
 							analyzeMethods.put(j, true);					
 						}
@@ -156,8 +157,8 @@ public class AnalysisContext {
 			}
 		}
 		
-		for (long i = 0; i < methodCounter; ++i) {
-			printMethodInformations(i);
+		for (String s : methodBehaviour.keySet()) {
+			printMethodInformations(s);
 		}
 		
 	}
@@ -220,35 +221,32 @@ public class AnalysisContext {
 	}
 
 	public void signalDependancy(String methodName, List<String> deps) {
-		Long currentMethodID = getKeyOfMethod(methodName);
 		for (String s: deps) {
 			
 			if (!methodID.values().contains(s))
 				continue;
+
 			// add the index of methods.
-			Long k = getKeyOfMethod(s);
-			if (!depends.get(currentMethodID).contains(k)) {
-				depends.get(currentMethodID).add(k);
+			if (!depends.get(methodName).contains(s)) {
+				depends.get(methodName).add(s);
 			}
 		}
 			
 	}
 	
 	public void modified(String method) {
-		Long key = getKeyOfMethod(method);
-		for (long i = 0; i < methodCounter; ++i) {
-			if (depends.get(i).contains(key)) {
-				analyzeMethods.put(i, true);
+		for (String s : methodBehaviour.keySet()) {
+			if (depends.get(s).contains(method)) {
+				analyzeMethods.put(method, true);
 			}
 		}
 	}
 	
 	public void setReturnExpression(String method, AnValue value) {
-		Long key = getKeyOfMethod(method);
 
-		if (!returnValue.get(key).equalValue((IExpression)value)) {
-			returnValue.put(key, (IExpression) value);
-			modifiedReturnExpression.put(key, true);
+		if (!returnValue.get(method).equalValue((IExpression)value)) {
+			returnValue.put(method, (IExpression) value);
+			modifiedReturnExpression.put(method, true);
 			//System.out.println("Method " + method + " was modified: new return value is " + value.toString());
 		}
 		
@@ -264,24 +262,12 @@ public class AnalysisContext {
 			}
 		}*/
 	}
-	
-	private Long getKeyOfMethod(String method) {
-		if (!methodID.containsValue(method)) {
-			throw new Error("Method not found: " + method);
-		}
-		for (Long i: methodID.keySet()) {
-			if (methodID.get(i).equalsIgnoreCase(method))
-				return i;
-		}
-		return null;
-	}
-	
+		
 	public IExpression getReturnValueOfMethod(String methodName) {
 		// All foreign methods are treated as null. actual usage of this value will result in cast errors.
-		long key = getKeyOfMethod(methodName);
 		
-		if (returnValue.get(key) instanceof IExpression)
-			return new FunctionCallExpression(returnValue.get(key).getType(), methodName);
+		if (returnValue.get(methodName) instanceof IExpression)
+			return new FunctionCallExpression(returnValue.get(methodName).getType(), methodName);
 					
 		return null;
 		
@@ -289,22 +275,23 @@ public class AnalysisContext {
 	}
 
 	public void createMethodNode(String className, String name, MethodNode method) {
-		methodNodes.put(methodCounter, method);
-		methodBehaviour.put(methodCounter, new HashMap<String, IBehaviour>());		
-		paramString.put(methodCounter, new ArrayList<String>());
-		owner.put(methodCounter, className);
-		methodID.put(methodCounter, name);
-		depends.put(methodCounter, new ArrayList<Long>());
-		releasedParameters.put(methodCounter, new HashMap<String, List<String>>());
-		analyzeMethods.put(methodCounter, true);
-		returnValue.put(methodCounter, new ConstExpression(Type.INT_TYPE, new Long(0)));
-		modifiedReturnExpression.put(methodCounter, false);
-		dynamicMethod.put(methodCounter, false);
-		updates.put(methodCounter, new HashMap<String, Map<String, AnValue>>());
+		String m = name;
+		methodNodes.put(m, method);
+		methodBehaviour.put(m, new HashMap<String, IBehaviour>());		
+		paramString.put(m, new ArrayList<String>());
+		owner.put(m, className);
+		methodID.put(m, name);
+		depends.put(m, new ArrayList<String>());
+		releasedParameters.put(m, new HashMap<String, List<String>>());
+		analyzeMethods.put(m, true);
+		returnValue.put(m, new ConstExpression(Type.INT_TYPE, new Long(0)));
+		modifiedReturnExpression.put(m, false);
+		updates.put(m, new HashMap<String, Map<String, AnValue>>());
+		threadStatusUpdates.put(m, new HashMap<String, Map<String, Integer>>());
 		methodCounter++;
 	}
 	
-	protected void printMethodInformations(long index) {
+	protected void printMethodInformations(String index) {
 
 		String mName = owner.get(index).substring(owner.get(index).lastIndexOf('/') + 1) + "." + methodNodes.get(index).name;
 		for (String s: paramString.get(index)) {
@@ -390,7 +377,7 @@ public class AnalysisContext {
 
 	public IBehaviour getBehaviour(String currentMethodName, List<? extends AnValue> values) {
 		return new MethodBehaviour(currentMethodName, values);
-		//return methodBehaviour.get(getKeyOfMethod(currentMethodName));
+		//return methodBehaviour.get(currentMethodName);
 	}
 
 	public Integer getStatusOfThread(long id) {
@@ -400,7 +387,7 @@ public class AnalysisContext {
 	public List<String> getParametersOf(String methodName) {
 		List<String> res = new ArrayList<String>();
 
-		MethodNode m = methodNodes.get(getKeyOfMethod(methodName));
+		MethodNode m = methodNodes.get(methodName);
 		String d = m.desc;
 		d = d.substring(1, d.lastIndexOf(")"));
 		if (d.length() > 0) {
@@ -423,32 +410,52 @@ public class AnalysisContext {
 		return methodID.containsValue(currentMethodName);
 	}
 	
+	public boolean typableClass(String className) {
+		return objectFields.containsKey(className) || objectFields.containsKey(className.replace('.', '/'));
+	}
+
 	public void signalRelease(String methodName, String parameterSetup, String parameter) {
-		long k = getKeyOfMethod(methodName);
-		List<String> actualPars = releasedParameters.get(k).get(parameterSetup);
+		List<String> actualPars = releasedParameters.get(methodName).get(parameterSetup);
 		if (!actualPars.contains(parameter))
-			releasedParameters.get(k).get(parameterSetup).add(parameter);
-	}
-
-	public void signalDynamicMethod(String currentMethodName) {
-		dynamicMethod.put(getKeyOfMethod(currentMethodName), true);
-	}
-
-	public boolean isDynamic(String methodName) {
-		return dynamicMethod.get(getKeyOfMethod(methodName));
+			releasedParameters.get(methodName).get(parameterSetup).add(parameter);
 	}
 
 	public void signalParametersPattern(String currentMethodName,
 			String paramsPattern) {
-		long k = getKeyOfMethod(currentMethodName);
+		String k = currentMethodName;
 		if (!paramString.get(k).contains(paramsPattern)) {
 			paramString.get(k).add(paramsPattern);
 			releasedParameters.get(k).put(paramsPattern, new ArrayList<String>());
 			methodBehaviour.get(k).put(paramsPattern, new Atom(Atom.RETURN));
 			analyzeMethods.put(k, true);
 			updates.get(k).put(paramsPattern, new HashMap<String, AnValue>());
+			Map<String, Integer> startStatus = new HashMap<String, Integer>();
+			parseStatus(paramsPattern, startStatus);
+			
+			threadStatusUpdates.get(k).put(paramsPattern, startStatus);
 		}
 		
+	}
+	
+	protected void parseStatus(String pattern, Map<String, Integer> status) {
+		if (!(pattern.contains(",") || pattern.contains("["))) {
+			if (pattern.contains(":")) {
+				String name = pattern.split(":")[0], statusString = pattern.split(":")[1];
+				if (!status.containsKey(name))
+					status.put(name, Integer.parseInt(statusString));
+			}
+		} else {
+			if (!pattern.contains("[") || pattern.indexOf(',') < pattern.indexOf('[')) {
+				// nomi normali
+				for (String s: Names.getSingleParameters(pattern))
+					parseStatus(s, status);
+			} else {
+				// singolo parametro con campi
+				String subpattern = pattern.substring(pattern.indexOf('[') + 1, pattern.length() - 1);
+				for (String s: Names.getSingleParameters(subpattern))
+					parseStatus(s, status);
+			}
+		}
 	}
 
 	public void resetVariables() {
@@ -519,7 +526,7 @@ public class AnalysisContext {
 		return thr;
 	}
 
-	protected ThreadValue generateVarThread(String oName, int pos, int status) {
+	protected VarThreadValue generateVarThread(String oName, int pos, int status) {
 		VarThreadValue thr = new VarThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
 				threadCounter, this, oName, pos);
 		threadsStatus.put(threadCounter, status);
@@ -538,10 +545,6 @@ public class AnalysisContext {
 			objectFields.put(className, x);
 		}
 		fieldType.put(className + "." + name, type);
-	}
-
-	public boolean typableClass(String className) {
-		return objectFields.containsKey(className) || objectFields.containsKey(className.replace('.', '/'));
 	}
 
 	
@@ -585,7 +588,7 @@ public class AnalysisContext {
 		Map<Long, Map<String, AnValue>> updatesByID = new HashMap<Long, Map<String, AnValue>>();
 		if (!methodID.containsValue(method))
 			return updatesByID;
-		Map<String, AnValue> up = updates.get(getKeyOfMethod(method)).get(signature);
+		Map<String, AnValue> up = updates.get(method).get(signature);
 		for (int i = 0; i < parameters.size(); ++i)
 			applyUpdates(parameters, i, up, updatesByID);
 		return updatesByID;
@@ -595,9 +598,11 @@ public class AnalysisContext {
 		// this must not be analyzed if the same object has already been updated;
 		if (resultingUpdates.containsKey(parameters.get(i).getID()))
 			return;
+		
 		//!(parameters.get(i).isVariable()) || 
-		if (((parameters.get(i) instanceof ThreadValue) && !(parameters.get(i) instanceof VarThreadValue)))
+		if (parameters.get(i) instanceof ThreadValue || parameters.get(i) instanceof IExpression) {
 			return;
+		}
 		
 		// and if no field of this object must be modified we return.
 		boolean isThere = false;
@@ -649,9 +654,7 @@ public class AnalysisContext {
 
 	public void signalFinalState(String methodName, List<AnValue> localList) {
 
-		long k = getKeyOfMethod(methodName);
-				
-//		System.out.println(currentSignature);
+		//		System.out.println(currentSignature);
 		// get the actual number of parameters..
 		int paramSize = Names.getSingleParameters(currentSignature).size();
 		Map<String, AnValue> m = new HashMap<String, AnValue>();
@@ -660,7 +663,7 @@ public class AnalysisContext {
 			computeUpdates(localList.get(i), m, Names.get(i));
 		
 		//..and save them in the apposite section.
-		Map<String, Map<String, AnValue>> old = updates.get(k);
+		Map<String, Map<String, AnValue>> old = updates.get(methodName);
 		
 		// cases when something was updated: 
 		// 1) No updates so far;
@@ -687,7 +690,7 @@ public class AnalysisContext {
 			if (mod)
 				modified(methodName);
 		}
-		updates.get(k).put(currentSignature, m);
+		updates.get(methodName).put(currentSignature, m);
 		
 	}
 
@@ -704,6 +707,37 @@ public class AnalysisContext {
 			for (AnValue x : a.getFields())
 				computeUpdates(x, m, n);
 		}
+	}
+
+
+	public Map<Long, Map<String, AnValue>> getAtomicUpdate(AnValue anValue, String currentMethodName) {
+		
+		ThreadValue t = (ThreadValue)anValue;
+		Map<Long, Map<String, AnValue>> r = new HashMap<Long, Map<String, AnValue>>();
+		Map<String, AnValue> r1 = new HashMap<String, AnValue>();
+
+		if (allocationCall.equalsIgnoreCase(currentMethodName))
+			t.runThread();
+		else
+			t.joinThread();
+		
+		r1.put("t", t);
+		r.put(t.getID(), r1);
+		
+		return r;
+	}
+
+
+
+	public void signalNewStatus(String methodName, String methodParametersPattern, String variableName,
+			int alreadyAcquired) {
+		threadStatusUpdates.get(methodName).get(methodParametersPattern).put(variableName, alreadyAcquired);
+	}
+
+
+	
+	public Map<String, Integer> getThreadUpdates(String currentMethodName, String methodParametersPattern) {
+		return threadStatusUpdates.get(currentMethodName).get(methodParametersPattern);
 	}
 
 

@@ -11,6 +11,7 @@ public class Release {
 		Thread a = new Thread(), b = new Thread();
 		
 		a.run(); b.run();
+		b.join();
 		
 		release(a);
 		release(a);

@@ -123,16 +123,24 @@ public class BehaviourFrame extends Frame<AnValue> {
 				
 				if (frameBehaviour instanceof ThreadResource) {
 					ThreadResource t = (ThreadResource)frameBehaviour;
-					if (t.getThreadValue().isVariable() && t.isRelease())
-						context.signalRelease(methodName, methodParametersPattern, t.getThreadValue().getVariableName());
-					ThreadValue relThread = t.getThreadValue();
-					if (t.isRelease())
-						relThread.joinThread();
-					else relThread.runThread();
-					updateByID(relThread);
+					if (t.getThreadValue().isVariable()) {
+						int status = ThreadResource.ALREADY_RELEASED;
+						if (!t.isRelease())
+							status = ThreadResource.ALREADY_ACQUIRED;
+						context.signalNewStatus(methodName, methodParametersPattern, t.getThreadValue().getVariableName(), status);
+						updateThreadStatus(t.getThreadValue().getThreadID(), status);
+						
+					}
+					for (Entry<Long, Map<String, AnValue>> e : in.getUpdates().entrySet())
+						updateByID(e.getKey(), (ThreadValue)e.getValue().get("t"));
 				}
-			} else for (Entry<Long, Map<String, AnValue>> entry : in.getUpdates().entrySet()) {
-				updateByID(entry.getKey(), entry.getValue());
+				else {
+					for (Entry<Long, Map<String, AnValue>> entry : in.getUpdates().entrySet())
+						updateByID(entry.getKey(), entry.getValue());
+					for (Entry<Long, Integer> e : in.getUpdatedThreads().entrySet()) {
+						updateThreadStatus(e.getKey(), e.getValue());
+					}
+				}
 			}
 			
 			in.resetCurrentMethod();
@@ -149,6 +157,20 @@ public class BehaviourFrame extends Frame<AnValue> {
 			else throw new RuntimeException("Illegal opcode " + insn.getOpcode());
 		}
 	}
+
+	protected void updateThreadStatus(Long long1, Integer value) {
+		for (int i = 0; i < getLocals(); ++i)
+			if (getLocal(i) instanceof ThreadValue) {
+				if (((ThreadValue)getLocal(i)).getThreadID() == long1)
+					((ThreadValue)getLocal(i)).setStatus(value);
+			}
+		for (int i = 0; i < getStackSize(); ++i)
+			if (getStack(i) instanceof ThreadValue) {
+				if (((ThreadValue)getStack(i)).getThreadID() == long1)
+					((ThreadValue)getStack(i)).setStatus(value);
+			}
+	}
+
 
 	@Override
 	public boolean merge(final Frame<? extends AnValue> other, final Interpreter<AnValue> interpreter) throws AnalyzerException {
@@ -169,20 +191,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 	}
 	
 	protected void updateByID(AnValue newValue) {
-		if (newValue instanceof ThreadValue) {
-			ThreadValue t = (ThreadValue)newValue;
-			for (int i = 0; i < getLocals(); ++i)
-				if (getLocal(i) instanceof ThreadValue) {
-					if (((ThreadValue)getLocal(i)).getThreadID() == t.getThreadID())
-						((ThreadValue)getLocal(i)).cloneStatus(t);
-				}
-			for (int i = 0; i < getStackSize(); ++i)
-				if (getStack(i) instanceof ThreadValue) {
-					if (((ThreadValue)getStack(i)).getThreadID() == t.getThreadID())
-						((ThreadValue)getStack(i)).cloneStatus(t);
-				}
-		}
-		else updateByID(newValue.getID(), newValue);
+		updateByID(newValue.getID(), newValue);
 	}
 	
 	protected void updateByID(long ID, Map<String, AnValue> map) {

@@ -123,7 +123,7 @@ public class ThreadAnalyzer implements Opcodes {
             current.setLocal(local++, context.parseObjectVariable(ctype, 0, singleParameters.get(0), parameterValues));
             object = 1;
             //singleParameters.remove(0);
-            context.signalDynamicMethod(methodName);
+            //context.signalDynamicMethod(methodName);
         }
         for (int i = 0; i < args.length; ++i) {
             current.setLocal(local++, context.parseObjectVariable(args[i], i + object, singleParameters.get(i + object), parameterValues));

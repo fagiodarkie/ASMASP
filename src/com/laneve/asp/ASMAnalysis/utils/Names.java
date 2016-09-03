@@ -114,4 +114,9 @@ public class Names {
 			className = className.substring(1);
 		return className.replace('.', '/');
 	}
+
+
+	public static int getPos(String substring) {
+		return alpha.indexOf(substring.substring(0, 1));
+	}
 }

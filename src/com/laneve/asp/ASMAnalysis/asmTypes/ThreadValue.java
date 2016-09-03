@@ -19,7 +19,9 @@ public class ThreadValue extends AbstractThread {
 	}
 	
 	public ThreadValue clone() {
-		return new ThreadValue(this, threadID, context, isVariable, name);
+		ThreadValue t = new ThreadValue(this, threadID, context, isVariable, name);
+		t.cloneStatus(this);
+		return t;
 	}
 
 	@Override
@@ -71,6 +73,11 @@ public class ThreadValue extends AbstractThread {
 
 	public boolean equalThread(ThreadValue x) {
 		return equalValue(x) && x.ID == ID && name.equalsIgnoreCase(x.name);
+	}
+
+
+	public void setStatus(Integer value) {
+		status = value;
 	}
 	
 

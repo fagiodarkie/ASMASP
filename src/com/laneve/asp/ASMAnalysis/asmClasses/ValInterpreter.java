@@ -1,8 +1,10 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
@@ -18,6 +20,7 @@ import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.Interpreter;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.DivExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
@@ -56,6 +59,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	private AnValue currentObject;
 	private String methodParametersPattern;
 	private Map<Long, Map<String, AnValue>> updated;
+	private Map<Long, Integer> updatedThreads;
 	
 	protected ValInterpreter(int api) {
 		super(api);
@@ -442,22 +446,37 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     		for (AnValue a: values)
     			c.add(a.clone());
 
-    		if (context.typableMethod(currentMethodName)) {
+    		updated = null;
+    		boolean typable = context.typableMethod(currentMethodName);
+    		if (typable) {
 //    			System.out.println("Method calls " + currentMethodName + " with parameters:");
 //    			if (currentMethodName.contains("doubleRelease(Lcom/laneve/asp/ASMAnalysis/tests/OuterClass;)V"))
 //    				currentMethodName.length();
     			methodParametersPattern = Names.computeParameterList(c);    		
     			//System.out.println(methodParametersPattern);
     			context.signalParametersPattern(currentMethodName, methodParametersPattern);
-    			if (context.isAtomicBehaviour(currentMethodName))
-    				createdBehaviour = context.createAtom(values.get(0), currentMethodName);
-				else
-    				createdBehaviour = context.getBehaviour(currentMethodName, c);
     		}
-
-        	updated = context.computeUpdatesToLocalEnvironment(currentMethodName, methodParametersPattern, c);
+		
+    		if (context.isAtomicBehaviour(currentMethodName)) {
+				createdBehaviour = context.createAtom(values.get(0), currentMethodName);
+				updated = context.getAtomicUpdate(values.get(0), currentMethodName);
+			}
+			else if (typable) {
+				createdBehaviour = context.getBehaviour(currentMethodName, c);
+    			updated = context.computeUpdatesToLocalEnvironment(currentMethodName, methodParametersPattern, c);
+    			updatedThreads = new HashMap<Long, Integer>();
+    			for (Entry<String, Integer> e: context.getThreadUpdates(currentMethodName, methodParametersPattern).entrySet()) {
+    				if (e.getKey().split("\\.").length == 1)
+    					updatedThreads.put(((ThreadValue)values.get(Names.getPos(e.getKey()))).getThreadID() , e.getValue());
+    				else {
+    					String[] parts = e.getKey().split("\\.");
+    					String field = e.getKey().substring(e.getKey().indexOf('.') + 1);
+    					updatedThreads.put(((ThreadValue)values.get(Names.getPos(parts[0])).getField(field)).getThreadID() , e.getValue());
+    				}
+    			}
+			}
         	
-        	if (t == Type.VOID_TYPE)
+        	if (t == Type.VOID_TYPE || !typable || !context.isAtomicBehaviour(currentMethodName))
         		return null;
 
         	AnValue a = context.getReturnValueOfMethod(currentMethodName);
@@ -522,6 +541,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		current = next = jumpTo = -1;
 		currentObject = null;
 		updated = null;
+		updatedThreads = null;
 	}
 
 	public AnValue newValue(Type ctype, int i, String c) {
@@ -548,6 +568,11 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
 	public Map<Long, Map<String, AnValue>> getUpdates() {
 		return updated;
+	}
+
+
+	public Map<Long, Integer> getUpdatedThreads() {
+		return updatedThreads;
 	}
 
 }
