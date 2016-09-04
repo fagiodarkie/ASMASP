@@ -20,7 +20,7 @@ public class ThreadValue extends AbstractThread {
 	
 	public ThreadValue clone() {
 		ThreadValue t = new ThreadValue(this, threadID, context, isVariable, name);
-		t.cloneStatus(this);
+		t.status = status;
 		return t;
 	}
 

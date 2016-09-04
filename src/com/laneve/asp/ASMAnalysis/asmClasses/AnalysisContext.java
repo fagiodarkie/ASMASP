@@ -47,6 +47,7 @@ public class AnalysisContext {
 	protected Map<String, Map<String, Map<String, Integer>>> threadStatusUpdates;
 	protected long threadCounter, methodCounter, objectCounter;
 	protected String resourceClass, allocationCall, deallocationCall, currentSignature;
+	protected Map<String, Integer> tempStatus;
 	
 	
 	public AnalysisContext() {
@@ -67,6 +68,7 @@ public class AnalysisContext {
 		fieldType = new HashMap<String, Type>();
 		updates = new HashMap<String, Map<String, Map<String,AnValue>>>();
 		threadStatusUpdates = new HashMap<String, Map<String, Map<String, Integer>>>();
+		tempStatus = new HashMap<String, Integer>();
 		
 		objectCounter = 0;
 		resourceClass = "java/lang/Thread";
@@ -171,6 +173,7 @@ public class AnalysisContext {
 	}
 	
 	public ThreadResource allocateThread(ThreadValue t) {
+		System.out.println("Context request: run thread #" + t.getThreadID() + " with status " + t.getStatus());
 		if (t instanceof VarThreadValue) {
 			String vn = t.getVariableName();
 
@@ -183,6 +186,8 @@ public class AnalysisContext {
 			if (threadsStatus.get(t.getThreadID()) == ThreadResource.ALLOCATED) {
 				threadVariableStatus.put(vn, ThreadResource.ALREADY_ACQUIRED);
 				threadsStatus.put(t.getThreadID(), ThreadResource.ALREADY_ACQUIRED);
+				t.runThread();
+				System.out.println("Thread #" + t.getThreadID() + " has new status " + t.getStatus());
 				t.setUpdated(true);
 				return new ThreadResource(t, ThreadResource.ACQUIRE);
 			} else {
@@ -196,6 +201,7 @@ public class AnalysisContext {
 	}
 
 	public ThreadResource deallocateThread(ThreadValue t) {
+		System.out.println("Context request: deallocate thread #" + t.getThreadID() + " with status " + t.getStatus());
 		if (t instanceof VarThreadValue) {
 			String vn = t.getVariableName();
 
@@ -209,6 +215,8 @@ public class AnalysisContext {
 				threadVariableStatus.put(vn, ThreadResource.ALREADY_RELEASED);
 				threadsStatus.put(t.getThreadID(), ThreadResource.ALREADY_RELEASED);
 				t.setUpdated(true);
+				t.joinThread();
+				System.out.println("New thread status: " + t.getStatus());
 				return new ThreadResource(t, ThreadResource.RELEASE);
 			} else {
 				return new ThreadResource(t, ThreadResource.ALREADY_RELEASED);
@@ -236,7 +244,7 @@ public class AnalysisContext {
 	
 	public void modified(String method) {
 		for (String s : methodBehaviour.keySet()) {
-			if (depends.get(s).contains(method)) {
+			if (!s.equalsIgnoreCase(method) && depends.get(s).contains(method)) {
 				analyzeMethods.put(method, true);
 			}
 		}
@@ -415,6 +423,7 @@ public class AnalysisContext {
 	}
 
 	public void signalRelease(String methodName, String parameterSetup, String parameter) {
+		System.out.println("Method " + methodName + parameterSetup + " releases " + parameter);
 		List<String> actualPars = releasedParameters.get(methodName).get(parameterSetup);
 		if (!actualPars.contains(parameter))
 			releasedParameters.get(methodName).get(parameterSetup).add(parameter);
@@ -687,11 +696,29 @@ public class AnalysisContext {
 					break;
 				}
 			}
+			
+			if (threadStatusUpdates.get(methodName).get(currentSignature) == null) 
+				mod = true;
+			else {
+				Map<String, Integer> comp = threadStatusUpdates.get(methodName).get(currentSignature);
+				for (Entry<String, Integer> e : tempStatus.entrySet()) {
+					if (!comp.containsKey(e.getKey())) {
+						mod = true;
+						break;
+					} else if (comp.get(e.getKey()).intValue() != e.getValue().intValue()) {
+						mod = true;
+						break;
+					}
+				}
+			}
+			
 			if (mod)
 				modified(methodName);
 		}
 		updates.get(methodName).put(currentSignature, m);
+		threadStatusUpdates.get(methodName).put(currentSignature, tempStatus);
 		
+		tempStatus = new HashMap<String, Integer>();
 	}
 
 	private void computeUpdates(AnValue a, Map<String, AnValue> m, String fatherName) {
@@ -708,7 +735,6 @@ public class AnalysisContext {
 				computeUpdates(x, m, n);
 		}
 	}
-
 
 	public Map<Long, Map<String, AnValue>> getAtomicUpdate(AnValue anValue, String currentMethodName) {
 		
@@ -727,14 +753,11 @@ public class AnalysisContext {
 		return r;
 	}
 
-
-
 	public void signalNewStatus(String methodName, String methodParametersPattern, String variableName,
 			int alreadyAcquired) {
-		threadStatusUpdates.get(methodName).get(methodParametersPattern).put(variableName, alreadyAcquired);
+		System.out.println("Method " + methodName + methodParametersPattern + " sets thread " + variableName + " to " + alreadyAcquired);
+		tempStatus.put(variableName, alreadyAcquired);
 	}
-
-
 	
 	public Map<String, Integer> getThreadUpdates(String currentMethodName, String methodParametersPattern) {
 		return threadStatusUpdates.get(currentMethodName).get(methodParametersPattern);
