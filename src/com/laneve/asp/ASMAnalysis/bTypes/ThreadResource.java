@@ -27,7 +27,7 @@ public class ThreadResource implements IBehaviour {
 	}
 
 	public boolean isRelease() {
-		return status == Atom.RELEASE;
+		return status == RELEASE || status == ALREADY_RELEASED;
 	}
 	
 	public ThreadResource clone() {

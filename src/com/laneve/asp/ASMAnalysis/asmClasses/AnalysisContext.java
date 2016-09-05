@@ -627,7 +627,7 @@ public class AnalysisContext {
 
 	public void signalFinalState(String methodName, List<AnValue> localList) {
 
-		//		System.out.println(currentSignature);
+		System.out.println("method " + methodName + currentSignature + " has final update status " + tempStatus);
 		// get the actual number of parameters..
 		int paramSize = Names.getSingleParameters(currentSignature).size();
 		Map<String, AnValue> m = new HashMap<String, AnValue>();
