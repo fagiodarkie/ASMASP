@@ -106,7 +106,7 @@ public class AnalysisContext {
 			if (!analyzeMethods.get(currentMethodID))
 				continue;
 
-//			System.out.println("Analyzing " + methodID.get(currentMethodID));
+			System.out.println("Analyzing " + currentMethodID);
 			// else, analyze it and put all its dependancies to be analyzed too.
 			// also all methods which depends on it, if behaviour changes.
 			// as side effect, the return value is automatically updated.
@@ -114,7 +114,7 @@ public class AnalysisContext {
 			for (String s: paramString.get(currentMethodID)) {
 				
 				currentSignature = s;
-//				System.out.println("Analyzing variant " + s);
+				System.out.println("Analyzing variant " + s);
 				BehaviourFrame[] frames = analyzer.analyze(owner.get(currentMethodID), methodNodes.get(currentMethodID), s);
 	
 //				System.out.println("Analysis ended.");
@@ -135,7 +135,6 @@ public class AnalysisContext {
 						if (depends.get(j).contains(currentMethodID)) {
 							analysisList.add(j);
 							analyzeMethods.put(j, true);
-							//System.out.println(methodID.get(j));
 						}
 					}
 					modifiedReturnExpression.put(currentMethodID, false);
@@ -160,7 +159,7 @@ public class AnalysisContext {
 		}
 		
 		for (String s : methodBehaviour.keySet()) {
-			printMethodInformations(s);
+			//printMethodInformations(s);
 		}
 		
 	}
@@ -183,10 +182,10 @@ public class AnalysisContext {
 //				t.setUpdated(true);
 //				return new ThreadResource(t, ThreadResource.ACQUIRE);
 //			} else
-			if (threadsStatus.get(t.getThreadID()) == ThreadResource.ALLOCATED) {
+			if (t.getStatus() == ThreadResource.ALLOCATED) {
 				threadVariableStatus.put(vn, ThreadResource.ALREADY_ACQUIRED);
 				threadsStatus.put(t.getThreadID(), ThreadResource.ALREADY_ACQUIRED);
-				t.runThread();
+				//t.runThread();
 				System.out.println("Thread #" + t.getThreadID() + " has new status " + t.getStatus());
 				t.setUpdated(true);
 				return new ThreadResource(t, ThreadResource.ACQUIRE);
@@ -211,11 +210,11 @@ public class AnalysisContext {
 //				t.setUpdated(true);
 //				return new ThreadResource(t, ThreadResource.RELEASE);
 //			} else
-			if (threadsStatus.get(t.getThreadID()) == ThreadResource.ALREADY_ACQUIRED) {
+			if (t.getStatus() == ThreadResource.ALREADY_ACQUIRED) {
 				threadVariableStatus.put(vn, ThreadResource.ALREADY_RELEASED);
 				threadsStatus.put(t.getThreadID(), ThreadResource.ALREADY_RELEASED);
 				t.setUpdated(true);
-				t.joinThread();
+				//t.joinThread();
 				System.out.println("New thread status: " + t.getStatus());
 				return new ThreadResource(t, ThreadResource.RELEASE);
 			} else {

@@ -54,6 +54,10 @@ public class ThreadValue extends AbstractThread {
 		status = t.status;
 	}
 	
+	public void setStatus(int s) {
+		status = s;
+	}
+	
 	public String getVariableName() {
 		if (!isVariable) {
 			// ?

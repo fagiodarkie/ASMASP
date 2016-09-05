@@ -123,16 +123,18 @@ public class BehaviourFrame extends Frame<AnValue> {
 				
 				if (frameBehaviour instanceof ThreadResource) {
 					ThreadResource t = (ThreadResource)frameBehaviour;
-					if (t.getThreadValue().isVariable()) {
-						int status = ThreadResource.ALREADY_RELEASED;
-						if (!t.isRelease())
-							status = ThreadResource.ALREADY_ACQUIRED;
-						context.signalNewStatus(methodName, methodParametersPattern, t.getThreadValue().getVariableName(), status);
-						updateThreadStatus(t.getThreadValue().getThreadID(), status);
-						
-					}
-					for (Entry<Long, Map<String, AnValue>> e : in.getUpdates().entrySet())
-						updateByID(e.getKey(), (ThreadValue)e.getValue().get("t"));
+					ThreadValue thr = t.getThreadValue();
+					int status = ThreadResource.ALREADY_RELEASED;
+					if (!t.isRelease())
+						status = ThreadResource.ALREADY_ACQUIRED;
+					if (thr.isVariable())
+						context.signalNewStatus(methodName, methodParametersPattern, thr.getVariableName(), status);						
+					System.out.println("BFrame: updating after call of " + methodName + " thread #" + thr.getThreadID() + " with new status: " + status);
+					updateThreadStatus(thr.getThreadID(), status);
+//					for (Entry<Long, Map<String, AnValue>> e : in.getUpdates().entrySet()) {
+//						ThreadValue thr = (ThreadValue)e.getValue().get("t");
+//						updateThreadStatus(thr.getThreadID(), thr.getStatus());
+//					}
 				}
 				else {
 					for (Entry<Long, Map<String, AnValue>> entry : in.getUpdates().entrySet())
@@ -163,12 +165,19 @@ public class BehaviourFrame extends Frame<AnValue> {
 			if (getLocal(i) instanceof ThreadValue) {
 				if (((ThreadValue)getLocal(i)).getThreadID() == long1)
 					((ThreadValue)getLocal(i)).setStatus(value);
-			}
+			} else updateThreadStatus(getLocal(i), long1, value);
 		for (int i = 0; i < getStackSize(); ++i)
 			if (getStack(i) instanceof ThreadValue) {
 				if (((ThreadValue)getStack(i)).getThreadID() == long1)
 					((ThreadValue)getStack(i)).setStatus(value);
-			}
+			} else updateThreadStatus(getStack(i), long1, value);
+	}
+	
+	protected void updateThreadStatus(AnValue outer, long id, int status) {
+		for (AnValue a: outer.getFields())
+			if (a instanceof ThreadValue && ((ThreadValue)a).getThreadID() == id)
+				((ThreadValue)a).setStatus(status);
+			else updateThreadStatus(a, id, status);
 	}
 
 
