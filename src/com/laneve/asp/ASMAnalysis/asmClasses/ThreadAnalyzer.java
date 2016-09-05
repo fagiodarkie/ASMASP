@@ -452,7 +452,6 @@ public class ThreadAnalyzer implements Opcodes {
 		
 		methodName = owner + "." + m.name + m.desc;
 		
-		context.resetVariables();
 		/*
 		 * The analyze() method is able to compute actual BehaviourFrames, due to
 		 * the redefinition of the frame creation methods.

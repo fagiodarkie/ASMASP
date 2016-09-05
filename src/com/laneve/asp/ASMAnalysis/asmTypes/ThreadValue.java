@@ -26,7 +26,7 @@ public class ThreadValue extends AbstractThread {
 
 	@Override
 	public boolean equalValue(AnValue other) {
-		return context.getStatusOfThread(threadID) == context.getStatusOfThread(((ThreadValue)other).threadID);
+		return status == ((ThreadValue)other).status;
 	}
 	
 	public long getThreadID() {
@@ -71,8 +71,7 @@ public class ThreadValue extends AbstractThread {
 	}
 	
 	public String printValue() {
-		int status = context.getStatusOfThread(ID);
-		return "" + status;
+		return Integer.toString(status);
 	}
 
 	public boolean equalThread(ThreadValue x) {
