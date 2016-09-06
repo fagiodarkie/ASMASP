@@ -171,6 +171,8 @@ public class BehaviourFrame extends Frame<AnValue> {
 	}
 	
 	protected void updateThreadStatus(AnValue outer, long id, int status) {
+		if (outer == null)
+			return;
 		for (AnValue a: outer.getFields())
 			if (a instanceof ThreadValue && ((ThreadValue)a).getThreadID() == id)
 				((ThreadValue)a).setStatus(status);

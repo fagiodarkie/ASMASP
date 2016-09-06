@@ -29,10 +29,13 @@ public class VarThreadValue extends ThreadValue {
 
 	public ThreadValue compute(List<AnValue> parameters) {
 		
+		String n = name;
+		if (n.split("\\.").length > 1)
+			index = Names.getPos(n.substring(0, n.indexOf('.')));
+			
 		if (index >= parameters.size())
 			return this;
 		
-		String n = name;
 		if (n.split("\\.").length == 1)
 			return (ThreadValue)parameters.get(index);
 		else return (ThreadValue)parameters.get(index).getField(n.substring(n.indexOf('.') + 1));

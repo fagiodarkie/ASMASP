@@ -421,7 +421,31 @@ public class AnalysisContext {
 	}
 	
 	protected void parseStatus(String pattern, Map<String, Integer> status) {
-		if (!(pattern.contains(",") || pattern.contains("["))) {
+		
+		if (!pattern.contains(":"))
+			return;
+		
+		if (!pattern.contains(",")) {
+			// single parameter
+			if (pattern.contains("[") || pattern.contains("]")) {
+				int begin = (pattern.contains("[") ? pattern.indexOf("[") + 1 : 0);
+				int end = (pattern.contains("]") ? pattern.indexOf("]") : 0);
+				parseStatus(pattern.substring(begin, end), status);
+			} else {
+				String name = pattern.split(":")[0];
+				int value = Integer.parseInt(pattern.split(":")[1]);
+				if (!status.containsKey(name))
+					status.put(name, value);
+			}
+		} else {
+			for (String s : Arrays.asList(pattern.split(",")))
+				parseStatus(s, status);
+		}
+		return;
+			
+		
+		
+/*		if (!(pattern.contains(",") || pattern.contains("["))) {
 			if (pattern.contains(":")) {
 				String name = pattern.split(":")[0], statusString = pattern.split(":")[1];
 				if (!status.containsKey(name))
@@ -430,6 +454,7 @@ public class AnalysisContext {
 		} else {
 			if (!pattern.contains("[") || pattern.indexOf(',') < pattern.indexOf('[')) {
 				// nomi normali
+				System.out.println(pattern + " caused stack overflow");
 				for (String s: Names.getSingleParameters(pattern))
 					parseStatus(s, status);
 			} else {
@@ -438,7 +463,7 @@ public class AnalysisContext {
 				for (String s: Names.getSingleParameters(subpattern))
 					parseStatus(s, status);
 			}
-		}
+		}*/
 	}
 	
 	public AnValue newObjectVariable(Type t, int p, String oName) {
