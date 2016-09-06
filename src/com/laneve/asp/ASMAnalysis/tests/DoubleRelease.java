@@ -17,6 +17,7 @@ public class DoubleRelease {
 		x.run();
 		y.run();
 		doubleRelease(x, y);
+		x = new Thread();
 		x.run();
 		doubleRelease(x, x);
 		doubleRelease(x, y);

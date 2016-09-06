@@ -258,7 +258,6 @@ public class BehaviourFrame extends Frame<AnValue> {
 	}
 
 
-
 	public BehaviourFrame init(BehaviourFrame src) {
 		super.init(src);
 		addAnalysisInformations(src.methodName, src.context);
@@ -269,7 +268,6 @@ public class BehaviourFrame extends Frame<AnValue> {
 		methodParametersPattern = src.methodParametersPattern;
 		return this;
 	}
-
 
 	public void executeJump(JumpInsnNode j, ValInterpreter in,
 			int insn, int sInsn, int jump) throws AnalyzerException {

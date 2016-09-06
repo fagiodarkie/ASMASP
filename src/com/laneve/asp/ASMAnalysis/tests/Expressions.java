@@ -15,7 +15,7 @@ public class Expressions {
 	}
 		
 	public static void test() {
-		// fact(100); not typable because of missing IF semantics.
+		fact(100); //not typable because of missing IF semantics.
 		
 		
 		

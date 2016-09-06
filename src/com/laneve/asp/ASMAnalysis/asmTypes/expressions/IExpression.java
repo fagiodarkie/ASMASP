@@ -33,6 +33,10 @@ public abstract class IExpression extends AnValue{
  	public abstract String toString();
 	
 	public IExpression evaluate(List<? extends AnValue> values) {
+		
+		if (left instanceof UnknownExpression || right instanceof UnknownExpression)
+			return new UnknownExpression();
+		
 		setParameters(values);
 		IExpression res;
 		try {

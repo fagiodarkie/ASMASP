@@ -18,6 +18,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.VarThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.ConstExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.FunctionCallExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.UnknownExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.VarExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.Atom;
 import com.laneve.asp.ASMAnalysis.bTypes.ConcatBehaviour;
@@ -224,10 +225,16 @@ public class AnalysisContext {
 	
 	public void setReturnExpression(String method, AnValue value) {
 
-		if (!returnValue.get(method).equalValue((IExpression)value)) {
+		if (returnValue.get(method).equalValue(new ConstExpression(Type.INT_TYPE, 0L))
+			&& !value.equalValue(new ConstExpression(Type.INT_TYPE, 0L))) {
 			returnValue.put(method, (IExpression) value);
 			modifiedReturnExpression.put(method, true);
 			//System.out.println("Method " + method + " was modified: new return value is " + value.toString());
+		} else if (returnValue.get(method).equalValue(new UnknownExpression()))
+			return;
+		else if (!returnValue.get(method).equalValue((IExpression)value)) {
+			returnValue.put(method, new UnknownExpression());
+			modifiedReturnExpression.put(method, true);			
 		}
 		
 		

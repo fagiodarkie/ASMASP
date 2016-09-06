@@ -35,6 +35,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SHRExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SubExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.SumExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.USHRExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.UnknownExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.EqExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.FalseExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.GeExpression;
@@ -46,7 +47,6 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.NeExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.TrueExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.ConditionalJump;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
-import com.laneve.asp.ASMAnalysis.bTypes.MethodBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 import com.laneve.asp.ASMAnalysis.utils.Names;
 
@@ -531,6 +531,29 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	public AnValue merge(AnValue v, AnValue w) {
 		if (v == null)
 			return w;
+		
+		if (v instanceof IExpression) {
+			IExpression iv = (IExpression)v, iw = (IExpression)w;
+			if (!iv.equalValue(iw))
+				return new UnknownExpression();
+			else return v;
+		}
+		
+		else if (v instanceof ThreadValue) {
+			ThreadValue tv = (ThreadValue)v, tw = (ThreadValue)w;
+			if (tv.getStatus() != tw.getStatus()) {
+				ThreadValue res = tv.clone();
+				res.setStatus(ThreadResource.DELTA);
+				return res;
+			} else return v;
+		}
+		
+		else if (v.getFieldSize() > 0) {
+			AnValue res = v.clone();
+			for (String s: res.getFieldNames())
+				res.setField(s, merge(v.getField(s), w.getField(s)));
+		}
+		
 		return v;
 	}
 
