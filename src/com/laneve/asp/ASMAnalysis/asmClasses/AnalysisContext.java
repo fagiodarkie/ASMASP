@@ -216,8 +216,8 @@ public class AnalysisContext {
 	
 	public void modified(String method) {
 		for (String s : methodBehaviour.keySet()) {
-			if (!s.equalsIgnoreCase(method) && depends.get(s).contains(method)) {
-				analyzeMethods.put(method, true);
+			if (depends.get(s).contains(method)) {
+				analyzeMethods.put(s, true);
 			}
 		}
 	}
@@ -289,6 +289,12 @@ public class AnalysisContext {
 				for (Entry<String, AnValue> e: updates.get(index).get(s).entrySet())
 					update += e.getKey() + ": " + e.getValue() + "; ";
 				System.out.println("Method " + actualName + " updates fields " + update);
+			}
+			if (threadStatusUpdates.get(index).get(s).size() > 0) {
+				String update = "";
+				for (Entry<String, Integer> e: threadStatusUpdates.get(index).get(s).entrySet())
+					update += e.getKey() + ": " + e.getValue() + "; ";
+				System.out.println("Method " + actualName + " updates threads status " + update);
 			}
 		}
 		System.out.println("Method " + mName + " has return value " + returnValue.get(index));
@@ -676,7 +682,10 @@ public class AnalysisContext {
 				modified(methodName);
 		}
 		updates.get(methodName).put(currentSignature, m);
-		threadStatusUpdates.get(methodName).put(currentSignature, tempStatus);
+		threadStatusUpdates.get(methodName).put(currentSignature, new HashMap<String, Integer>());
+		for (Entry<String, Integer> e : tempStatus.entrySet()) {
+			threadStatusUpdates.get(methodName).get(currentSignature).put(e.getKey(), e.getValue());
+		}
 		
 		tempStatus = new HashMap<String, Integer>();
 	}

@@ -16,12 +16,6 @@ public class Names {
 		
 		public ParamAsString(AnValue val, Map<Long, String> idNames) {
 			
-			if (val.getClassName().contains("OuterClass")) {
-				int a;
-				a = 0;
-				a += 4;
-			}
-			
 			this.name = idNames.get(val.getID());
 			params = new ArrayList<ParamAsString>();
 			for (AnValue a : val.getFields()) {
