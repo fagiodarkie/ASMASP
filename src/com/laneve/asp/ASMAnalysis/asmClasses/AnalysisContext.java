@@ -230,24 +230,13 @@ public class AnalysisContext {
 			returnValue.put(method, (IExpression) value);
 			modifiedReturnExpression.put(method, true);
 			//System.out.println("Method " + method + " was modified: new return value is " + value.toString());
-		} else if (returnValue.get(method).equalValue(new UnknownExpression()))
+		} else if (returnValue.get(method).equalValue(new UnknownExpression(value.getType())))
 			return;
 		else if (!returnValue.get(method).equalValue((IExpression)value)) {
-			returnValue.put(method, new UnknownExpression());
+			returnValue.put(method, new UnknownExpression(value.getType()));
 			modifiedReturnExpression.put(method, true);			
 		}
 		
-		
-		/*
-		 * TODO check on equal return expression will be done in a later stage, when we are able
-		 * to understand when we are trying to set 2 different return expression in the same analysis cycle.
-		 * 
-		 * if (returnValue.get(key) == null)
-		else {
-			if (!((IExpression) value).equalExpression(returnValue.get(key))) {
-				throw new Error("Analysis error: unable to analyze methods returning different values.");
-			}
-		}*/
 	}
 		
 	public IExpression getReturnValueOfMethod(String methodName) {

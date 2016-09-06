@@ -102,15 +102,10 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case LCONST_0:
         case LCONST_1:
         	return new ConstExpression(Type.LONG_TYPE, AnValue.getConstValue(insn.getOpcode()));
-        case FCONST_0:
-        case FCONST_1:
-        case FCONST_2:
-        case DCONST_0:
-        case DCONST_1:
-        	// ?
+
         case BIPUSH:
         case SIPUSH:
-        	return new ConstExpression(Type.LONG_TYPE, AnValue.getConstValue(((IntInsnNode)insn).operand ));
+        	return new ConstExpression(Type.LONG_TYPE, (long)(((IntInsnNode)insn).operand ));
         	
         case LDC:
             Object cst = ((LdcInsnNode) insn).cst;
@@ -144,6 +139,11 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case NEW:
         	String d = ((TypeInsnNode) insn).desc;
         	return newValue(Type.getObjectType(d));
+        case FCONST_0:
+        case FCONST_1:
+        case FCONST_2:
+        case DCONST_0:
+        case DCONST_1:
         default:
             throw new Error("Internal error.");
         }
@@ -448,8 +448,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     		boolean typable = context.typableMethod(currentMethodName);
     		if (typable) {
 //    			System.out.println("Method calls " + currentMethodName + " with parameters:");
-//    			if (currentMethodName.contains("doubleRelease(Lcom/laneve/asp/ASMAnalysis/tests/OuterClass;)V"))
-//    				currentMethodName.length();
+    			if (currentMethodName.contains("fact"))
+    				currentMethodName.length();
     			methodParametersPattern = Names.computeParameterList(c);    		
     			//System.out.println(methodParametersPattern);
     			context.signalParametersPattern(currentMethodName, methodParametersPattern);
@@ -483,7 +483,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     			}
 			}
         	
-        	if (t == Type.VOID_TYPE || !typable || !context.isAtomicBehaviour(currentMethodName))
+        	if (t == Type.VOID_TYPE || !typable || context.isAtomicBehaviour(currentMethodName))
         		return null;
 
         	AnValue a = context.getReturnValueOfMethod(currentMethodName);
@@ -493,11 +493,10 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         		// the method has a non-typable return value (eg. float)
         		return null;
         	}
-        	IExpression exp = (IExpression)a;
+        	IExpression res = (IExpression)a;
         	
         	// and we istantiate it with the actual values with which the method is called.
         	// IExpression res = exp.evaluate(values);
-        	IExpression res = exp;
         	res.setParameters(c);//hasClassParameter ? c : values);
         	res.setType(t);
         	

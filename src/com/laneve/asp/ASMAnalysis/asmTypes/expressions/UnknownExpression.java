@@ -14,7 +14,6 @@ public class UnknownExpression extends IExpression {
 		this(Type.INT_TYPE);
 	}
 	
-
 	@Override
 	public Long evaluate() {
 		return null;
@@ -22,7 +21,7 @@ public class UnknownExpression extends IExpression {
 
 	@Override
 	public String toString() {
-		return ((AnValue)this).toString() + ":-";
+		return "unknown";
 	}
 
 	@Override
