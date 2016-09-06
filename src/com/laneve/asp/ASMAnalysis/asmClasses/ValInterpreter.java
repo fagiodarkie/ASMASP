@@ -464,11 +464,11 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 					updatedThreads.put(thr.getThreadID(), ThreadResource.ALREADY_RELEASED);
 				else
 					updatedThreads.put(thr.getThreadID(), ThreadResource.ALREADY_ACQUIRED);
-				System.out.println("Atomic method called: new status of " + thr + " is " + thr.getStatus());
+//				System.out.println("Atomic method called: new status of " + thr + " is " + thr.getStatus());
 			}
     		
 			else if (typable) {
-				System.out.println("Method " + currentMethodName + " called with parameters " + methodParametersPattern);
+//				System.out.println("Method " + currentMethodName + " called with parameters " + methodParametersPattern);
 				createdBehaviour = context.getBehaviour(currentMethodName, c);
     			updated = context.computeUpdatesToLocalEnvironment(currentMethodName, methodParametersPattern, c);
     			updatedThreads = new HashMap<Long, Integer>();

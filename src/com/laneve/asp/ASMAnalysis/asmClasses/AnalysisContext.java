@@ -102,7 +102,7 @@ public class AnalysisContext {
 			if (!analyzeMethods.get(currentMethodID))
 				continue;
 
-			System.out.println("Analyzing " + currentMethodID);
+//			System.out.println("Analyzing " + currentMethodID);
 			// else, analyze it and put all its dependancies to be analyzed too.
 			// also all methods which depends on it, if behaviour changes.
 			// as side effect, the return value is automatically updated.
@@ -110,7 +110,7 @@ public class AnalysisContext {
 			for (String s: paramString.get(currentMethodID)) {
 				
 				currentSignature = s;
-				System.out.println("Analyzing variant " + s);
+//				System.out.println("Analyzing variant " + s);
 				BehaviourFrame[] frames = analyzer.analyze(owner.get(currentMethodID), methodNodes.get(currentMethodID), s);
 	
 //				System.out.println("Analysis ended.");
@@ -168,11 +168,11 @@ public class AnalysisContext {
 	}
 	
 	public ThreadResource allocateThread(ThreadValue t) {
-		System.out.println("Context request: run thread #" + t.getThreadID() + " with status " + t.getStatus());
+//		System.out.println("Context request: run thread #" + t.getThreadID() + " with status " + t.getStatus());
 		if (t instanceof VarThreadValue) {
 
 			if (t.getStatus() == ThreadResource.ALLOCATED) {
-				System.out.println("Thread #" + t.getThreadID() + " has new status " + t.getStatus());
+//				System.out.println("Thread #" + t.getThreadID() + " has new status " + t.getStatus());
 				t.setUpdated(true);
 				return new ThreadResource(t, ThreadResource.ACQUIRE);
 			} else {
@@ -185,11 +185,11 @@ public class AnalysisContext {
 	}
 
 	public ThreadResource deallocateThread(ThreadValue t) {
-		System.out.println("Context request: deallocate thread #" + t.getThreadID() + " with status " + t.getStatus());
+//		System.out.println("Context request: deallocate thread #" + t.getThreadID() + " with status " + t.getStatus());
 		if (t instanceof VarThreadValue) {
 			if (t.getStatus() == ThreadResource.ALREADY_ACQUIRED) {
 				t.setUpdated(true);
-				System.out.println("New thread status: " + t.getStatus());
+//				System.out.println("New thread status: " + t.getStatus());
 				return new ThreadResource(t, ThreadResource.RELEASE);
 			} else {
 				return new ThreadResource(t, ThreadResource.ALREADY_RELEASED);
@@ -629,7 +629,7 @@ public class AnalysisContext {
 
 	public void signalFinalState(String methodName, List<AnValue> localList) {
 
-		System.out.println("method " + methodName + currentSignature + " has final update status " + tempStatus);
+//		System.out.println("method " + methodName + currentSignature + " has final update status " + tempStatus);
 		// get the actual number of parameters..
 		int paramSize = Names.getSingleParameters(currentSignature).size();
 		Map<String, AnValue> m = new HashMap<String, AnValue>();
@@ -724,7 +724,7 @@ public class AnalysisContext {
 
 	public void signalNewStatus(String methodName, String methodParametersPattern, String variableName,
 			int alreadyAcquired) {
-		System.out.println("Method " + methodName + methodParametersPattern + " sets thread " + variableName + " to " + alreadyAcquired);
+//		System.out.println("Method " + methodName + methodParametersPattern + " sets thread " + variableName + " to " + alreadyAcquired);
 		tempStatus.put(variableName, alreadyAcquired);
 	}
 	

@@ -129,7 +129,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 						status = ThreadResource.ALREADY_ACQUIRED;
 					if (thr.isVariable())
 						context.signalNewStatus(methodName, methodParametersPattern, thr.getVariableName(), status);						
-					System.out.println("BFrame: updating after call of " + methodName + " thread #" + thr.getThreadID() + " with new status: " + status);
+//					System.out.println("BFrame: updating after call of " + methodName + " thread #" + thr.getThreadID() + " with new status: " + status);
 					updateThreadStatus(thr.getThreadID(), status);
 				}
 
