@@ -155,7 +155,7 @@ public class AnalysisContext {
 		}
 		
 		for (String s : methodBehaviour.keySet()) {
-			//printMethodInformations(s);
+			printMethodInformations(s);
 		}
 		
 	}
@@ -493,18 +493,14 @@ public class AnalysisContext {
 	
 	protected ThreadValue generateThread(String oName, int status) {
 		ThreadValue thr = new ThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
-				threadCounter, this, false, oName);
-		thr.setStatus(status);
-	//	threadsStatus.put(threadCounter, status);
+				threadCounter, status, false, oName);
 		threadCounter++;
 		return thr;
 	}
 
 	protected VarThreadValue generateVarThread(String oName, int pos, int status) {
 		VarThreadValue thr = new VarThreadValue(new AnValue(Type.getObjectType(ThreadValue.fullyQualifiedName)),
-				threadCounter, this, oName, pos);
-		thr.setStatus(status);
-	//	threadsStatus.put(threadCounter, status);
+				threadCounter, status, oName, pos);
 		threadCounter++;
 		return thr;
 	}
@@ -528,13 +524,13 @@ public class AnalysisContext {
 		if (parameterValues.containsKey(name))
 			return parameterValues.get(name);
 
-//		if (ctype.getClassName().equals(resourceClass)) {
-//			String n = name.split(":")[0];
-//			int status = Integer.parseInt(name.split(":")[1]);
-//			ThreadValue v = generateVarThread(n, pos, status);
-//			parameterValues.put(name, v);
-//			return v;
-//		}
+		if (isResource(ctype.getClassName())) {
+			String n = name.split(":")[0];
+			int status = Integer.parseInt(name.split(":")[1]);
+			ThreadValue v = generateVarThread(n, pos, status);
+			parameterValues.put(n, v);
+			return v;
+		}
 		
 		AnValue baseObject = newObjectVariable(ctype, pos, name);
 		if (!name.equalsIgnoreCase(parameter)) {

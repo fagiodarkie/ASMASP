@@ -7,20 +7,18 @@ public class ThreadValue extends AbstractThread {
 
 	protected long threadID;
 	protected int status;
-	protected AnalysisContext context;
 	public static final String fullyQualifiedName = "java.lang.Thread";
 	
-	public ThreadValue(AnValue a, long ID, AnalysisContext c, boolean variable, String c2) {
+	public ThreadValue(AnValue a, long ID, int c, boolean variable, String c2) {
 		super(a);
 		this.threadID = ID;
 		this.isVariable = variable;
-		context = c;
+		status = c;
 		name = c2;
 	}
 	
 	public ThreadValue clone() {
-		ThreadValue t = new ThreadValue(this, threadID, context, isVariable, name);
-		t.status = status;
+		ThreadValue t = new ThreadValue(this, threadID, status, isVariable, name);
 		return t;
 	}
 

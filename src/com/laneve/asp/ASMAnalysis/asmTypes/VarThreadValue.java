@@ -10,13 +10,14 @@ public class VarThreadValue extends ThreadValue {
 	protected int index;
 	public static final String fullyQualifiedName = "java.lang.Thread";
 	
-	public VarThreadValue(AnValue a, long ID, AnalysisContext c, String c2, int ind) {
-		super(a, ID, c, true, c2);
+	public VarThreadValue(AnValue a, long ID, int stat, String c2, int ind) {
+		super(a, ID, stat, true, c2);
 		this.index = ind;
 	}
 	
 	public VarThreadValue clone() {
-		return new VarThreadValue(this, threadID, context, name, index);
+		VarThreadValue x = new VarThreadValue(this, threadID, status, name, index);
+		return x;
 	}
 
 	@Override

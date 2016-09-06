@@ -47,6 +47,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.TrueExpression;
 import com.laneve.asp.ASMAnalysis.bTypes.ConditionalJump;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.MethodBehaviour;
+import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 import com.laneve.asp.ASMAnalysis.utils.Names;
 
 
@@ -438,9 +439,6 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         	}
 
         	
-        	if (currentMethodName.contains("doubleRelease")) {
-        		currentMethodName += "";
-        	}
         	// here we manage the argument list!
     		List<AnValue> c = new ArrayList<AnValue>();
     		for (AnValue a: values)
@@ -461,8 +459,14 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     			ThreadValue thr = (ThreadValue) values.get(0);
 				createdBehaviour = context.createAtom(thr, currentMethodName);
 				updated = context.getAtomicUpdate(thr, currentMethodName);
+				updatedThreads = new HashMap<Long, Integer>();
+				if (((ThreadResource)createdBehaviour).isRelease())
+					updatedThreads.put(thr.getThreadID(), ThreadResource.ALREADY_RELEASED);
+				else
+					updatedThreads.put(thr.getThreadID(), ThreadResource.ALREADY_ACQUIRED);
 				System.out.println("Atomic method called: new status of " + thr + " is " + thr.getStatus());
 			}
+    		
 			else if (typable) {
 				System.out.println("Method " + currentMethodName + " called with parameters " + methodParametersPattern);
 				createdBehaviour = context.getBehaviour(currentMethodName, c);

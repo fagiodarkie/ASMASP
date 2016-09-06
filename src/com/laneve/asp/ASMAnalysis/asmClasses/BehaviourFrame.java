@@ -131,11 +131,8 @@ public class BehaviourFrame extends Frame<AnValue> {
 						context.signalNewStatus(methodName, methodParametersPattern, thr.getVariableName(), status);						
 					System.out.println("BFrame: updating after call of " + methodName + " thread #" + thr.getThreadID() + " with new status: " + status);
 					updateThreadStatus(thr.getThreadID(), status);
-//					for (Entry<Long, Map<String, AnValue>> e : in.getUpdates().entrySet()) {
-//						ThreadValue thr = (ThreadValue)e.getValue().get("t");
-//						updateThreadStatus(thr.getThreadID(), thr.getStatus());
-//					}
 				}
+
 				else {
 					for (Entry<Long, Map<String, AnValue>> entry : in.getUpdates().entrySet())
 						updateByID(entry.getKey(), entry.getValue());
