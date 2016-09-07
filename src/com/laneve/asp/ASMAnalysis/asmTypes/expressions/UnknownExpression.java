@@ -13,6 +13,12 @@ public class UnknownExpression extends IExpression {
 	public UnknownExpression() {
 		this(Type.INT_TYPE);
 	}
+
+	public UnknownExpression(Type t, String name) {
+		this(t);
+		this.name = name;
+		this.fieldName = name;
+	}
 	
 	@Override
 	public Long evaluate() {
@@ -21,7 +27,7 @@ public class UnknownExpression extends IExpression {
 
 	@Override
 	public String toString() {
-		return "unknown";
+		return fieldName + ":unknown";
 	}
 
 	@Override

@@ -557,7 +557,8 @@ public class AnalysisContext {
 			ThreadValue v = generateVarThread(n, pos, status);
 			parameterValues.put(n, v);
 			return v;
-		}
+		} else if (name.contains(":unknown"))
+			return new UnknownExpression(ctype, name.substring(0, name.indexOf(':')));
 		
 		AnValue baseObject = newObjectVariable(ctype, pos, name);
 		if (!name.equalsIgnoreCase(parameter)) {
