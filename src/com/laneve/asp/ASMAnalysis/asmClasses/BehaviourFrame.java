@@ -17,6 +17,7 @@ import org.objectweb.asm.tree.analysis.Interpreter;
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
+import com.laneve.asp.ASMAnalysis.bTypes.Atom;
 import com.laneve.asp.ASMAnalysis.bTypes.ConditionalJump;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
@@ -96,7 +97,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 		case Opcodes.RETURN:
 			in.setCurrentMethod(methodName);
 			super.execute(insn, in);
-			
+			frameBehaviour = new Atom(Atom.RETURN);//in.getBehaviour();
 			List<AnValue> localList = new ArrayList<AnValue>();
 			for (int i = 0; i < getLocals(); ++i)
 				localList.add(getLocal(i));
@@ -257,7 +258,10 @@ public class BehaviourFrame extends Frame<AnValue> {
 		return "";
 	}
 
-
+	public void resetBehaviour() {
+		setBehaviour(null);
+	}
+	
 	public BehaviourFrame init(BehaviourFrame src) {
 		super.init(src);
 		addAnalysisInformations(src.methodName, src.context);

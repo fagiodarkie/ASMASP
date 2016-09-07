@@ -4,13 +4,12 @@ public class Expressions {
 
 	public static int fact(int n){
 		 
-		int x, m;
+		int m;
 
 		if (n == 0) return 1;
 		else { 
-			x = fact(n-1); 
-			m = x; 
-			return m*n;
+			m = fact(n-1);
+			return m * n;
 		}
 	}
 		

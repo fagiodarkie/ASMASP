@@ -142,20 +142,20 @@ public class ThreadAnalyzer implements Opcodes {
         while (top > 0) {
             int insn = queue[--top];
             
+            
             BehaviourFrame f = frames[insn];
             OwnedSubroutine subroutine = subroutines[insn];
             queued[insn] = false;
 
-/*            if (insn == 7 && methodName.contains("bar")) {
-            	insn += 0;
-            }
-*/            
             AbstractInsnNode insnNode = null;
             try {
                 insnNode = m.instructions.get(insn);
                 int insnOpcode = insnNode.getOpcode();
                 int insnType = insnNode.getType();
 
+                if (methodName.contains("fact")) {
+                	insn += 0;
+                }
                 if (insnType == AbstractInsnNode.LABEL
                         || insnType == AbstractInsnNode.LINE
                         || insnType == AbstractInsnNode.FRAME) {
@@ -167,6 +167,7 @@ public class ThreadAnalyzer implements Opcodes {
                         JumpInsnNode j = (JumpInsnNode) insnNode;
                         int jump = insns.indexOf(j.label);
                         current.init(f).executeJump(j, interpreter, insn, insn + 1, jump);
+                        frames[insn].setBehaviour(current.getBehaviour());
                 	}
                     else {
                     	current.init(f).execute(insnNode, interpreter);
@@ -176,15 +177,15 @@ public class ThreadAnalyzer implements Opcodes {
                     if (insnNode instanceof JumpInsnNode) {
                         JumpInsnNode j = (JumpInsnNode) insnNode;
                         if (insnOpcode != GOTO && insnOpcode != JSR) {
-                            merge(insn + 1, current, subroutine);
+                            mergeNoBehaviour(insn + 1, current, subroutine);
                             newControlFlowEdge(insn, insn + 1);
                         }
                         int jump = insns.indexOf(j.label);
                         if (insnOpcode == JSR) {
-                            merge(jump, current, new OwnedSubroutine(j.label,
+                            mergeNoBehaviour(jump, current, new OwnedSubroutine(j.label,
                                     m.maxLocals, j));
                         } else {
-                            merge(jump, current, subroutine);
+                            mergeNoBehaviour(jump, current, subroutine);
                         }
                         newControlFlowEdge(insn, jump);
                     } else if (insnNode instanceof LookupSwitchInsnNode) {
@@ -422,6 +423,12 @@ public class ThreadAnalyzer implements Opcodes {
         }
     }
 
+    private void mergeNoBehaviour(final int insn, final BehaviourFrame frame,
+            final OwnedSubroutine subroutine) throws AnalyzerException {
+    	merge(insn, frame, subroutine);
+    	frames[insn].resetBehaviour();
+    }
+    
     private void merge(final int insn, final BehaviourFrame beforeJSR,
             final BehaviourFrame afterRET, final OwnedSubroutine subroutineBeforeJSR,
             final boolean[] access) throws AnalyzerException {

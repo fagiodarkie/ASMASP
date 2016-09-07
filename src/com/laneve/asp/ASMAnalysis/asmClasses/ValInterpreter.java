@@ -45,6 +45,7 @@ import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.LeExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.LtExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.NeExpression;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.bools.TrueExpression;
+import com.laneve.asp.ASMAnalysis.bTypes.Atom;
 import com.laneve.asp.ASMAnalysis.bTypes.ConditionalJump;
 import com.laneve.asp.ASMAnalysis.bTypes.IBehaviour;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
@@ -448,8 +449,6 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     		boolean typable = context.typableMethod(currentMethodName);
     		if (typable) {
 //    			System.out.println("Method calls " + currentMethodName + " with parameters:");
-    			if (currentMethodName.contains("fact"))
-    				currentMethodName.length();
     			methodParametersPattern = Names.computeParameterList(c);    		
     			//System.out.println(methodParametersPattern);
     			context.signalParametersPattern(currentMethodName, methodParametersPattern);
@@ -520,8 +519,10 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		case Opcodes.IRETURN:
 		case Opcodes.LRETURN:
 			context.setReturnExpression(currentMethodName, value);
+			createdBehaviour = new Atom(Atom.RETURN);
 			break;
 		default:
+			createdBehaviour = new Atom(Atom.RETURN);
 			context.setReturnExpression(currentMethodName, null);
 		}
 	}

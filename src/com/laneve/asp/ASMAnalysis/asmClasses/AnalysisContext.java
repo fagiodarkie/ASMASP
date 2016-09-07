@@ -140,6 +140,11 @@ public class AnalysisContext {
 				methodFrames.put(currentMethodID, Arrays.asList(frames));
 				
 				// if the new behaviour is different from the past one, also update all methods depending on this one.
+				
+				if (currentMethodID.contains("fact")) {
+					currentMethodID.length();
+				}
+				
 				IBehaviour old = methodBehaviour.get(currentMethodID).get(s);
 				IBehaviour updatedBehaviour = computeBehaviour(frames);
 				
@@ -156,7 +161,8 @@ public class AnalysisContext {
 		}
 		
 		for (String s : methodBehaviour.keySet()) {
-			printMethodInformations(s);
+			if (s.contains("fact"))
+				printMethodInformations(s);
 		}
 		
 	}
