@@ -141,9 +141,6 @@ public class AnalysisContext {
 				
 				// if the new behaviour is different from the past one, also update all methods depending on this one.
 				
-				if (currentMethodID.contains("fact")) {
-					currentMethodID.length();
-				}
 				
 				IBehaviour old = methodBehaviour.get(currentMethodID).get(s);
 				IBehaviour updatedBehaviour = computeBehaviour(frames);
@@ -161,8 +158,7 @@ public class AnalysisContext {
 		}
 		
 		for (String s : methodBehaviour.keySet()) {
-			if (s.contains("fact"))
-				printMethodInformations(s);
+			printMethodInformations(s);
 		}
 		
 	}
@@ -320,6 +316,8 @@ public class AnalysisContext {
 			if (b == null)
 				return computeBehaviour(start, frames, begin + 1, end);
 			else {
+				if (b instanceof Atom)
+					return start == null ? new Atom(Atom.RETURN) : start;
 				if (b instanceof ConditionalJump) {
 					ConditionalJump con = (ConditionalJump) b;
 					if (con.getThenIndex() > begin && con.getElseIndex() > begin) {
@@ -330,7 +328,7 @@ public class AnalysisContext {
 					} else return computeBehaviour(start, frames, begin + 1, end);
 				} else {
 					IBehaviour future = computeBehaviour(null, frames, begin + 1, end);
-					if (future != null)
+					if (future != null && !(future instanceof Atom))
 						return new ConcatBehaviour(b, future);
 					else return b;
 				}

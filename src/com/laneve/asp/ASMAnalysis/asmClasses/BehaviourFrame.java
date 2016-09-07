@@ -98,6 +98,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 			in.setCurrentMethod(methodName);
 			super.execute(insn, in);
 			frameBehaviour = new Atom(Atom.RETURN);//in.getBehaviour();
+			
 			List<AnValue> localList = new ArrayList<AnValue>();
 			for (int i = 0; i < getLocals(); ++i)
 				localList.add(getLocal(i));

@@ -27,7 +27,7 @@ public class UnknownExpression extends IExpression {
 
 	@Override
 	public String toString() {
-		return fieldName + ":unknown";
+		return (fieldName != null ? fieldName + ":unknown" : "unknown");
 	}
 
 	@Override

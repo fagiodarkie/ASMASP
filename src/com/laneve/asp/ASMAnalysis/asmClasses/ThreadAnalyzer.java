@@ -242,8 +242,9 @@ public class ThreadAnalyzer implements Opcodes {
                         }
                         merge(insn + 1, current, subroutine);
                         newControlFlowEdge(insn, insn + 1);
-                    }
-                }
+                    } else if (insnOpcode >= IRETURN && insnOpcode <= RETURN)
+                    	frames[insn].setBehaviour(current.getBehaviour());
+            	}
 
                 List<TryCatchBlockNode> insnHandlers = handlers[insn];
                 if (insnHandlers != null) {
@@ -425,8 +426,11 @@ public class ThreadAnalyzer implements Opcodes {
 
     private void mergeNoBehaviour(final int insn, final BehaviourFrame frame,
             final OwnedSubroutine subroutine) throws AnalyzerException {
+    	IBehaviour b = null;
+    	if (frames[insn] != null)
+    		b = frames[insn].getBehaviour();
     	merge(insn, frame, subroutine);
-    	frames[insn].resetBehaviour();
+    	frames[insn].setBehaviour(b);
     }
     
     private void merge(final int insn, final BehaviourFrame beforeJSR,

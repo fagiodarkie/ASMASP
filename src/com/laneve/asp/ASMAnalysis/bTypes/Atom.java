@@ -2,20 +2,8 @@ package com.laneve.asp.ASMAnalysis.bTypes;
 
 public class Atom implements IBehaviour {
 
-	public static int ACQUIRE = 0, RELEASE = 1, RETURN = 2;
+	public static int RETURN = 0;
 	
-	protected static final String acq = ":acquired", rel = ":released";
-	
-	protected static int released = 0, acquired = 0;
-	
-	protected static int getNextReleased() {
-		return released++;
-	}
-	
-	protected static int getNextAcquired() {
-		return acquired++;
-	}
-
 	private int type;
 	
 	public Atom(int type) {
@@ -43,7 +31,6 @@ public class Atom implements IBehaviour {
 
 	@Override
 	public void mergeWith(IBehaviour frameBehaviour) {
-		// TODO Auto-generated method stub
 		
 	}
 
