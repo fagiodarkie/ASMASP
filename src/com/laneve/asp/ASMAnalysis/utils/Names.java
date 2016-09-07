@@ -7,22 +7,30 @@ import java.util.Map;
 
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
 
 public class Names {
 
 	private static class ParamAsString {
-		public List<ParamAsString> params;
-		public String name;
+		protected List<ParamAsString> params;
+		protected String name;
+		protected ThreadValue thread;
+		protected IExpression exp;
 		
 		public ParamAsString(AnValue val, Map<Long, String> idNames) {
 			
 			this.name = idNames.get(val.getID());
 			params = new ArrayList<ParamAsString>();
-			for (AnValue a : val.getFields()) {
-				if (val instanceof ThreadValue)
-					a.clone();
+			
+			if (val instanceof IExpression) {
+				exp = (IExpression) val.clone();
+				thread = null;
+			} else if (val instanceof ThreadValue) {
+				exp = null;
+				thread = (ThreadValue) val.clone();
+			} else for (AnValue a : val.getFields()) {
 				params.add(new ParamAsString(a, idNames));
-			}
+			} 
 		}
 		
 		public String toString() {
@@ -31,6 +39,22 @@ public class Names {
 				for (ParamAsString par: params)
 					p += par.toString() + ",";
 				p = p.substring(0, p.length() - 1) + "]";
+			}
+			
+			return name + p;
+		}
+
+		public String toStringWithValues() {
+			String p = (params.size() > 0 ? "[" : "");
+			if (p.length() > 0) {
+				for (ParamAsString par: params)
+					p += par.toString() + ",";
+				p = p.substring(0, p.length() - 1) + "]";
+			} else {
+				if (exp != null)
+					return name + ":" + exp.toString();
+				else if (thread != null)
+					return name + ":" + thread.getStatus();
 			}
 			
 			return name + p;
@@ -64,22 +88,30 @@ public class Names {
 
 	public static String computeParameterList(List<AnValue> params) {
 		
-		if (params.size() == 0)
-			return "";
-		
 		String res = "";
+		
+		for (ParamAsString x : computeParams(params))
+			res += x.toString() + ",";
+	
+		String r = res.substring(0, res.length() - (res.endsWith(",") ? 1 : 0));
+//		System.out.println(r);
+		return r;
+	}
+
+	private static List<ParamAsString> computeParams(List<AnValue> params) {
+		
+		List<ParamAsString> res = new ArrayList<ParamAsString>();
+		if (params.size() == 0)
+			return res;
 		
 		Map<Long, String> names = new HashMap<Long, String>();
 		for (AnValue a : params)
 			fillMap(names, a, get(params.indexOf(a)));
 		for (AnValue a : params) {
 			ParamAsString x = new ParamAsString(a, names);
-			res += x.toString() + ",";
+			res.add(x);
 		}
-		
-		String r = res.substring(0, res.length() - (res.endsWith(",") ? 1 : 0));
-//		System.out.println(r);
-		return r;
+		return res;
 	}
 
 	public static String get(int i) {
@@ -112,5 +144,17 @@ public class Names {
 
 	public static int getPos(String substring) {
 		return alpha.indexOf(substring.substring(0, 1));
+	}
+
+
+	public static String computeParameterListWithValues(List<AnValue> vals) {
+		String res = "";
+		
+		for (ParamAsString x : computeParams(vals))
+			res += x.toStringWithValues() + ",";
+	
+		String r = res.substring(0, res.length() - (res.endsWith(",") ? 1 : 0));
+//		System.out.println(r);
+		return r;
 	}
 }

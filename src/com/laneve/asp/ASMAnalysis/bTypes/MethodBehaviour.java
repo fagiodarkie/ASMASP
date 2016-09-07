@@ -67,7 +67,7 @@ public class MethodBehaviour implements IBehaviour {
 		if (vals == null)
 			return ret + pattern + ")";
 		else
-			return ret + Names.computeParameterList((List<AnValue>)vals) + ")";
+			return ret + Names.computeParameterListWithValues((List<AnValue>)vals) + ")";
 		
 		
 //		List<ThreadValue> t = new ArrayList<ThreadValue>();
