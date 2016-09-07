@@ -24,8 +24,9 @@ public class Expressions {
 	public static void test() {
 		
 		int m = 10, n = 12;
-		fact(m);
-		factWrong(n);
+		simpleOperations(n, m);
+		if (m == 10) n = fact(m);
+		else n = factWrong(n);
 		simpleOperations(m, n);
 		
 		

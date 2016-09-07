@@ -278,6 +278,8 @@ public class BehaviourFrame extends Frame<AnValue> {
 			int insn, int sInsn, int jump) throws AnalyzerException {
 		in.setJumpLabels(insn + 1, sInsn + 1, jump + 1);
 		execute(j, in);
+		if (j.getOpcode() == Opcodes.GOTO)
+			in.processGOTO(insn, jump + 1);
 		frameBehaviour = in.getBehaviour();
 		in.resetCurrentMethod();
 

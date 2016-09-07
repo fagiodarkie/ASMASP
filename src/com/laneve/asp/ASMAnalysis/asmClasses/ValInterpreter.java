@@ -327,6 +327,10 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		}
 	}
 
+	public void processGOTO(int insn, int jump) {
+		createdBehaviour = new ConditionalJump(insn, new TrueExpression(Type.BOOLEAN_TYPE), jump, new FalseExpression(Type.BOOLEAN_TYPE), -1);
+	}
+	
 	public void processJumpInstruction(int insnOpcode, int insn, int i, int jump, IExpression l, IExpression r) {
 		Type b = Type.BOOLEAN_TYPE;
 		IExpression zero = new ConstExpression(Type.INT_TYPE, new Long(0));
@@ -392,8 +396,6 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 			ncond = new GtExpression(b, l, r);
 			createdBehaviour = new ConditionalJump(insn, cond, jump, ncond, i);
 			break;
-		case Opcodes.GOTO:
-			createdBehaviour = new ConditionalJump(insn, new TrueExpression(b), jump, new FalseExpression(b), -1);
 		case Opcodes.IF_ACMPEQ:
 		case Opcodes.IF_ACMPNE:
 		case Opcodes.IFNONNULL:

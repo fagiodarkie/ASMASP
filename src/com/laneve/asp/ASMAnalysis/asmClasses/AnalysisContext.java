@@ -140,7 +140,9 @@ public class AnalysisContext {
 				methodFrames.put(currentMethodID, Arrays.asList(frames));
 				
 				// if the new behaviour is different from the past one, also update all methods depending on this one.
-				
+				if (currentMethodID.contains("Expressions.test")) {
+					currentMethodID.length();
+				}
 				
 				IBehaviour old = methodBehaviour.get(currentMethodID).get(s);
 				IBehaviour updatedBehaviour = computeBehaviour(frames);
@@ -157,7 +159,9 @@ public class AnalysisContext {
 			}
 		}
 		
-		for (String s : methodBehaviour.keySet()) {
+		List<String> a = new ArrayList<String>(methodBehaviour.keySet());
+		java.util.Collections.sort(a);
+		for (String s : a) {
 			printMethodInformations(s);
 		}
 		
@@ -311,7 +315,7 @@ public class AnalysisContext {
 			return start;
 		
 		IBehaviour b = frames[begin].frameBehaviour;
-		if (start == null) {
+		if (start == null || start instanceof Atom) {
 			// we compute from the current behaviour.
 			if (b == null)
 				return computeBehaviour(start, frames, begin + 1, end);
@@ -325,7 +329,10 @@ public class AnalysisContext {
 						IBehaviour elseBranch = computeBehaviour(null, frames, con.getElseIndex(), end);
 						con.setBranches(thenBranch, elseBranch);
 						return con;
-					} else return computeBehaviour(start, frames, begin + 1, end);
+					} else if (con.getElseIndex() < 0) {
+						return computeBehaviour(start, frames, con.getThenIndex(), end);
+					} else
+						return computeBehaviour(start, frames, begin + 1, end);
 				} else {
 					IBehaviour future = computeBehaviour(null, frames, begin + 1, end);
 					if (future != null && !(future instanceof Atom))

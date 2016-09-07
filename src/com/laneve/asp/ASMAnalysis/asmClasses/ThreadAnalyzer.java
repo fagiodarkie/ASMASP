@@ -239,7 +239,7 @@ public class ThreadAnalyzer implements Opcodes {
                         }
                         merge(insn + 1, current, subroutine);
                         newControlFlowEdge(insn, insn + 1);
-                    } else if (insnOpcode >= IRETURN && insnOpcode <= RETURN)
+                    } else if ((insnOpcode >= IRETURN && insnOpcode <= RETURN) || insnOpcode == GOTO)
                     	frames[insn].setBehaviour(current.getBehaviour());
             	}
 
