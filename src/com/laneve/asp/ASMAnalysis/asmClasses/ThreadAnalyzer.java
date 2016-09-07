@@ -1,7 +1,6 @@
 package com.laneve.asp.ASMAnalysis.asmClasses;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -153,9 +152,7 @@ public class ThreadAnalyzer implements Opcodes {
                 int insnOpcode = insnNode.getOpcode();
                 int insnType = insnNode.getType();
 
-                if (methodName.contains("fact")) {
-                	insn += 0;
-                }
+
                 if (insnType == AbstractInsnNode.LABEL
                         || insnType == AbstractInsnNode.LINE
                         || insnType == AbstractInsnNode.FRAME) {

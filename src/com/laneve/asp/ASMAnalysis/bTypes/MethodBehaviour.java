@@ -59,6 +59,7 @@ public class MethodBehaviour implements IBehaviour {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	public String toString() {
 		String ret = methodName.split("\\(")[0];
 		ret = ret.substring(ret.lastIndexOf("/") + 1) + "(";

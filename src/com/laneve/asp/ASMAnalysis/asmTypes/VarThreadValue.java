@@ -2,7 +2,6 @@ package com.laneve.asp.ASMAnalysis.asmTypes;
 
 import java.util.List;
 
-import com.laneve.asp.ASMAnalysis.asmClasses.AnalysisContext;
 import com.laneve.asp.ASMAnalysis.utils.Names;
 
 public class VarThreadValue extends ThreadValue {

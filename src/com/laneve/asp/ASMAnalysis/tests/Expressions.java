@@ -12,9 +12,21 @@ public class Expressions {
 			return m * n;
 		}
 	}
+	
+	public static int factWrong(int n) {
+		return n * factWrong(n - 1);
+	}
+	
+	public static int simpleOperations(int n, int m) {
+		return 1 + (m - 2) * (n / 2);
+	}
 		
 	public static void test() {
-		fact(100); //not typable because of missing IF semantics.
+		
+		int m = 10, n = 12;
+		fact(m);
+		factWrong(n);
+		simpleOperations(m, n);
 		
 		
 		

@@ -1,6 +1,5 @@
 package com.laneve.asp.ASMAnalysis.asmTypes;
 
-import com.laneve.asp.ASMAnalysis.asmClasses.AnalysisContext;
 import com.laneve.asp.ASMAnalysis.bTypes.ThreadResource;
 
 public class ThreadValue extends AbstractThread {

@@ -106,7 +106,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 
         case BIPUSH:
         case SIPUSH:
-        	return new ConstExpression(Type.LONG_TYPE, (long)(((IntInsnNode)insn).operand ));
+        	return new ConstExpression(Type.INT_TYPE, (long)(((IntInsnNode)insn).operand ));
         	
         case LDC:
             Object cst = ((LdcInsnNode) insn).cst;

@@ -7,12 +7,8 @@ public class Tests {
 		Release.test();
 		Aliasing.test();
 		DoubleRelease.test();
-		Fields.test();
-		ThreadFields.test();
 		AnnidatedFields.test();
 		Expressions.test();
-		If.test();
-		
 		
 	}
 }
