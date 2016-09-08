@@ -31,7 +31,7 @@ import com.laneve.asp.ASMAnalysis.utils.Names;
 public class AnalysisContext {
 
 	protected Map<String, Boolean> analyzeMethods, modifiedReturnExpression;
-	protected Map<String, IExpression> returnValue;
+	protected Map<String, Map<String, IExpression>> returnValue;
 	protected Map<String, String> methodID, owner;
 	protected Map<String, List<String>> depends;
 	protected Map<String, Map<String, List<String>>> releasedParameters;
@@ -51,7 +51,7 @@ public class AnalysisContext {
 	public AnalysisContext() {
 		analyzeMethods = new HashMap<String, Boolean>();
 		modifiedReturnExpression = new HashMap<String, Boolean>();
-		returnValue = new HashMap<String, IExpression>();
+		returnValue = new HashMap<String, Map<String, IExpression>>();
 		methodID = new HashMap<String, String>();
 		owner = new HashMap<String, String>();
 		depends = new HashMap<String, List<String>>();
@@ -229,31 +229,30 @@ public class AnalysisContext {
 		}
 	}
 	
-	public void setReturnExpression(String method, AnValue value) {
+	public void setReturnExpression(String method, String signature, AnValue value) {
 
-		if (returnValue.get(method).equalValue(new ConstExpression(Type.INT_TYPE, 0L))
+		if (returnValue.get(method).get(signature).equalValue(new ConstExpression(Type.INT_TYPE, 0L))
 			&& !value.equalValue(new ConstExpression(Type.INT_TYPE, 0L))) {
-			returnValue.put(method, (IExpression) value);
+			returnValue.get(method).put(signature, (IExpression) value);
 			modifiedReturnExpression.put(method, true);
 			//System.out.println("Method " + method + " was modified: new return value is " + value.toString());
-		} else if (returnValue.get(method).equalValue(new UnknownExpression(value.getType())))
+		} else if (returnValue.get(method).get(signature).equalValue(new UnknownExpression(value.getType())))
 			return;
-		else if (!returnValue.get(method).equalValue((IExpression)value)) {
-			returnValue.put(method, new UnknownExpression(value.getType()));
+		else if (!returnValue.get(method).get(signature).equalValue((IExpression)value)) {
+			returnValue.get(method).put(signature, new UnknownExpression(value.getType()));
 			modifiedReturnExpression.put(method, true);			
 		}
 		
 	}
 		
-	public IExpression getReturnValueOfMethod(String methodName) {
+	public IExpression getReturnValueOfMethod(String methodName, String signature) {
 		// All foreign methods are treated as null. actual usage of this value will result in cast errors.
 		
-		if (returnValue.get(methodName) instanceof IExpression)
-			return new FunctionCallExpression(returnValue.get(methodName).getType(), methodName);
+		if (returnValue.get(methodName).get(signature) instanceof IExpression)
+			return new FunctionCallExpression(returnValue.get(methodName).get(signature).getType(), methodName);
 					
 		return null;
 		
-		// return returnValue.get(key);
 	}
 
 	public void createMethodNode(String className, String name, MethodNode method) {
@@ -266,7 +265,7 @@ public class AnalysisContext {
 		depends.put(m, new ArrayList<String>());
 		releasedParameters.put(m, new HashMap<String, List<String>>());
 		analyzeMethods.put(m, true);
-		returnValue.put(m, new ConstExpression(Type.INT_TYPE, new Long(0)));
+		returnValue.put(m, new HashMap<String, IExpression>());
 		modifiedReturnExpression.put(m, false);
 		updates.put(m, new HashMap<String, Map<String, AnValue>>());
 		threadStatusUpdates.put(m, new HashMap<String, Map<String, Integer>>());
@@ -298,8 +297,8 @@ public class AnalysisContext {
 					update += e.getKey() + ": " + e.getValue() + "; ";
 				System.out.println("Method " + actualName + " updates threads status " + update);
 			}
+			System.out.println("Method " + actualName + " has return value " + returnValue.get(index).get(s));
 		}
-		System.out.println("Method " + mName + " has return value " + returnValue.get(index));
 	}
 
 	protected IBehaviour computeBehaviour(BehaviourFrame[] frames) {
@@ -417,6 +416,7 @@ public class AnalysisContext {
 			paramString.get(k).add(paramsPattern);
 			releasedParameters.get(k).put(paramsPattern, new ArrayList<String>());
 			methodBehaviour.get(k).put(paramsPattern, new Atom(Atom.RETURN));
+			returnValue.get(k).put(paramsPattern, new ConstExpression(Type.INT_TYPE, 0L));
 			analyzeMethods.put(k, true);
 			updates.get(k).put(paramsPattern, new HashMap<String, AnValue>());
 			Map<String, Integer> startStatus = new HashMap<String, Integer>();

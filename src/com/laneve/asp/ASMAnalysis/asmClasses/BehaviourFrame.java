@@ -95,7 +95,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 		case Opcodes.DRETURN:
 		case Opcodes.ARETURN:
 		case Opcodes.RETURN:
-			in.setCurrentMethod(methodName);
+			in.setCurrentMethod(methodName, methodParametersPattern);
 			super.execute(insn, in);
 			frameBehaviour = new Atom(Atom.RETURN);//in.getBehaviour();
 			
@@ -117,7 +117,7 @@ public class BehaviourFrame extends Frame<AnValue> {
 				MethodInsnNode invoke = ((MethodInsnNode) insn);
 				invokedMethod = invoke.owner + "." + invoke.name + invoke.desc;				
 			}
-			in.setCurrentMethod(invokedMethod);
+			in.setCurrentMethod(invokedMethod, methodParametersPattern);
 			super.execute(insn, in);
 			
 			if (in.getBehaviour() != null) {

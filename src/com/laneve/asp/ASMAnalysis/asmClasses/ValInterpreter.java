@@ -62,6 +62,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	private String methodParametersPattern;
 	private Map<Long, Map<String, AnValue>> updated;
 	private Map<Long, Integer> updatedThreads;
+	private String signature;
 	
 	protected ValInterpreter(int api) {
 		super(api);
@@ -484,10 +485,11 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     			}
 			}
         	
+    		String x = currentMethodName;
         	if (t == Type.VOID_TYPE || !typable || context.isAtomicBehaviour(currentMethodName))
         		return null;
 
-        	AnValue a = context.getReturnValueOfMethod(currentMethodName);
+        	AnValue a = context.getReturnValueOfMethod(currentMethodName, methodParametersPattern);
         	//System.out.println("Method " + currentMethodName + " typed with value " + a.toString());
         	// now we take the method return value, with its eventual variables,
         	if (a == null) {
@@ -520,12 +522,12 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		switch (insn.getOpcode()) {
 		case Opcodes.IRETURN:
 		case Opcodes.LRETURN:
-			context.setReturnExpression(currentMethodName, value);
+			context.setReturnExpression(currentMethodName, signature, value);
 			createdBehaviour = new Atom(Atom.RETURN);
 			break;
 		default:
+			context.setReturnExpression(currentMethodName, signature, null);
 			createdBehaviour = new Atom(Atom.RETURN);
-			context.setReturnExpression(currentMethodName, null);
 		}
 	}
 
@@ -559,8 +561,9 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		return v;
 	}
 
-	public void setCurrentMethod(String methodName) {
+	public void setCurrentMethod(String methodName, String methodParametersPattern2) {
 		currentMethodName = methodName;
+		signature = methodParametersPattern2;
 	}
 
 	public IBehaviour getBehaviour() {
@@ -572,6 +575,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		createdBehaviour = null;
 		current = next = jumpTo = -1;
 		currentObject = null;
+		signature = null;
 		updated = null;
 		updatedThreads = null;
 	}
