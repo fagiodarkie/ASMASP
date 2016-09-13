@@ -429,7 +429,7 @@ public class AnalysisContext {
 	
 	protected void parseStatus(String pattern, Map<String, Integer> status) {
 		
-		if (!pattern.contains(":"))
+		if (!pattern.contains(":") || pattern.contains(":unknown"))
 			return;
 		
 		if (!pattern.contains(",")) {

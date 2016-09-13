@@ -485,7 +485,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
     			}
 			}
         	
-    		String x = currentMethodName;
+    		//String x = currentMethodName;
         	if (t == Type.VOID_TYPE || !typable || context.isAtomicBehaviour(currentMethodName))
         		return null;
 

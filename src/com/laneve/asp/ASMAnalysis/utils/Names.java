@@ -8,6 +8,7 @@ import java.util.Map;
 import com.laneve.asp.ASMAnalysis.asmTypes.AnValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.ThreadValue;
 import com.laneve.asp.ASMAnalysis.asmTypes.expressions.IExpression;
+import com.laneve.asp.ASMAnalysis.asmTypes.expressions.UnknownExpression;
 
 public class Names {
 
@@ -25,6 +26,8 @@ public class Names {
 			if (val instanceof IExpression) {
 				exp = (IExpression) val.clone();
 				thread = null;
+				if (val instanceof UnknownExpression)
+					this.name += ":unknown";
 			} else if (val instanceof ThreadValue) {
 				exp = null;
 				thread = (ThreadValue) val.clone();
@@ -52,7 +55,7 @@ public class Names {
 				p = p.substring(0, p.length() - 1) + "]";
 			} else {
 				if (exp != null)
-					return name + ":" + exp.toString();
+					return (exp instanceof UnknownExpression ? name : name + ":" + exp.toString());
 				else if (thread != null)
 					return name + ":" + thread.getStatus();
 			}

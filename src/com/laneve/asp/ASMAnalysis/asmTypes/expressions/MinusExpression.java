@@ -20,6 +20,8 @@ public class MinusExpression extends IExpression {
 	}
 
 	public String toString() {
+		if (left.toString().contains("unknown"))
+			return "unknown";
 		return "(-" + left.toString() + ")";
 	}
 

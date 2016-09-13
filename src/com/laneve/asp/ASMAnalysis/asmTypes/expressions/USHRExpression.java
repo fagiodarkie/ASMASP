@@ -22,6 +22,8 @@ public class USHRExpression extends IExpression {
 	}
 
 	public String toString() {
+		if (left.toString().contains("unknown") || right.toString().contains("unknown"))
+			return "unknown";
 		return "(" + left.toString() + " >> " + right.toString() + ")";
 	}
 
