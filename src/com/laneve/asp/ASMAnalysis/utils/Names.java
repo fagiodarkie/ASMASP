@@ -57,7 +57,7 @@ public class Names {
 				if (exp != null)
 					return (exp instanceof UnknownExpression ? name : name + ":" + exp.toString());
 				else if (thread != null)
-					return name + ":" + thread.getStatus();
+					return name ;
 			}
 			
 			return name + p;
