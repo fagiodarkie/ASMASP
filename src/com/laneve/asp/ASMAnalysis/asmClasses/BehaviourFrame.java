@@ -27,8 +27,8 @@ public class BehaviourFrame extends Frame<AnValue> {
 	
 	protected IBehaviour frameBehaviour;
 	protected AnalysisContext context;
-	protected String methodName;
-	protected String invokedMethod, methodParametersPattern;
+	protected String methodName, methodParametersPattern;
+	protected String invokedMethod;
 	
 	public BehaviourFrame(Frame<? extends AnValue> src, String methodName, AnalysisContext context) {
 		super(src);

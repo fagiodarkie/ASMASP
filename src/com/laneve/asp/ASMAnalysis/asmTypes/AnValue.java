@@ -300,5 +300,10 @@ public class AnValue implements Value {
 			else e.getValue().updateByID(id, newValue);
 	}
 
+
+	public void setType(Type longType) {
+		type = longType;
+	}
+
 	
 }

@@ -161,7 +161,7 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 	@Override
 	public AnValue unaryOperation(AbstractInsnNode insn, AnValue value)
 			throws AnalyzerException {
-		//AnValue v = value.clone();
+		AnValue v = value.clone();
 		switch (insn.getOpcode()) {
 		case INEG:
 		case LNEG:
@@ -169,7 +169,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
 		case IINC:
 			return new SumExpression(value.getType(), (IExpression) value, new ConstExpression(Type.INT_TYPE, new Long(1)));
         case Opcodes.I2L:
-        	return value;
+        	v.setType(Type.LONG_TYPE);
+        	return v;
         case Opcodes.F2L:
         case Opcodes.D2L:
         	return new AnValue(Type.LONG_TYPE);
@@ -179,6 +180,8 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.FNEG:
         	return new AnValue(Type.FLOAT_TYPE);
         case Opcodes.L2I:
+        	v.setType(Type.INT_TYPE);
+        	return v;
         case Opcodes.F2I:
         case Opcodes.D2I:
         	return new AnValue(Type.INT_TYPE);
@@ -294,13 +297,16 @@ public class ValInterpreter extends Interpreter<AnValue> implements Opcodes {
         case Opcodes.DDIV:
         	throw new Error("Floating Point operations not supported.");
         case Opcodes.LCMP:
-        	v1 = ((IExpression) value1).evaluate();
-        	v2 = ((IExpression) value2).evaluate();
-        	if (v1 > v2)
-        		return new ConstExpression(Type.INT_TYPE, new Long(1));
-        	else if (v1 < v2)
-        		return new ConstExpression(Type.INT_TYPE, new Long(-1));
-        	else return new ConstExpression(Type.INT_TYPE, new Long(0));
+        	if (((IExpression)value1).canEvaluate() && ((IExpression)value2).canEvaluate()) {
+	        	v1 = ((IExpression) value1).evaluate();
+	        	v2 = ((IExpression) value2).evaluate();
+	        	if (v1 > v2)
+	        		return new ConstExpression(Type.INT_TYPE, new Long(1));
+	        	else if (v1 < v2)
+	        		return new ConstExpression(Type.INT_TYPE, new Long(-1));
+	        	else return new ConstExpression(Type.INT_TYPE, new Long(0));
+        	} else
+        		return new UnknownExpression();
         case Opcodes.IF_ICMPEQ:
         case Opcodes.IF_ICMPNE:
         case Opcodes.IF_ICMPLT:

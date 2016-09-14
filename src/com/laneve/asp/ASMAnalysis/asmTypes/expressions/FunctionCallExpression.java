@@ -48,7 +48,7 @@ public class FunctionCallExpression extends IExpression {
 		if (ret.endsWith(", "))
 			ret = ret.substring(0, ret.lastIndexOf(", "));
 		
-		if (ret.substring(ret.indexOf('(')).contains("unknown"))
+		if (ret.contains(":unknown"))
 			return "unknown";
 		return ret + ")";
 	}
