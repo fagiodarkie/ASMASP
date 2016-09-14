@@ -174,7 +174,7 @@ public class AnalysisContext {
 		deallocationCall = dealloc;
 	}
 	
-	public ThreadResource allocateThread(ThreadValue t) {
+	public IBehaviour allocateThread(ThreadValue t) {
 //		System.out.println("Context request: run thread #" + t.getThreadID() + " with status " + t.getStatus());
 		if (t instanceof VarThreadValue) {
 
@@ -183,15 +183,15 @@ public class AnalysisContext {
 				t.setUpdated(true);
 				return new ThreadResource(t, ThreadResource.ACQUIRE);
 			} else {
-				return new ThreadResource(t, ThreadResource.ALREADY_ACQUIRED);
+				return new Atom(Atom.RETURN);// new ThreadResource(t, ThreadResource.ALREADY_ACQUIRED);
 			}
 		} else if (t.getStatus() == ThreadResource.ALLOCATED) {
 			t.setUpdated(true);
 			return new ThreadResource(t, ThreadResource.ACQUIRE);
-		} else return new ThreadResource(t, ThreadResource.ALREADY_ACQUIRED);
+		} else return new Atom(Atom.RETURN);//ThreadResource(t, ThreadResource.ALREADY_ACQUIRED);
 	}
 
-	public ThreadResource deallocateThread(ThreadValue t) {
+	public IBehaviour deallocateThread(ThreadValue t) {
 //		System.out.println("Context request: deallocate thread #" + t.getThreadID() + " with status " + t.getStatus());
 		if (t instanceof VarThreadValue) {
 			if (t.getStatus() == ThreadResource.ALREADY_ACQUIRED) {
@@ -199,12 +199,12 @@ public class AnalysisContext {
 //				System.out.println("New thread status: " + t.getStatus());
 				return new ThreadResource(t, ThreadResource.RELEASE);
 			} else {
-				return new ThreadResource(t, ThreadResource.ALREADY_RELEASED);
+				return new Atom(Atom.RETURN);//ThreadResource(t, ThreadResource.ALREADY_RELEASED);
 			}
 		} else if (t.getStatus() == ThreadResource.ALREADY_ACQUIRED) {
 			t.setUpdated(true);
 			return new ThreadResource(t, ThreadResource.RELEASE);
-		} else return new ThreadResource(t, ThreadResource.ALREADY_RELEASED);
+		} else return new Atom(Atom.RETURN);//ThreadResource(t, ThreadResource.ALREADY_RELEASED);
 	}
 
 	public void signalDependancy(String methodName, List<String> deps) {
@@ -358,7 +358,7 @@ public class AnalysisContext {
 				|| currentMethodName.equalsIgnoreCase(deallocationCall);
 	}
 
-	public ThreadResource createAtom(AnValue anValue, String currentMethodName) {
+	public IBehaviour createAtom(AnValue anValue, String currentMethodName) {
 		if (isAtomicBehaviour(currentMethodName)) {
 			if (currentMethodName.equalsIgnoreCase(allocationCall))
 				return allocateThread((ThreadValue)anValue);
